@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Windows-Kopf: die EXE. Composition Root, verbindet Shell, Module und Windows-Umsetzungen. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <AssemblyName>Fledgr</AssemblyName>
+    <RootNamespace>YTSPlayer.Desktop</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\fledgr.ico</ApplicationIcon>
+    <Product>Fledgr</Product>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <TieredPGO>false</TieredPGO>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    LibVLC (nur Audio): nur 64-Bit-Windows und nur die Teile, die für Audio-Wiedergabe nötig sind.
+    Das spart rund 250 MB. Mit -p:VlcFull=true wird alles mitgenommen (zum Fehlersuchen).
+  -->
+  <PropertyGroup>
+    <VlcWindowsX86Enabled>false</VlcWindowsX86Enabled>
+    <VlcWindowsArm64Enabled>false</VlcWindowsArm64Enabled>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VlcFull)' != 'true'">
+    <VlcWindowsX64ExcludeFiles Include="libvlc.lib;libvlccore.lib;hrtfs\%2A%2A;lua\%2A%2A" />
+    <VlcWindowsX64ExcludeFiles Include="plugins\video_output\%2A%2A;plugins\video_chroma\%2A%2A;plugins\video_filter\%2A%2A;plugins\video_splitter\%2A%2A;plugins\spu\%2A%2A;plugins\text_renderer\%2A%2A;plugins\visualization\%2A%2A" />
+    <VlcWindowsX64ExcludeFiles Include="plugins\d3d11\%2A%2A;plugins\d3d9\%2A%2A;plugins\access_output\%2A%2A;plugins\stream_out\%2A%2A;plugins\mux\%2A%2A;plugins\services_discovery\%2A%2A;plugins\meta_engine\%2A%2A;plugins\lua\%2A%2A;plugins\logger\%2A%2A;plugins\keystore\%2A%2A" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="5" />
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.24" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Shell\YTSPlayer.Shell.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Modules.MusicPlayer\YTSPlayer.Modules.MusicPlayer.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Modules.YtConnect\YTSPlayer.Modules.YtConnect.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Modules.YtConnect.Windows\YTSPlayer.Modules.YtConnect.Windows.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Modules.RadioPlayer\YTSPlayer.Modules.RadioPlayer.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Platform.Windows\YTSPlayer.Platform.Windows.csproj" />
+  </ItemGroup>
+</Project>

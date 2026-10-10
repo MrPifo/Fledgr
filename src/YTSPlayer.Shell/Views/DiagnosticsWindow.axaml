@@ -1,0 +1,84 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:YTSPlayer.Shell.ViewModels"
+        xmlns:c="using:YTSPlayer.Ui.Controls"
+        xmlns:d="using:YTSPlayer.Contracts.Diagnostics"
+        x:Class="YTSPlayer.Shell.Views.DiagnosticsWindow"
+        x:DataType="vm:DiagnosticsViewModel"
+        Width="720" Height="780" Title="Diagnose – Fledgr">
+
+    <ScrollViewer>
+        <StackPanel Margin="{DynamicResource Pad.L}" Spacing="{DynamicResource Space.M}">
+            <TextBlock Text="{Binding TotalText}" Classes="title" />
+            <ProgressBar Value="{Binding Percent}" Minimum="0" Maximum="100" />
+            <TextBlock Text="{Binding TargetText}" Classes="muted" />
+            <c:HistoryChart Height="120" Values="{Binding History}" Target="{Binding TargetMb}" />
+
+            <TextBlock Text="Prozesse" Classes="heading" />
+            <Grid ColumnDefinitions="90,*,70,90,70" Classes="muted">
+                <TextBlock Text="Gruppe" Classes="muted" />
+                <TextBlock Grid.Column="1" Text="Prozess" Classes="muted" />
+                <TextBlock Grid.Column="2" Text="PID" Classes="muted" />
+                <TextBlock Grid.Column="3" Text="MB" Classes="muted" />
+                <TextBlock Grid.Column="4" Text="CPU %" Classes="muted" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Rows}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="d:ProcessRow">
+                        <Grid ColumnDefinitions="90,*,70,90,70">
+                            <TextBlock Text="{Binding Group}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Name}" />
+                            <TextBlock Grid.Column="2" Text="{Binding Pid}" />
+                            <TextBlock Grid.Column="3" Text="{Binding Mb, StringFormat={}{0:F1}}" />
+                            <TextBlock Grid.Column="4" Text="{Binding Cpu, StringFormat={}{0:F1}}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="Zähler der Module" Classes="heading" />
+            <ItemsControl ItemsSource="{Binding Lines}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="d:DiagnosticLine">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="{Binding Label}" Classes="muted" />
+                            <TextBlock Grid.Column="1" Text="{Binding Value}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Text="Operationen (Dauer)" Classes="heading" />
+            <Grid ColumnDefinitions="*,60,60,80,80,80,60">
+                <TextBlock Text="Name" Classes="muted" />
+                <TextBlock Grid.Column="1" Text="Anz." Classes="muted" />
+                <TextBlock Grid.Column="2" Text="Fehler" Classes="muted" />
+                <TextBlock Grid.Column="3" Text="Letzte" Classes="muted" />
+                <TextBlock Grid.Column="4" Text="Ø" Classes="muted" />
+                <TextBlock Grid.Column="5" Text="Max" Classes="muted" />
+                <TextBlock Grid.Column="6" Text="Läuft" Classes="muted" />
+            </Grid>
+            <ItemsControl ItemsSource="{Binding Operations}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:OperationRow">
+                        <Grid ColumnDefinitions="*,60,60,80,80,80,60">
+                            <TextBlock Text="{Binding Name}" />
+                            <TextBlock Grid.Column="1" Text="{Binding Count}" />
+                            <TextBlock Grid.Column="2" Text="{Binding Failures}" />
+                            <TextBlock Grid.Column="3" Text="{Binding Last}" />
+                            <TextBlock Grid.Column="4" Text="{Binding Average}" />
+                            <TextBlock Grid.Column="5" Text="{Binding Max}" />
+                            <TextBlock Grid.Column="6" Text="{Binding Running}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                <Button Content="Arbeitssatz leeren" Command="{Binding TrimNowCommand}" />
+                <Button Content="CSV exportieren" Command="{Binding ExportCsvCommand}" />
+            </StackPanel>
+            <TextBlock Text="{Binding Info}" Classes="muted" TextWrapping="Wrap" />
+        </StackPanel>
+    </ScrollViewer>
+</Window>

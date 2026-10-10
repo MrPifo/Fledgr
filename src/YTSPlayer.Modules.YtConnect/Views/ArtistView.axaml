@@ -1,0 +1,93 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
+             xmlns:views="using:YTSPlayer.Modules.YtConnect.Views"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="YTSPlayer.Modules.YtConnect.Views.ArtistView"
+             x:DataType="vm:YtViewModel">
+
+    <!-- Künstler-Seite: Kopf mit Bild und Knöpfen, Top-Songs, darunter Bereiche (Alben, Singles, Videos, Fans mögen auch …) -->
+    <Grid RowDefinitions="Auto,*" RowSpacing="{DynamicResource Space.S}">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+            <Button Command="{Binding BackFromArtistCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                    <mi:MaterialIcon Kind="ChevronLeft" />
+                    <TextBlock Text="Zurück" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <TextBlock Grid.Column="1" Classes="heading" Text="{Binding Artist.Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <Button Grid.Column="2" Content="Aktualisieren" Command="{Binding ReloadArtistCommand}" />
+        </Grid>
+
+        <ui:LoadingState Grid.Row="1" State="{Binding ArtistState}" Message="Künstler-Seite wird geladen …"
+                         ErrorText="{Binding ArtistError}" RetryCommand="{Binding ReloadArtistCommand}">
+            <ScrollViewer>
+                <StackPanel Spacing="{DynamicResource Space.L}">
+
+                    <!-- Kopf -->
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource Space.L}">
+                        <Border Classes="cover" Width="180" Height="180" VerticalAlignment="Top">
+                            <Image Source="{Binding ArtistCover}" Stretch="UniformToFill" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center">
+                            <TextBlock Classes="title" Text="{Binding Artist.Name}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Classes="muted" Text="{Binding Artist.Listeners}" />
+                            <TextBlock Text="{Binding Artist.Description}" TextWrapping="Wrap" MaxLines="{Binding DescriptionLines}" Classes="caption" />
+                            <Button Classes="ghost" Content="{Binding DescriptionToggleText}" Command="{Binding ToggleDescriptionCommand}" HorizontalAlignment="Left" />
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                                <Button Classes="primary" Command="{Binding ArtistShuffleCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                                        <mi:MaterialIcon Kind="Shuffle" />
+                                        <TextBlock Text="Zufallsmix" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ArtistMixCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                                        <mi:MaterialIcon Kind="RadioTower" />
+                                        <TextBlock Text="Mix" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ToggleSubscribeCommand}" Classes.active="{Binding Subscribed}" Content="{Binding SubscribeText}" />
+                                <Button Classes="icon ghost" Click="OnArtistMore" ToolTip.Tip="Mehr">
+                                    <mi:MaterialIcon Kind="DotsVertical" />
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Top-Songs -->
+                    <StackPanel Spacing="{DynamicResource Space.S}" IsVisible="{Binding HasArtistSongs}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Classes="heading" Text="{Binding Artist.TopSongsTitle}" VerticalAlignment="Center" />
+                            <Button Grid.Column="1" Content="Alle anzeigen" Command="{Binding ArtistAllSongsCommand}" />
+                        </Grid>
+                        <ListBox x:Name="ArtistSongList" ItemsSource="{Binding ArtistSongs}" DoubleTapped="OnArtistSongDoubleTapped"
+                                 ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TrackItem">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}" ContextRequested="OnTrackContext" Background="Transparent">
+                                        <Border Classes="thumb">
+                                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Artist}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="2" Text="{Binding Duration}" Classes="caption muted" VerticalAlignment="Center" />
+                                        <Button Grid.Column="3" Classes="icon ghost" Click="OnTrackMenu" DoubleTapped="OnMenuButtonDoubleTapped" ToolTip.Tip="Mehr">
+                                            <mi:MaterialIcon Kind="DotsVertical" />
+                                        </Button>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </StackPanel>
+
+                    <!-- Bereiche mit Karten -->
+                    <views:ShelvesView Sections="{Binding ArtistSections}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ui:LoadingState>
+    </Grid>
+</UserControl>

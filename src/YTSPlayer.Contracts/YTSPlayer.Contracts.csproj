@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Reine Verträge und Modelle. Kein UI, kein Windows-Code, kein Avalonia. -->
+  <PropertyGroup>
+    <RootNamespace>YTSPlayer.Contracts</RootNamespace>
+  </PropertyGroup>
+</Project>

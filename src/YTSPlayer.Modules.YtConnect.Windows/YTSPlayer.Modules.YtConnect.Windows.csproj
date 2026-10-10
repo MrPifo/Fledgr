@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Windows-Umsetzung der Web-Ansicht für YT-Connect mit WebView2. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>YTSPlayer.Modules.YtConnect.Windows</RootNamespace>
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4258.31" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YTSPlayer.Modules.YtConnect\YTSPlayer.Modules.YtConnect.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Platform.Windows\YTSPlayer.Platform.Windows.csproj" />
+  </ItemGroup>
+</Project>

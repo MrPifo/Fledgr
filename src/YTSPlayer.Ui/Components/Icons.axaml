@@ -1,0 +1,13 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mi="using:Material.Icons.Avalonia">
+    <!-- Icons: Vektor-Icons aus Material.Icons.Avalonia. Größe immer über das Token Size.Icon, Farbe erbt vom Elternelement (Foreground). -->
+    <Style Selector="mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.Icon}" />
+        <Setter Property="Height" Value="{DynamicResource Size.Icon}" />
+    </Style>
+    <Style Selector="Button.icon.large mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconL}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconL}" />
+    </Style>
+</Styles>

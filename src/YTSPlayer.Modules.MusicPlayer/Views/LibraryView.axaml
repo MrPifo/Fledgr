@@ -1,0 +1,79 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.MusicPlayer.ViewModels"
+             xmlns:m="using:YTSPlayer.Modules.MusicPlayer"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
+             xmlns:icons="using:YTSPlayer.Ui"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="YTSPlayer.Modules.MusicPlayer.Views.LibraryView"
+             x:DataType="vm:LibraryViewModel"
+             DragDrop.AllowDrop="True">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="{DynamicResource Space.S}">
+
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+            <TextBox x:Name="SearchBox" Text="{Binding SearchText}" PlaceholderText="Suchen in allen Ordnern (Strg+F) …" />
+            <ComboBox Grid.Column="1" ItemsSource="{Binding ModeNames}" SelectedIndex="{Binding ModeIndex}" MinWidth="130" />
+            <Button Grid.Column="2" Content="Ordner hinzufügen" Classes="primary" Click="OnAddFolder" />
+            <Button Grid.Column="3" Content="Neu scannen" Command="{Binding RescanCommand}" IsEnabled="{Binding !IsScanning}" />
+        </Grid>
+
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+            <Button Classes="ghost" Command="{Binding GoUpCommand}" IsEnabled="{Binding CanGoUp}" ToolTip.Tip="Eine Ebene höher"><mi:MaterialIcon Kind="ArrowUp" /></Button>
+            <TextBlock Grid.Column="1" Text="{Binding PathText}" Classes="muted" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <Button Grid.Column="2" Click="OnPlaySelection" ToolTip.Tip="Alle markierten Titel nacheinander abspielen (mehrere mit Strg oder Umschalt markieren)">
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                    <mi:MaterialIcon Kind="PlaylistPlay" />
+                    <TextBlock Text="Auswahl abspielen" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <CheckBox Grid.Column="3" Content="Beim Auswählen vorhören" IsChecked="{Binding AutoPreview}" />
+        </Grid>
+
+        <ui:LoadingState Grid.Row="2" State="{Binding State}" Message="{Binding Message}"
+                         ErrorText="{Binding ErrorText}" RetryCommand="{Binding ReloadCommand}">
+            <ListBox x:Name="List" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" SelectionMode="Multiple"
+                     DoubleTapped="OnDoubleTapped" KeyDown="OnListKeyDown">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LibraryItem">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                            <!-- Cover, wenn vorhanden; sonst das Symbol (Ordner, Titel …) -->
+                            <Border Classes="thumb">
+                                <Grid>
+                                    <mi:MaterialIcon Kind="{Binding Icon, Converter={x:Static icons:IconConverters.Kind}}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                     IsVisible="{Binding !HasCover}" />
+                                    <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                </Grid>
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Subtitle}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                            <Button Grid.Column="2" Classes="ghost" IsVisible="{Binding IsTrack}" ToolTip.Tip="Favorit"
+                                    Command="{Binding ToggleFavoriteCommand}">
+                                <mi:MaterialIcon Kind="{Binding FavoriteIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ui:LoadingState>
+
+        <StackPanel Grid.Row="3" Spacing="{DynamicResource Space.S}">
+            <StackPanel IsVisible="{Binding IsScanning}" Spacing="{DynamicResource Space.XS}">
+                <ProgressBar IsIndeterminate="True" />
+                <TextBlock Text="{Binding ScanText}" Classes="caption muted" />
+            </StackPanel>
+            <TextBlock Text="{Binding ScanText}" Classes="caption muted" IsVisible="{Binding !IsScanning}" />
+            <Grid ColumnDefinitions="Auto,200,Auto,*,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                <TextBlock Text="Playlist:" VerticalAlignment="Center" Classes="muted" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Playlists}" SelectedItem="{Binding TargetPlaylist}" HorizontalAlignment="Stretch" DisplayMemberBinding="{Binding Name}" />
+                <Button Grid.Column="2" Content="Titel hinzufügen" Click="OnAddToPlaylist" />
+                <TextBox Grid.Column="3" Text="{Binding NewPlaylistName}" PlaceholderText="Name der neuen Playlist" />
+                <Button Grid.Column="4" Content="Neue Playlist" Command="{Binding CreatePlaylistCommand}" />
+                <Button Grid.Column="5" Content="Aus Playlist entfernen" Click="OnRemoveFromPlaylist" IsVisible="{Binding InPlaylist}" />
+                <Button Grid.Column="6" Content="Playlist löschen" Classes="danger" Command="{Binding DeletePlaylistCommand}" IsVisible="{Binding InPlaylist}" />
+            </Grid>
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- YouTube Music: Anmeldung, Wiedergabe über eine versteckte Web-Ansicht, Playlists. Plattformneutral (kein WebView2-Code). -->
+  <PropertyGroup>
+    <RootNamespace>YTSPlayer.Modules.YtConnect</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
+  </ItemGroup>
+</Project>

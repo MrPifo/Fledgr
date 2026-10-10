@@ -1,0 +1,12 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Fortschritt: ProgressBar. IsIndeterminate=true bei unbekannter Dauer, sonst Value 0..100. -->
+    <Style Selector="ProgressBar">
+        <Setter Property="MinHeight" Value="6" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+    </Style>
+    <Style Selector="ProgressBar.warning">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Warning}" />
+    </Style>
+</Styles>

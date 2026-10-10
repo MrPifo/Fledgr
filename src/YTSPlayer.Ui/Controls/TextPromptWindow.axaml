@@ -1,0 +1,16 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="YTSPlayer.Ui.Controls.TextPromptWindow"
+        Width="380" SizeToContent="Height" CanResize="False" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+
+    <!-- Kleiner Dialog mit einer Texteingabe (z. B. Name einer neuen Playlist). -->
+    <StackPanel Margin="{DynamicResource Pad.L}" Spacing="{DynamicResource Space.M}">
+        <TextBlock x:Name="Prompt" Classes="body" TextWrapping="Wrap" />
+        <TextBox x:Name="Input" MaxLength="150" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{DynamicResource Space.S}">
+            <Button x:Name="Cancel" Content="Abbrechen" />
+            <Button x:Name="Ok" Classes="primary" IsDefault="True" />
+        </StackPanel>
+    </StackPanel>
+</Window>

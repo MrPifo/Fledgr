@@ -1,0 +1,13 @@
+bin/
+obj/
+publish/
+.vs/
+*.user
+*.bak
+
+# lokale Arbeitsdateien
+CLAUDE.md
+.claude/
+docs/
+selftest-*.txt
+shot-*.png

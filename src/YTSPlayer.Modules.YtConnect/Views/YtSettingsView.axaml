@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             x:Class="YTSPlayer.Modules.YtConnect.Views.YtSettingsView"
+             x:DataType="vm:YtSettingsViewModel">
+
+    <StackPanel Spacing="{DynamicResource Space.L}">
+
+        <StackPanel Spacing="{DynamicResource Space.S}">
+            <TextBlock Classes="heading" Text="Wiedergabe" />
+            <CheckBox Content="Song-Modus (kein Video, spart Daten und Speicher)" IsChecked="{Binding S.SongMode}" />
+        </StackPanel>
+
+        <StackPanel Spacing="{DynamicResource Space.S}">
+            <TextBlock Classes="heading" Text="Speicher sparen" />
+            <TextBlock Classes="caption muted" TextWrapping="Wrap"
+                       Text="Hebel der Web-Ansicht, die YouTube Music im Hintergrund abspielt. Änderungen wirken nach „Anwenden“ (die Web-Ansicht startet dabei neu)." />
+            <WrapPanel>
+                <CheckBox Content="Bilder blockieren" IsChecked="{Binding S.BlockImages}" />
+                <CheckBox Content="CSS blockieren" IsChecked="{Binding S.BlockStyles}" />
+                <CheckBox Content="Fonts blockieren" IsChecked="{Binding S.BlockFonts}" />
+                <CheckBox Content="GPU aus" IsChecked="{Binding S.DisableGpu}" />
+                <CheckBox Content="GPU im Browser-Prozess" IsChecked="{Binding S.InProcessGpu}" />
+                <CheckBox Content="V8-Heap klein" IsChecked="{Binding S.LimitV8}" />
+                <CheckBox Content="Prozess pro Seite" IsChecked="{Binding S.ProcessPerSite}" />
+                <CheckBox Content="Site Isolation aus" IsChecked="{Binding S.SiteIsolationOff}" />
+                <CheckBox Content="Arbeitssatz im Leerlauf leeren" IsChecked="{Binding S.TrimWhenIdle}" />
+            </WrapPanel>
+            <Grid ColumnDefinitions="Auto,80,Auto,80" ColumnSpacing="{DynamicResource Space.S}">
+                <TextBlock Text="Sparmodus nach (s)" VerticalAlignment="Center" />
+                <TextBox Grid.Column="1" Text="{Binding S.IdleLowSeconds}" />
+                <TextBlock Grid.Column="2" Text="Web-Ansicht aus nach (min)" VerticalAlignment="Center" />
+                <TextBox Grid.Column="3" Text="{Binding S.IdleDisposeMinutes}" />
+            </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                <Button Content="Anwenden (Web-Ansicht neu starten)" Classes="primary" Command="{Binding ApplyCommand}" />
+                <Button Content="Arbeitssatz jetzt leeren" Command="{Binding TrimNowCommand}" />
+            </StackPanel>
+            <TextBlock Text="{Binding Info}" Classes="caption muted" TextWrapping="Wrap" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

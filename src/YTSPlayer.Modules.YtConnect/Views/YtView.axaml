@@ -1,0 +1,162 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             xmlns:m="using:YTSPlayer.Modules.YtConnect"
+             xmlns:views="using:YTSPlayer.Modules.YtConnect.Views"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="YTSPlayer.Modules.YtConnect.Views.YtView"
+             x:DataType="vm:YtViewModel">
+
+    <Grid>
+        <!-- Nicht angemeldet -->
+        <Border Classes="panel" IsVisible="{Binding ShowLoggedOut}" HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="360">
+            <StackPanel Spacing="{DynamicResource Space.M}">
+                <TextBlock Classes="title" Text="YouTube Music" />
+                <TextBlock Classes="muted" TextWrapping="Wrap"
+                           Text="Melde dich mit deinem Google-Konto an. Die Anmeldung läuft auf der Google-Seite. Wir sehen dein Passwort nie." />
+                <TextBlock Classes="danger" Text="{Binding Notice}" TextWrapping="Wrap" IsVisible="{Binding HasNotice}" />
+                <Button Content="Bei YouTube Music anmelden" Classes="primary" Command="{Binding SignInCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+        </Border>
+
+        <!-- Anmeldung läuft: die Google-Seite ist hier eingebettet -->
+        <Grid IsVisible="{Binding ShowLogin}" RowDefinitions="Auto,*" RowSpacing="{DynamicResource Space.S}">
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                <TextBlock Classes="heading" Text="Bei Google anmelden" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Fertig" Classes="primary" Command="{Binding FinishLoginCommand}" />
+                <Button Grid.Column="2" Content="Abbrechen" Command="{Binding CancelLoginCommand}" />
+            </Grid>
+            <ContentControl Grid.Row="1" Content="{Binding LoginSurface}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+        </Grid>
+
+        <!-- Prüfen / Abmelden -->
+        <ui:LoadingState IsVisible="{Binding ShowBusy}" State="Loading" Message="{Binding BusyText}" />
+
+        <!-- Angemeldet -->
+        <Grid IsVisible="{Binding ShowLoggedIn}" RowDefinitions="*,Auto" RowSpacing="{DynamicResource Space.S}">
+            <!-- Liste der Playlists -->
+            <!-- Künstler-Seite (aus der Suche oder von einer Karte geöffnet) -->
+            <views:ArtistView IsVisible="{Binding ArtistVisible}" />
+
+            <Grid IsVisible="{Binding ShowList}" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="{DynamicResource Space.S}">
+                <!-- Suche nach Songs bei YouTube Music -->
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                    <!-- Mit Vorschlägen (frühere Suchen und YouTube-Vorschläge). Enter oder Klick auf einen Vorschlag sucht. -->
+                    <AutoCompleteBox x:Name="SearchBox" Text="{Binding SearchText}" ItemsSource="{Binding Suggestions}" PlaceholderText="Bei YouTube Music suchen …"
+                                     MinimumPrefixLength="0" FilterMode="None" IsTextCompletionEnabled="False"
+                                     KeyUp="OnSearchKeyUp" GotFocus="OnSearchGotFocus" DropDownClosed="OnSearchDropDownClosed" />
+                    <Button Grid.Column="1" Classes="icon ghost" Command="{Binding ClearHistoryCommand}" ToolTip.Tip="Suchverlauf löschen">
+                        <mi:MaterialIcon Kind="DeleteSweep" />
+                    </Button>
+                    <Button Grid.Column="2" Command="{Binding SearchCommand}" ToolTip.Tip="Suchen">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                            <mi:MaterialIcon Kind="Magnify" />
+                            <TextBlock Text="Suchen" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                    <!-- Umschalter: eigene Playlists oder die Startseite mit Empfehlungen -->
+                    <Button Classes="ghost" Classes.active="{Binding !HomeMode}" Command="{Binding ShowPlaylistsTabCommand}" Content="Playlists" />
+                    <Button Grid.Column="1" Classes="ghost" Classes.active="{Binding HomeMode}" Command="{Binding ShowHomeTabCommand}" Content="Startseite" />
+                    <TextBlock Grid.Column="2" Classes="caption muted" Text="Wird im Hintergrund geprüft …" VerticalAlignment="Center"
+                               IsVisible="{Binding BackgroundBusy}" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" IsVisible="{Binding ShowPlaylists}">
+                        <Button Click="OnNewPlaylist" ToolTip.Tip="Neue Playlist anlegen">
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                                <mi:MaterialIcon Kind="PlaylistPlus" />
+                                <TextBlock Text="Neue Playlist" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <Button Content="Aktualisieren" Command="{Binding RefreshCommand}" IsEnabled="{Binding CanRefresh}" />
+                        <Button Content="Öffnen" Command="{Binding OpenPlaylistCommand}" />
+                        <Button Content="Abspielen" Command="{Binding PlaySelectedCommand}" />
+                    </StackPanel>
+                    <Button Grid.Column="3" Content="Aktualisieren" Command="{Binding ReloadHomeCommand}" IsVisible="{Binding ShowHomePanel}" />
+                </Grid>
+                <ProgressBar Grid.Row="2" IsIndeterminate="True" IsVisible="{Binding BackgroundBusy}" />
+                <!-- Startseite: Bereiche mit Karten, beim Scrollen kommen weitere nach -->
+                <ui:LoadingState Grid.Row="3" IsVisible="{Binding ShowHomePanel}" State="{Binding HomeState}" Message="{Binding HomeMessage}"
+                                 ErrorText="{Binding HomeError}" RetryCommand="{Binding ReloadHomeCommand}">
+                    <ScrollViewer x:Name="HomeScroll">
+                        <views:ShelvesView Sections="{Binding HomeSections}" />
+                    </ScrollViewer>
+                </ui:LoadingState>
+                <ui:LoadingState Grid.Row="3" IsVisible="{Binding ShowPlaylists}" State="{Binding State}" Message="{Binding Message}"
+                                 ErrorText="{Binding ErrorText}" RetryCommand="{Binding RefreshCommand}">
+                    <ListBox x:Name="List" ItemsSource="{Binding Items}" SelectedItem="{Binding Selected}" DoubleTapped="OnPlaylistDoubleTapped">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="m:PlaylistInfo">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource Space.M}" ContextRequested="OnPlaylistContext">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Sub}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="icon ghost" Click="OnPlaylistMenu" DoubleTapped="OnMenuButtonDoubleTapped"
+                                            ToolTip.Tip="Mehr">
+                                        <mi:MaterialIcon Kind="DotsVertical" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ui:LoadingState>
+            </Grid>
+
+            <!-- Titel einer geöffneten Playlist -->
+            <Grid IsVisible="{Binding IsPlaylistOpen}" RowDefinitions="Auto,Auto,*" RowSpacing="{DynamicResource Space.S}">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                    <Button Command="{Binding BackCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                            <mi:MaterialIcon Kind="ChevronLeft" />
+                            <TextBlock Text="Zurück" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Grid.Column="1" Classes="heading" Text="{Binding Opened.Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <!-- Filter: erst in den Treffern sichtbar -->
+                    <ComboBox Grid.Column="2" ItemsSource="{Binding FilterNames}" SelectedIndex="{Binding SearchFilterIndex}" MinWidth="130"
+                              IsVisible="{Binding IsSearch}" ToolTip.Tip="Treffer filtern: Titel, Künstler, Alben oder Playlists" />
+                    <Button Grid.Column="2" Content="Aktualisieren" Command="{Binding RefreshTracksCommand}" IsEnabled="{Binding CanRefreshTracks}" IsVisible="{Binding !IsSearch}" />
+                    <Button Grid.Column="3" Content="Alle abspielen" Classes="primary" Command="{Binding PlaySelectedCommand}" IsVisible="{Binding !IsSearch}" />
+                </Grid>
+                <ProgressBar Grid.Row="1" IsIndeterminate="True" IsVisible="{Binding BackgroundBusy}" />
+                <ui:LoadingState Grid.Row="2" State="{Binding TracksState}" Message="{Binding TracksMessage}"
+                                 ErrorText="{Binding TracksError}" RetryCommand="{Binding RefreshTracksCommand}">
+                    <ListBox x:Name="TrackList" ItemsSource="{Binding Tracks}" SelectedItem="{Binding SelectedTrack}" DoubleTapped="OnTrackDoubleTapped">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TrackItem">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}" ContextRequested="OnTrackContext" Background="Transparent">
+                                    <Border Classes="thumb">
+                                        <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Artist}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{Binding Duration}" Classes="caption muted" VerticalAlignment="Center" />
+                                    <Button Grid.Column="3" Classes="icon ghost" Click="OnTrackMenu" DoubleTapped="OnMenuButtonDoubleTapped"
+                                            ToolTip.Tip="Mehr">
+                                        <mi:MaterialIcon Kind="DotsVertical" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </ui:LoadingState>
+            </Grid>
+
+            <StackPanel Grid.Row="1" Spacing="{DynamicResource Space.S}">
+                <!-- Nachfrage vor dem Löschen einer Playlist -->
+                <Border Classes="panel flat" IsVisible="{Binding HasDeleteAsk}">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                        <TextBlock Text="{Binding DeleteAskText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="Löschen" Classes="danger" Command="{Binding ConfirmDeleteCommand}" />
+                        <Button Grid.Column="2" Content="Abbrechen" Command="{Binding CancelDeleteCommand}" />
+                    </Grid>
+                </Border>
+                <TextBlock Text="{Binding Info}" Classes="caption muted" TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

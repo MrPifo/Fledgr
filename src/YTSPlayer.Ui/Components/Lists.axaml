@@ -1,0 +1,16 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Listen: ListBox mit einheitlichen Zeilen. Zeileninhalt kommt aus den DataTemplates (Ui/Templates). -->
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <!-- Scrollbalken immer voll sichtbar, nicht ausblenden. -->
+        <Setter Property="ScrollViewer.AllowAutoHide" Value="False" />
+    </Style>
+    <Style Selector="ListBoxItem">
+        <Setter Property="Padding" Value="{DynamicResource Pad.S}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
+    </Style>
+</Styles>

@@ -1,0 +1,64 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="using:YTSPlayer.Ui.Controls">
+    <!-- Control-Themes der eigenen Controls (LoadingState, Avatar). -->
+
+    <ControlTheme x:Key="{x:Type c:LoadingState}" TargetType="c:LoadingState">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <ContentPresenter x:Name="PART_Content"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}" />
+                    <StackPanel x:Name="PART_Loading" IsVisible="False" Spacing="{DynamicResource Space.S}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center" MinWidth="220">
+                        <ProgressBar IsIndeterminate="{TemplateBinding IsIndeterminate}"
+                                     Value="{TemplateBinding Progress}" Minimum="0" Maximum="100" />
+                        <TextBlock Text="{TemplateBinding Message}" Classes="caption muted" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel x:Name="PART_Empty" IsVisible="False"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{TemplateBinding Message}" Classes="muted" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel x:Name="PART_Error" IsVisible="False" Spacing="{DynamicResource Space.S}"
+                                HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="{TemplateBinding ErrorText}" Classes="danger" HorizontalAlignment="Center" TextWrapping="Wrap" />
+                        <Button Content="Erneut versuchen" Command="{TemplateBinding RetryCommand}" HorizontalAlignment="Center" />
+                    </StackPanel>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:not(:ready) /template/ ContentPresenter#PART_Content">
+            <Setter Property="IsVisible" Value="False" />
+        </Style>
+        <Style Selector="^:loading /template/ StackPanel#PART_Loading">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="^:empty /template/ StackPanel#PART_Empty">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+        <Style Selector="^:error /template/ StackPanel#PART_Error">
+            <Setter Property="IsVisible" Value="True" />
+        </Style>
+    </ControlTheme>
+
+    <ControlTheme x:Key="{x:Type c:Avatar}" TargetType="c:Avatar">
+        <Setter Property="Width" Value="{DynamicResource Size.AvatarM}" />
+        <Setter Property="Height" Value="{DynamicResource Size.AvatarM}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{DynamicResource Brush.Accent}" CornerRadius="{DynamicResource Radius.Round}" ClipToBounds="True">
+                    <Panel>
+                        <TextBlock Text="{TemplateBinding Initial}" Foreground="{DynamicResource Brush.OnAccent}"
+                                   FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Image Source="{TemplateBinding Source}" Stretch="UniformToFill" />
+                    </Panel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^.small">
+            <Setter Property="Width" Value="{DynamicResource Size.AvatarS}" />
+            <Setter Property="Height" Value="{DynamicResource Size.AvatarS}" />
+        </Style>
+    </ControlTheme>
+</ResourceDictionary>

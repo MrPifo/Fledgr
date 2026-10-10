@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Design-System: Palette, Metriken, Komponenten. Von Shell und allen Modulen genutzt. -->
+  <PropertyGroup>
+    <RootNamespace>YTSPlayer.Ui</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- Icons: Material Design Icons als Vektor-Pfade. Keine Unicode-Symbole oder Emojis als Icons (Projektregel). -->
+    <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
+  </ItemGroup>
+</Project>

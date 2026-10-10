@@ -1,0 +1,34 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             x:Class="YTSPlayer.Modules.YtConnect.Views.ShelvesView">
+
+    <!-- Bereiche mit waagerechten Reihen von Karten (Künstler-Seite und Startseite). Die Quelle kommt über „Sections“. -->
+    <ItemsControl x:Name="Shelves">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="{DynamicResource Space.L}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ArtistSectionVm">
+                <StackPanel Spacing="{DynamicResource Space.S}">
+                    <TextBlock Classes="heading" Text="{Binding Title}" />
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.M}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:TrackItem">
+                                    <StackPanel Width="150" Spacing="{DynamicResource Space.XS}" Background="Transparent" Cursor="Hand"
+                                                Tapped="OnCardTapped" ContextRequested="OnCardContext">
+                                        <Border Classes="cover" Width="150" Height="150">
+                                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                        </Border>
+                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Artist}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+            </DataTemplate>
+        </ItemsControl.ItemTemplate>
+    </ItemsControl>
+</UserControl>

@@ -1,0 +1,25 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Eingabe-Elemente: TextBox, ComboBox (Dropdown), ToggleSwitch, CheckBox, Slider, Menü.
+        Form und Größe kommen aus den Metriken, Farben aus der Fluent-Basis plus Akzent der Palette.
+    -->
+    <Style Selector="TextBox">
+        <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+    </Style>
+    <Style Selector="ComboBox">
+        <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+    </Style>
+    <Style Selector="CheckBox">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+    </Style>
+    <Style Selector="ToggleSwitch">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+    </Style>
+    <Style Selector="MenuItem">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+    </Style>
+</Styles>

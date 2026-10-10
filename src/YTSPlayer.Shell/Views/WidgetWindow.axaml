@@ -1,0 +1,83 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:YTSPlayer.Shell.ViewModels"
+        xmlns:views="using:YTSPlayer.Shell.Views"
+        xmlns:ui="using:YTSPlayer.Ui.Controls"
+        xmlns:icons="using:YTSPlayer.Ui"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="YTSPlayer.Shell.Views.WidgetWindow"
+        x:DataType="vm:ShellViewModel"
+        Width="300" SizeToContent="Height" CanResize="False" Topmost="True" ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen"
+        WindowDecorations="None" Title="Fledgr Widget">
+
+    <!-- Mini-Version des Players: Cover, Titel, Steuerung, Lautstärke, Fortschritt. Oben rechts zurück zur großen App. -->
+    <Border Classes="raised flush flat" PointerPressed="OnDrag" PointerMoved="OnDragMove" PointerReleased="OnDragEnd">
+        <Grid Margin="{DynamicResource Pad.S}" RowDefinitions="Auto,Auto,Auto">
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                <Border Classes="cover flat" Width="48" Height="48" IsVisible="{Binding HasCover}">
+                    <Grid>
+                        <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                        <Border Classes="scrim" IsVisible="{Binding CanOpenExternal}" PointerPressed="OnCoverPressed"
+                                ToolTip.Tip="{Binding ExternalLabel}">
+                            <mi:MaterialIcon Kind="OpenInNew" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsVisible="{Binding HasYear}" VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="CircleSmall" />
+                            <TextBlock Text="{Binding Year}" Classes="muted" />
+                        </StackPanel>
+                        <ui:MarqueeText Text="{Binding Title}" TextElement.FontWeight="SemiBold" />
+                    </DockPanel>
+                    <Border Background="Transparent" Cursor="Hand" IsHitTestVisible="{Binding CanOpenArtist}" PointerPressed="OnArtistPressed"
+                            ToolTip.Tip="Künstler-Seite öffnen">
+                        <ui:MarqueeText Text="{Binding Artist}" Classes="caption muted" />
+                    </Border>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button Classes="icon ghost" Command="{Binding ReturnToMainCommand}" ToolTip.Tip="Zurück zur großen App"><mi:MaterialIcon Kind="ArrowExpand" /></Button>
+                    <Button Classes="icon ghost" Command="{Binding QuitCommand}" ToolTip.Tip="Beenden"><mi:MaterialIcon Kind="Close" /></Button>
+                </StackPanel>
+            </Grid>
+
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{DynamicResource Space.XS}">
+                <Button Classes="icon ghost" Classes.active="{Binding IsLiked}" Command="{Binding ToggleLikeCommand}"
+                        IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding LikeTip}">
+                    <mi:MaterialIcon Kind="{Binding LikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                </Button>
+                <Button Classes="icon ghost" Classes.active="{Binding IsDisliked}" Command="{Binding ToggleDislikeCommand}"
+                        IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding DislikeTip}">
+                    <mi:MaterialIcon Kind="{Binding DislikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                </Button>
+                <Button Classes="icon ghost" Click="OnTrackMenu" IsVisible="{Binding CanTrackMenu}" ToolTip.Tip="Mehr: Playlist, Mix, Teilen …">
+                    <mi:MaterialIcon Kind="DotsVertical" />
+                </Button>
+                <Button Classes="icon ghost" Classes.active="{Binding IsShuffle}" Command="{Binding ToggleShuffleCommand}"
+                        IsVisible="{Binding CanShuffle}" ToolTip.Tip="{Binding ShuffleTip}">
+                    <mi:MaterialIcon Kind="{Binding ShuffleIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                </Button>
+                <Button Classes="icon ghost" Command="{Binding PreviousCommand}" IsVisible="{Binding CanPrevious}"><mi:MaterialIcon Kind="SkipPrevious" /></Button>
+                <Button Classes="icon" Command="{Binding TogglePlayCommand}"><mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" /></Button>
+                <Button Classes="icon ghost" Command="{Binding NextCommand}" IsVisible="{Binding CanNext}"><mi:MaterialIcon Kind="SkipNext" /></Button>
+                <Button Classes="icon ghost" IsVisible="{Binding CanVolume}" ToolTip.Tip="Lautstärke">
+                    <mi:MaterialIcon Kind="VolumeHigh" />
+                    <Button.Flyout>
+                        <Flyout Placement="Top">
+                            <Slider Minimum="0" Maximum="1" Value="{Binding Volume}" Width="140" />
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+            </StackPanel>
+
+            <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}" IsVisible="{Binding CanSeek}">
+                <TextBlock Text="{Binding PositionText}" Classes="caption muted" VerticalAlignment="Center" />
+                <views:PlayerSeekBar Grid.Column="1" Minimum="0" Maximum="{Binding SliderMax}" />
+                <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="caption muted" VerticalAlignment="Center" />
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

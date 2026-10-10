@@ -1,0 +1,110 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Buttons. Eine Basis plus Varianten über Classes:
+          (ohne)    = secondary (Standard)
+          primary   = Hauptaktion (Akzent)
+          danger    = gefährliche Aktion (z. B. Abmelden, Löschen)
+          ghost     = ohne Fläche
+          icon      = rund, nur Icon (MaterialIcon als Inhalt)  (+ large = größer, z. B. Play)
+          active    = eingeschaltet (z. B. Zufall an): Akzentfläche. Zusammen mit icon/ghost nutzbar.
+        Neue Variante? Erst prüfen, ob eine bestehende passt. Dann hier ergänzen und im Katalog (CLAUDE.md) eintragen.
+    -->
+
+    <!-- Basis / secondary -->
+    <Style Selector="Button">
+        <Setter Property="Padding" Value="{DynamicResource Pad.Control}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfacePressed}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+    </Style>
+    <Style Selector="Button:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface1}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
+    </Style>
+
+    <!-- primary -->
+    <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+    </Style>
+    <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentPressed}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+    </Style>
+
+    <!-- danger -->
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource Brush.Danger}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
+    </Style>
+    <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.DangerHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.DangerHover}" />
+    </Style>
+    <Style Selector="Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.DangerPressed}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+    </Style>
+
+    <!-- ghost -->
+    <Style Selector="Button.ghost">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.ghost:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHover}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.ghost:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+
+    <!-- icon (rund, nur Symbol) -->
+    <Style Selector="Button.icon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconButton}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconButton}" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
+        <Setter Property="FontFamily" Value="Segoe UI Symbol" />
+    </Style>
+    <Style Selector="Button.icon.large">
+        <Setter Property="Width" Value="{DynamicResource Size.IconButtonL}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconButtonL}" />
+    </Style>
+
+    <!-- active (eingeschalteter Zustand, z. B. Zufall) -->
+    <Style Selector="Button.active">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Button.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+    </Style>
+</Styles>

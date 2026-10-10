@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Oberfläche der App: Hauptfenster, Navigation, Player-Leiste, Widget, Diagnose, Plugin-Host. Plattformneutral. -->
+  <PropertyGroup>
+    <RootNamespace>YTSPlayer.Shell</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
+    <ProjectReference Include="..\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
+  </ItemGroup>
+</Project>

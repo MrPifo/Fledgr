@@ -1,0 +1,9 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Wird in App.axaml unter Application.Resources eingebunden: Palette, Metriken, Control-Themes. -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://YTSPlayer.Ui/Theme/Palette.axaml" />
+        <ResourceInclude Source="avares://YTSPlayer.Ui/Theme/Metrics.axaml" />
+        <ResourceInclude Source="avares://YTSPlayer.Ui/Theme/Controls.axaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.MusicPlayer.ViewModels"
+             x:Class="YTSPlayer.Modules.MusicPlayer.Views.MusicSettingsView"
+             x:DataType="vm:MusicSettingsViewModel">
+
+    <StackPanel Spacing="{DynamicResource Space.M}">
+        <StackPanel Spacing="{DynamicResource Space.S}">
+            <TextBlock Classes="heading" Text="Suche" />
+            <CheckBox Content="Titel, Interpret und Album in der Suche berücksichtigen" IsChecked="{Binding SearchTags}" />
+            <TextBlock Classes="caption muted" TextWrapping="Wrap"
+                       Text="Die App liest dafür beim Scan die Tags jeder Datei (einmalig, danach nur geänderte Dateien). Das braucht etwas Zeit und ein paar MB Speicher." />
+            <Button Content="Jetzt neu scannen" HorizontalAlignment="Left" Command="{Binding RescanNowCommand}" />
+            <TextBlock Text="{Binding Info}" Classes="caption muted" TextWrapping="Wrap" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

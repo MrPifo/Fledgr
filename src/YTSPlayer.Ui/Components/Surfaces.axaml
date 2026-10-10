@@ -1,0 +1,50 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Flächen. Border mit Classes="panel|raised|cover" (+ flat, flush). -->
+    <Style Selector="Border.panel">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface1}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.M}" />
+    </Style>
+    <Style Selector="Border.raised">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.M}" />
+    </Style>
+    <Style Selector="Border.cover">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.L}" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <!-- Vorschaubild in Listenzeilen (quadratisch, kleine Ecken). -->
+    <Style Selector="Border.thumb">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
+        <Setter Property="Width" Value="{DynamicResource Size.Thumb}" />
+        <Setter Property="Height" Value="{DynamicResource Size.Thumb}" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <!-- Klickbare Fläche über einem Bild (z. B. Cover): beim Darüberfahren blendet sie abgedunkelt ein und zeigt ein Symbol. -->
+    <Style Selector="Border.scrim">
+        <Setter Property="Background" Value="{DynamicResource Brush.Scrim}" />
+        <Setter Property="Opacity" Value="0" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.scrim:pointerover">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+    <!-- Varianten: flat = eckig (Leisten am Fensterrand), flush = ohne Innenabstand. -->
+    <Style Selector="Border.flat">
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Border.flush">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+</Styles>

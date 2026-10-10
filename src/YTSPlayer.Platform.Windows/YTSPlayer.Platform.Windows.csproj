@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Windows-spezifischer Code: P/Invoke (Speicher, CPU, Fenster-Platzierung). Nur von *.Windows und Desktop genutzt. -->
+  <PropertyGroup>
+    <!-- Windows-Ziel nötig für die Windows-Medien-Schnittstelle (SMTC: Medientasten, Medienanzeige). Gilt auch für die Projekte, die dieses hier einbinden. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>YTSPlayer.Platform.Windows</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
+  </ItemGroup>
+</Project>

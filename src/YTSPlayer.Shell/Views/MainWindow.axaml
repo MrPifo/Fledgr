@@ -1,0 +1,182 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:YTSPlayer.Shell.ViewModels"
+        xmlns:views="using:YTSPlayer.Shell.Views"
+        xmlns:plugins="using:YTSPlayer.Contracts.Plugins"
+        xmlns:ui="using:YTSPlayer.Ui.Controls"
+        xmlns:icons="using:YTSPlayer.Ui"
+        xmlns:mi="using:Material.Icons.Avalonia"
+        x:Class="YTSPlayer.Shell.Views.MainWindow"
+        x:DataType="vm:ShellViewModel"
+        Width="980" Height="660" MinWidth="780" MinHeight="520"
+        WindowStartupLocation="CenterScreen"
+        Title="Fledgr">
+
+    <Window.DataTemplates>
+        <DataTemplate DataType="vm:SettingsViewModel">
+            <views:SettingsView />
+        </DataTemplate>
+    </Window.DataTemplates>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Kopfzeile: Titel und Konto -->
+        <Border Classes="panel flat">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}">
+                <TextBlock Classes="heading" Text="Fledgr" VerticalAlignment="Center" />
+                <Button Grid.Column="2" Classes="icon ghost" Classes.active="{Binding SleepOn}" Command="{Binding ToggleSleepCommand}" VerticalAlignment="Center"
+                        ToolTip.Tip="{Binding SleepTip}">
+                    <mi:MaterialIcon Kind="{Binding SleepIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                </Button>
+                <Button Grid.Column="3" Classes="icon ghost" Command="{Binding OpenSettingsCommand}" VerticalAlignment="Center"
+                        ToolTip.Tip="Einstellungen">
+                    <mi:MaterialIcon Kind="Cog" />
+                </Button>
+                <Button Grid.Column="4" Classes="ghost" Command="{Binding WidgetCommand}" VerticalAlignment="Center"
+                        ToolTip.Tip="Die App in ein kleines Widget verwandeln">
+                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                        <mi:MaterialIcon Kind="PictureInPictureBottomRight" />
+                        <TextBlock Text="Widget" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{DynamicResource Space.M}"
+                            IsVisible="{Binding HasAccount}" VerticalAlignment="Center">
+                    <Button Classes="ghost" IsVisible="{Binding IsLoggedIn}">
+                        <ui:Avatar Classes="small" Source="{Binding Avatar}" Initial="{Binding AccountInitial}" />
+                        <!-- Rechtsklick auf das Profil: Einstellungen des Kontos (bei YouTube Music dessen Einstellungen) und Abmelden -->
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Einstellungen" Command="{Binding OpenAccountSettingsCommand}">
+                                    <MenuItem.Icon><mi:MaterialIcon Kind="Cog" /></MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Abmelden" Command="{Binding SignOutCommand}" IsVisible="{Binding CanSignOut}">
+                                    <MenuItem.Icon><mi:MaterialIcon Kind="Logout" /></MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                        <Button.Flyout>
+                            <Flyout Placement="BottomEdgeAlignedRight">
+                                <StackPanel Spacing="{DynamicResource Space.M}" MinWidth="220">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding AccountName}" />
+                                        <TextBlock Text="{Binding AccountEmail}" Classes="caption muted" />
+                                    </StackPanel>
+                                    <Button Content="Abmelden" Classes="danger" Command="{Binding SignOutCommand}" IsVisible="{Binding CanSignOut}" HorizontalAlignment="Stretch" />
+                                </StackPanel>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                    <TextBlock Text="{Binding AccountBusyText}" Classes="muted" IsVisible="{Binding AccountBusy}" VerticalAlignment="Center" />
+                    <Button Content="Anmelden" Classes="primary" Command="{Binding SignInCommand}" IsVisible="{Binding CanSignIn}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Navigation und Inhalt -->
+        <Grid Grid.Row="1" ColumnDefinitions="200,*,Auto">
+            <DockPanel Margin="{DynamicResource Pad.S}">
+                <StackPanel DockPanel.Dock="Bottom" Spacing="{DynamicResource Space.XS}">
+                    <Button Content="Diagnose" Classes="ghost" Command="{Binding DiagnosticsCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
+                    <Button Content="Beenden" Classes="ghost" Command="{Binding QuitCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
+                </StackPanel>
+                <ListBox ItemsSource="{Binding Nav}" SelectedItem="{Binding SelectedPage}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="plugins:NavPage">
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                                <mi:MaterialIcon Kind="{Binding Icon, Converter={x:Static icons:IconConverters.Kind}}" />
+                                <TextBlock Text="{Binding Title}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+            <ContentControl Grid.Column="1" Content="{Binding CurrentContent}" Margin="{DynamicResource Pad.M}" />
+
+            <!-- Songtext: rechts eingeblendet, wenn man ihn über den Knopf in der Player-Leiste einschaltet -->
+            <Border Grid.Column="2" Classes="panel flat" Width="320" IsVisible="{Binding ShowLyrics}">
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="{DynamicResource Space.S}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="heading" Text="Songtext" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Classes="icon ghost" Command="{Binding ToggleLyricsCommand}" ToolTip.Tip="Songtext ausblenden">
+                            <mi:MaterialIcon Kind="Close" />
+                        </Button>
+                    </Grid>
+                    <ScrollViewer Grid.Row="1">
+                        <TextBlock Text="{Binding LyricsText}" TextWrapping="Wrap" />
+                    </ScrollViewer>
+                    <TextBlock Grid.Row="2" Text="{Binding LyricsSource}" Classes="caption muted" TextWrapping="Wrap" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Player-Leiste -->
+        <Border Grid.Row="2" Classes="panel flat">
+            <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource Space.S}">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.L}">
+                    <Border Classes="cover" Width="56" Height="56" IsVisible="{Binding HasCover}">
+                        <Grid>
+                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                            <!-- Klick aufs Cover öffnet den Titel im Browser (nur wenn die Quelle eine Adresse anbietet). -->
+                            <Border Classes="scrim" IsVisible="{Binding CanOpenExternal}" PointerPressed="OnCoverPressed"
+                                    ToolTip.Tip="{Binding ExternalLabel}">
+                                <mi:MaterialIcon Kind="OpenInNew" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsVisible="{Binding HasYear}" VerticalAlignment="Center">
+                                <mi:MaterialIcon Kind="CircleSmall" />
+                                <TextBlock Text="{Binding Year}" Classes="heading muted" />
+                            </StackPanel>
+                            <ui:MarqueeText Text="{Binding Title}" Classes="heading" />
+                        </DockPanel>
+                        <!-- Bei YouTube Music öffnet ein Klick auf den Künstlernamen dessen Seite -->
+                        <Border Background="Transparent" Cursor="Hand" IsHitTestVisible="{Binding CanOpenArtist}" PointerPressed="OnArtistPressed"
+                                ToolTip.Tip="Künstler-Seite öffnen">
+                            <ui:MarqueeText Text="{Binding Artist}" Classes="muted" />
+                        </Border>
+                        <TextBlock Text="{Binding Status}" Classes="caption muted" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center">
+                        <Button Classes="icon" Classes.active="{Binding IsLiked}" Command="{Binding ToggleLikeCommand}"
+                                IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding LikeTip}">
+                            <mi:MaterialIcon Kind="{Binding LikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                        </Button>
+                        <Button Classes="icon" Classes.active="{Binding IsDisliked}" Command="{Binding ToggleDislikeCommand}"
+                                IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding DislikeTip}">
+                            <mi:MaterialIcon Kind="{Binding DislikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                        </Button>
+                        <Button Classes="icon" Classes.active="{Binding ShowLyrics}" Command="{Binding ToggleLyricsCommand}" IsVisible="{Binding CanLyrics}"
+                                ToolTip.Tip="Songtext ein- oder ausblenden">
+                            <mi:MaterialIcon Kind="TextLong" />
+                        </Button>
+                        <Button Classes="icon" Click="OnTrackMenu" IsVisible="{Binding CanTrackMenu}" ToolTip.Tip="Mehr: Playlist, Mix, Teilen …">
+                            <mi:MaterialIcon Kind="DotsVertical" />
+                        </Button>
+                        <Button Classes="icon" Classes.active="{Binding IsShuffle}" Command="{Binding ToggleShuffleCommand}"
+                                IsVisible="{Binding CanShuffle}" ToolTip.Tip="{Binding ShuffleTip}">
+                            <mi:MaterialIcon Kind="{Binding ShuffleIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                        </Button>
+                        <Button Classes="icon" Command="{Binding PreviousCommand}" IsVisible="{Binding CanPrevious}"><mi:MaterialIcon Kind="SkipPrevious" /></Button>
+                        <Button Classes="icon large primary" Command="{Binding TogglePlayCommand}"><mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" /></Button>
+                        <Button Classes="icon" Command="{Binding NextCommand}" IsVisible="{Binding CanNext}"><mi:MaterialIcon Kind="SkipNext" /></Button>
+                        <Button Classes="icon" Classes.active="{Binding IsRadioMix}" Command="{Binding RadioMixCommand}"
+                                IsVisible="{Binding CanRadioMix}" ToolTip.Tip="{Binding RadioMixTip}">
+                            <mi:MaterialIcon Kind="RadioTower" />
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center" IsVisible="{Binding CanVolume}">
+                        <mi:MaterialIcon Kind="VolumeHigh" VerticalAlignment="Center" />
+                        <Slider Minimum="0" Maximum="1" Value="{Binding Volume}" Width="120" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}" IsVisible="{Binding CanSeek}">
+                    <TextBlock Text="{Binding PositionText}" Classes="caption muted" VerticalAlignment="Center" />
+                    <views:PlayerSeekBar Grid.Column="1" Minimum="0" Maximum="{Binding SliderMax}" />
+                    <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="caption muted" VerticalAlignment="Center" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>
