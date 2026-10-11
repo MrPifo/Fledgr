@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<translations language="en" country="GB">
+  <!-- Number and date formats -->
+  <t key="format.decimal">.</t>
+  <t key="format.thousands">,</t>
+  <t key="format.date">dd/MM/yyyy</t>
+  <t key="format.time">HH:mm</t>
+  <t key="format.longdate">%1 · %2 %3</t>
+
+  <!-- Weekdays (0 = Sunday) -->
+  <t key="date.day.0">Sunday</t>
+  <t key="date.day.1">Monday</t>
+  <t key="date.day.2">Tuesday</t>
+  <t key="date.day.3">Wednesday</t>
+  <t key="date.day.4">Thursday</t>
+  <t key="date.day.5">Friday</t>
+  <t key="date.day.6">Saturday</t>
+
+  <!-- Months -->
+  <t key="date.month.1">January</t>
+  <t key="date.month.2">February</t>
+  <t key="date.month.3">March</t>
+  <t key="date.month.4">April</t>
+  <t key="date.month.5">May</t>
+  <t key="date.month.6">June</t>
+  <t key="date.month.7">July</t>
+  <t key="date.month.8">August</t>
+  <t key="date.month.9">September</t>
+  <t key="date.month.10">October</t>
+  <t key="date.month.11">November</t>
+  <t key="date.month.12">December</t>
+
+  <!-- General -->
+  <t key="ui.retry">Try again</t>
+  <t key="ui.close">Close</t>
+  <t key="ui.cancel">Cancel</t>
+  <t key="ui.ok">OK</t>
+</translations>

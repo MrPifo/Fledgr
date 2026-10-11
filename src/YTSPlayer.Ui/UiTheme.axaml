@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:materialIcons="using:Material.Icons.Avalonia">
     <!-- Wird in App.axaml unter Application.Styles NACH FluentTheme eingebunden. -->
@@ -9,6 +9,8 @@
     <StyleInclude Source="avares://YTSPlayer.Ui/Components/Surfaces.axaml" />
     <StyleInclude Source="avares://YTSPlayer.Ui/Components/Feedback.axaml" />
     <StyleInclude Source="avares://YTSPlayer.Ui/Components/Lists.axaml" />
+    <StyleInclude Source="avares://YTSPlayer.Ui/Components/ScrollBars.axaml" />
+    <StyleInclude Source="avares://YTSPlayer.Ui/Components/Player.axaml" />
     <StyleInclude Source="avares://YTSPlayer.Ui/Components/Icons.axaml" />
     <materialIcons:MaterialIconStyles />
 </Styles>

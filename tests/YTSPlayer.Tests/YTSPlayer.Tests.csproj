@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\src\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
     <ProjectReference Include="..\..\src\YTSPlayer.Modules.MusicPlayer\YTSPlayer.Modules.MusicPlayer.csproj" />
     <ProjectReference Include="..\..\src\YTSPlayer.Modules.YtConnect\YTSPlayer.Modules.YtConnect.csproj" />
+    <ProjectReference Include="..\..\src\YTSPlayer.Modules.RadioPlayer\YTSPlayer.Modules.RadioPlayer.csproj" />
   </ItemGroup>
 
 </Project>

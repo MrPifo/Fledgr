@@ -1,0 +1,128 @@
+﻿<UserControl xmlns:loc="using:YTSPlayer.Ui.Localization" xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.RadioPlayer.ViewModels"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
+             xmlns:icons="using:YTSPlayer.Ui"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="YTSPlayer.Modules.RadioPlayer.Views.RadioView"
+             x:DataType="vm:RadioViewModel">
+
+    <UserControl.Resources>
+        <!-- Eine Sender-Zeile, von Suche, Favoriten und Verlauf gemeinsam genutzt. -->
+        <DataTemplate x:Key="StationRow" x:DataType="vm:StationItem">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                <Border Classes="thumb" Width="{DynamicResource Size.Thumb}" Height="{DynamicResource Size.Thumb}">
+                    <Grid>
+                        <mi:MaterialIcon Kind="Radio" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasLogo}" />
+                        <Image Source="{Binding Logo}" Stretch="UniformToFill" />
+                    </Grid>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Subtitle}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}" IsVisible="{Binding HasStatus}">
+                        <mi:MaterialIcon Kind="Alert" />
+                        <TextBlock Text="{Binding StatusText}" Classes="caption danger" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </StackPanel>
+                <ui:PlayingBars Grid.Column="2" Playing="{Binding IsPlayingNow}" IsVisible="{Binding IsCurrent}" />
+                <Button Grid.Column="3" Classes="icon" Command="{Binding ToggleFavoriteCommand}" ToolTip.Tip="{loc:T radio.view.favorite}">
+                    <mi:MaterialIcon Kind="{Binding FavoriteIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                </Button>
+                <Button Grid.Column="4" Classes="icon" Command="{Binding PlayCommand}" ToolTip.Tip="{loc:T radio.view.play}">
+                    <mi:MaterialIcon Kind="Play" />
+                </Button>
+            </Grid>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Der laufende Sender ist in jeder Liste markiert (Auswahl-Optik). -->
+        <Style Selector="ListBoxItem">
+            <Setter Property="IsSelected" Value="{ReflectionBinding IsCurrent, Mode=OneWay}" />
+        </Style>
+        <!-- Auswahl-Liste hat immer dieselbe Breite, egal wie lang die Länder-Namen sind. -->
+        <Style Selector="ComboBox /template/ Popup">
+            <Setter Property="Width" Value="{DynamicResource Size.Dropdown}" />
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" RowSpacing="{DynamicResource Space.S}">
+
+        <StackPanel Spacing="{DynamicResource Space.XS}">
+            <!-- Die Sendersuche (Name) sitzt in der Kopfzeile. Hier: Land wählen (mit Suche im Dropdown), Genre und Adresse. -->
+            <Grid ColumnDefinitions="220,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                <Button x:Name="CountryButton" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" ToolTip.Tip="{loc:T radio.view.country}">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                        <TextBlock Text="{Binding SelectedCountry.Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                        <mi:MaterialIcon Grid.Column="1" Kind="ChevronDown" />
+                    </Grid>
+                    <Button.Flyout>
+                        <Flyout Placement="TopEdgeAlignedLeft" ShowMode="Transient" FlyoutPresenterClasses="pop">
+                            <Border Classes="pop-card" Width="{DynamicResource Size.Dropdown}">
+                                <Grid>
+                                    <Border Classes="grain g-menu" CornerRadius="{DynamicResource Radius.Card}" />
+                                    <StackPanel Margin="{DynamicResource Pad.Menu}" Spacing="{DynamicResource Space.XS}">
+                                        <TextBlock Text="{loc:T radio.view.country}" Classes="tiny upper muted" Margin="{DynamicResource Pad.MenuHead}" />
+                                        <TextBox Text="{Binding CountryFilter}" PlaceholderText="{loc:T radio.view.country.search}" />
+                                        <ListBox Classes="menu" ItemsSource="{Binding Countries}" SelectedItem="{Binding SelectedCountry}" Tapped="OnCountryTapped">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate x:CompileBindings="False">
+                                                    <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <TextBox Grid.Column="1" Text="{Binding Genre}" PlaceholderText="{loc:T radio.view.genre}" />
+                <Button Grid.Column="2" Classes="primary" Click="OnAddUrl" ToolTip.Tip="{loc:T radio.view.addUrl.tip}">
+                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                        <mi:MaterialIcon Kind="Plus" />
+                        <TextBlock Text="{loc:T radio.add.title}" VerticalAlignment="Center" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+            <TextBlock Text="{Binding NoticeText}" Classes="caption danger" />
+        </StackPanel>
+
+        <ScrollViewer Classes="page" Grid.Row="1" DoubleTapped="OnStationDoubleTapped">
+            <StackPanel Spacing="{DynamicResource Space.M}">
+
+                <!-- Suche: Treffer statt Favoriten und Verlauf. -->
+                <StackPanel IsVisible="{Binding ShowResults}" Spacing="{DynamicResource Space.S}">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource Space.S}">
+                        <Button Classes="ghost" Command="{Binding ShowFavoritesCommand}" ToolTip.Tip="{loc:T radio.view.back.tip}">
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                                <mi:MaterialIcon Kind="ChevronLeft" />
+                                <TextBlock Text="{loc:T radio.view.favorites}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Grid.Column="1" Text="{loc:T radio.view.results}" Classes="heading" VerticalAlignment="Center" />
+                    </Grid>
+                    <ui:LoadingState State="{Binding SearchState}" Message="{Binding SearchMessage}"
+                                     ErrorText="{Binding ErrorText}" RetryCommand="{Binding RetrySearchCommand}">
+                        <ListBox ItemsSource="{Binding Results}" ItemTemplate="{StaticResource StationRow}" />
+                    </ui:LoadingState>
+                </StackPanel>
+
+                <StackPanel IsVisible="{Binding !ShowResults}" Spacing="{DynamicResource Space.M}">
+                    <StackPanel Spacing="{DynamicResource Space.S}">
+                        <TextBlock Text="{loc:T radio.view.favorites}" Classes="heading" />
+                        <TextBlock Text="{loc:T radio.view.noFavorites}"
+                                   Classes="muted" TextWrapping="Wrap" IsVisible="{Binding !HasFavorites}" />
+                        <ListBox ItemsSource="{Binding Favorites}" ItemTemplate="{StaticResource StationRow}" IsVisible="{Binding HasFavorites}" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="{DynamicResource Space.S}" IsVisible="{Binding HasRecent}">
+                        <TextBlock Text="{loc:T radio.view.recent}" Classes="heading" />
+                        <ListBox ItemsSource="{Binding Recent}" ItemTemplate="{StaticResource StationRow}" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

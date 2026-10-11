@@ -1,6 +1,7 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
 using YTSPlayer.Shell.ViewModels;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Shell.Views;
 
@@ -14,6 +15,6 @@ static class CoverLink
         e.Handled = true;
         if (vm.ExternalUrl is not { } url || !Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme is not ("http" or "https")) return;
         try { await top.Launcher.LaunchUriAsync(uri); }
-        catch (Exception) { vm.Status = "Der Browser konnte nicht geöffnet werden."; }
+        catch (Exception) { vm.Status = Loc.T("shell.error.browser"); }
     }
 }

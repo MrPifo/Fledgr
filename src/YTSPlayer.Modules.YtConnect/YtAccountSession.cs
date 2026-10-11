@@ -4,6 +4,7 @@ using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Plugins;
 using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Modules.YtConnect.Scripts;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.YtConnect;
 
@@ -84,7 +85,7 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
         catch (Exception ex)
         {
             scope.Fail();
-            Notice = "Anmeldung konnte nicht starten: " + ex.Message;
+            Notice = Loc.F("yt.account.loginFailed", ex.Message);
             await CancelLoginAsync();
         }
     }
@@ -116,7 +117,7 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
             }
             if (!r.TryGetProperty("loggedIn", out var li) || !li.GetBoolean())
             {
-                Notice = "Es ist kein Konto angemeldet.";
+                Notice = Loc.T("yt.account.none");
                 await FailLoginAsync();
                 return;
             }
@@ -133,7 +134,7 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
         catch (Exception ex)
         {
             scope.Fail();
-            Notice = "Fehler bei der Anmeldung: " + ex.Message;
+            Notice = Loc.F("yt.account.loginError", ex.Message);
             await FailLoginAsync();
         }
     }
@@ -154,7 +155,7 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
         try
         {
             await _stopPlayback();
-            if (!_engine.IsRunning) await _engine.StartAsync("about:blank");
+            await _engine.EnsureRunningAsync("about:blank");
             await _engine.Host.ClearDataAsync();
             await _engine.StopAsync();
         }
@@ -190,21 +191,21 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
     /// <summary>Lädt das Profilbild. Bei Fehlern steht der Grund in <see cref="Notice"/> (nur Host, keine Adresse mit Parametern).</summary>
     async Task<byte[]?> LoadAvatarAsync(string url)
     {
-        if (string.IsNullOrEmpty(url)) { Notice = "Profilbild: keine Adresse gefunden."; return null; }
+        if (string.IsNullOrEmpty(url)) { Notice = Loc.T("yt.avatar.noUrl"); return null; }
         try
         {
             if (url.StartsWith("//")) url = "https:" + url;
             // Google-Bilder: Größe im Adress-Ende (=s88-c-k…) auf 96 px setzen, das spart Daten.
             url = System.Text.RegularExpressions.Regex.Replace(url, @"=s\d+(-[a-z0-9-]*)?$", "=s96-c");
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) { Notice = "Profilbild: ungültige Adresse."; return null; }
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) { Notice = Loc.T("yt.avatar.badUrl"); return null; }
             var bytes = await Http.GetByteArrayAsync(uri);
             if (bytes.Length is > 0 and < 300_000) return bytes;
-            Notice = $"Profilbild: unpassende Größe ({bytes.Length} Byte, {uri.Host}).";
+            Notice = Loc.F("yt.avatar.badSize", bytes.Length, uri.Host);
             return null;
         }
         catch (Exception ex)
         {
-            Notice = "Profilbild konnte nicht geladen werden: " + ex.Message;
+            Notice = Loc.F("yt.avatar.failed", ex.Message);
             return null;
         }
     }
@@ -241,11 +242,7 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
         var startedHere = false;
         try
         {
-            if (!_engine.IsRunning)
-            {
-                await _engine.StartAsync(UrlNormalizer.Home);
-                startedHere = true;
-            }
+            startedHere = await _engine.EnsureRunningAsync(UrlNormalizer.Home);
             JsonElement? result = null;
             for (var attempt = 0; attempt < 3 && result == null; attempt++)
             {
@@ -256,7 +253,7 @@ public sealed class YtAccountSession : IAccountSession, IDisposable
             if (result is not { } r || !r.TryGetProperty("loggedIn", out var li) || !li.GetBoolean())
             {
                 scope.Fail();
-                Notice = "Profilbild: Profil konnte nicht gelesen werden.";
+                Notice = Loc.T("yt.avatar.noProfile");
                 Changed?.Invoke();
                 return;
             }

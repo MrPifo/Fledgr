@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<translations language="de" country="DE">
+  <!-- Navigation und Kopfzeile -->
+  <t key="shell.nav.settings">Einstellungen</t>
+  <t key="shell.nav.diagnostics">Diagnose</t>
+  <t key="shell.nav.quit">Beenden</t>
+  <t key="shell.header.widget">Die App in ein kleines Widget verwandeln</t>
+
+  <!-- Home -->
+  <t key="home.nav">Home</t>
+  <t key="home.time">%1 Uhr</t>
+  <t key="home.greeting.morning">Guten Morgen</t>
+  <t key="home.greeting.day">Guten Tag</t>
+  <t key="home.greeting.evening">Guten Abend</t>
+  <t key="home.greeting.night">Gute Nacht</t>
+  <t key="home.resume">Weitermachen</t>
+  <t key="home.continue">Aktuell gespielt:</t>
+  <t key="home.showAll">Alle anzeigen</t>
+  <t key="home.noModules">Alle Module sind ausgeschaltet. Schalte in den Einstellungen unter „Module“ etwas ein.</t>
+  <t key="home.history">Verlauf</t>
+  <t key="home.history.clear">Verlauf leeren</t>
+  <t key="home.source.yt">YouTube</t>
+  <t key="home.source.radio">Radio</t>
+  <t key="home.source.local">Lokal</t>
+  <t key="home.ago.now">gerade eben</t>
+  <t key="home.ago.min.one">vor %1 Min</t>
+  <t key="home.ago.min.other">vor %1 Min</t>
+  <t key="home.ago.hour.one">vor %1 Std</t>
+  <t key="home.ago.hour.other">vor %1 Std</t>
+  <t key="home.ago.day.one">vor %1 Tag</t>
+  <t key="home.ago.day.other">vor %1 Tagen</t>
+
+  <!-- Konto -->
+  <t key="shell.account.settings">Einstellungen</t>
+  <t key="shell.account.signout">Abmelden</t>
+  <t key="shell.account.signin">Anmelden</t>
+  <t key="shell.account.busy.login">Anmeldung läuft …</t>
+  <t key="shell.account.busy.verify">Profil wird gelesen …</t>
+  <t key="shell.account.busy.logout">Abmelden …</t>
+
+  <!-- Songtext -->
+  <t key="shell.lyrics.title">Songtext</t>
+  <t key="shell.lyrics.hide">Songtext ausblenden</t>
+  <t key="shell.lyrics.unsupported">Die laufende Quelle liefert keine Songtexte.</t>
+  <t key="shell.lyrics.loading">Songtext wird geladen …</t>
+  <t key="shell.lyrics.none">Zu diesem Titel gibt es keinen Songtext.</t>
+  <t key="shell.lyrics.failed">Der Songtext konnte nicht geladen werden.</t>
+
+  <!-- Player -->
+  <t key="shell.player.idle">Nichts spielt</t>
+  <t key="shell.player.artistpage">Künstler-Seite öffnen</t>
+  <t key="shell.player.more">Mehr</t>
+  <t key="shell.player.addToPlaylist">Zu Playlist hinzufügen</t>
+  <t key="shell.player.mute">Stumm schalten</t>
+  <t key="shell.player.shuffle.on">Zufallswiedergabe: an (klicken zum Ausschalten)</t>
+  <t key="shell.player.shuffle.off">Zufallswiedergabe: aus (klicken zum Einschalten)</t>
+  <t key="shell.player.mix.on">Radio-Mix läuft (klicken startet ihn neu ab diesem Titel)</t>
+  <t key="shell.player.mix.off">Radio-Mix zu diesem Titel starten</t>
+  <t key="shell.player.like.on">Gefällt mir: ja (klicken zum Entfernen)</t>
+  <t key="shell.player.like.off">Gefällt mir</t>
+  <t key="shell.player.dislike.on">Gefällt mir nicht: ja (klicken zum Entfernen)</t>
+  <t key="shell.player.dislike.off">Gefällt mir nicht</t>
+  <t key="shell.status.playing">Spielt</t>
+  <t key="shell.status.paused">Pausiert</t>
+  <t key="shell.error">Fehler: %1</t>
+  <t key="shell.menu.lyrics">Songtext</t>
+  <t key="shell.menu.radiomix">Radio-Mix starten</t>
+
+  <!-- Sleep-Timer -->
+  <t key="shell.sleep.on">Sleep-Timer an: Pause nach %1 Minuten ohne Bedienung (klicken zum Ausschalten)</t>
+  <t key="shell.sleep.off">Sleep-Timer aus (klicken zum Einschalten)</t>
+
+  <!-- Einstellungen -->
+  <t key="shell.settings.general">Allgemein</t>
+  <t key="shell.settings.modules">Module</t>
+  <t key="shell.settings.cubicvolume">Feine Regelung bei leiser Lautstärke</t>
+  <t key="shell.settings.playerdocked">Player-Leiste fest unten, volle Breite</t>
+  <t key="shell.settings.minimize">Beim Schließen minimieren</t>
+  <t key="shell.settings.ram">RAM-Ziel (MB)</t>
+  <t key="shell.settings.sleep">Sleep-Timer</t>
+  <t key="shell.settings.sleep.enable">Bei Inaktivität pausieren</t>
+  <t key="shell.settings.sleep.after">Pause nach (min)</t>
+  <t key="shell.settings.sleep.hint">Zählt Maus, Tastatur und Medientasten. Eine Minute vorher erscheint ein Hinweis.</t>
+  <t key="shell.settings.cache">Cache</t>
+  <t key="shell.settings.cache.size">Belegt</t>
+  <t key="shell.settings.cache.clear">Leeren</t>
+  <t key="shell.settings.cache.hint">Bilder und gespeicherte Listen. Login, Einstellungen und Playlists bleiben.</t>
+  <t key="shell.settings.log">Protokoll</t>
+  <t key="shell.settings.log.open">Ordner öffnen</t>
+  <t key="shell.settings.modules.hint">Ausgeschaltete Module geben ihren Speicher frei.</t>
+  <t key="shell.tray.signedOut">Nicht angemeldet</t>
+  <t key="shell.tray.pause">Pause</t>
+  <t key="shell.tray.play">Wiedergabe</t>
+  <t key="shell.tray.next">Weiter</t>
+  <t key="shell.tray.previous">Zurück</t>
+  <t key="shell.tray.show">Fenster zeigen</t>
+  <t key="shell.tray.widget">Widget</t>
+  <t key="shell.sleep.paused">Sleep-Timer: Wiedergabe pausiert (keine Bedienung seit %1 Minuten).</t>
+  <t key="shell.sleep.warn">Sleep-Timer: Pause in einer Minute. Maus bewegen oder Taste drücken bricht ab.</t>
+  <t key="shell.error.module">Fehler beim Start eines Moduls: %1</t>
+  <t key="shell.error.session">Letzte Sitzung konnte nicht wiederhergestellt werden: %1</t>
+  <t key="shell.error.sourceInactive">Quelle „%1“ ist nicht aktiv. Plugin einschalten.</t>
+  <t key="shell.error.browser">Der Browser konnte nicht geöffnet werden.</t>
+  <t key="shell.widget.back">Zurück zur großen App</t>
+  <t key="shell.widget.favorites">Favoriten</t>
+  <t key="shell.widget.source.radio">Radio</t>
+  <t key="shell.widget.source.yt">Music</t>
+  <t key="shell.widget.source.local">Lokal</t>
+  <t key="shell.player.volume">Lautstärke</t>
+  <t key="shell.player.volume.percent">%1 %%</t>
+  <t key="shell.settings.version">Version</t>
+</translations>

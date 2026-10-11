@@ -1,6 +1,9 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace YTSPlayer.Modules.YtConnect;
+
+/// <summary>Eine Stimmung (Chip) oben auf der Startseite. <paramref name="Params"/> ist der Wert, mit dem die Seite die gefilterte Startseite lädt.</summary>
+public sealed record HomeChip(string Title, string Params, bool Selected);
 
 /// <summary>
 /// Liest die Startseite von YouTube Music (InnerTube <c>browse</c> mit „FEmusic_home“) und deren Fortsetzungen:
@@ -32,7 +35,10 @@ public static class YtHomeParser
                     var title = shelf.TryGetProperty("header", out var h) && YtLibrary.FindProperty(h, "title") is { } t ? Join(t)
                         : shelf.TryGetProperty("title", out var t2) ? Join(t2) : "";
                     var cards = YtArtistParser.Cards(shelf);
-                    if (cards.Count > 0) sections.Add(new ArtistSectionData(title, cards));
+                    // Besteht der Bereich nur aus Titel-Zeilen („Schnell wieder einsteigen“), wird er als Zeilen gezeigt, sonst als Karten.
+                    var rows = shelf.TryGetProperty("contents", out var items) && items.ValueKind == JsonValueKind.Array && items.GetArrayLength() > 0
+                               && items.EnumerateArray().All(i => i.TryGetProperty("musicResponsiveListItemRenderer", out _));
+                    if (cards.Count > 0) sections.Add(new ArtistSectionData(title, cards, rows ? SectionLayout.Rows : SectionLayout.Cards));
                 }
 
             // Weitere Bereiche: das Zeichen steht in „continuations“ des Listen-Elements.
@@ -48,6 +54,31 @@ public static class YtHomeParser
             return ([], null);
         }
         return (sections, next);
+    }
+
+    /// <summary>
+    /// Die Stimmungen oben auf der Startseite (<c>chipCloudRenderer</c>), leer wenn es keine gibt.
+    /// Aufbau aus der echten Seite abgeleitet, nicht gegen jedes Konto geprüft.
+    /// </summary>
+    public static List<HomeChip> ParseChips(string json)
+    {
+        var chips = new List<HomeChip>();
+        try
+        {
+            using var d = JsonDocument.Parse(json);
+            if (YtLibrary.FindProperty(d.RootElement, "chipCloudRenderer") is not { } cloud
+                || !cloud.TryGetProperty("chips", out var list) || list.ValueKind != JsonValueKind.Array) return chips;
+            foreach (var c in list.EnumerateArray())
+            {
+                if (!c.TryGetProperty("chipCloudChipRenderer", out var chip)) continue;
+                var title = chip.TryGetProperty("text", out var t) ? Join(t) : "";
+                var param = YtLibrary.FindProperty(chip, "browseEndpoint") is { } be && be.TryGetProperty("params", out var p) ? p.GetString() ?? "" : "";
+                var selected = chip.TryGetProperty("isSelected", out var sel) && sel.ValueKind == JsonValueKind.True;
+                if (title.Length > 0 && param.Length > 0) chips.Add(new HomeChip(title, param, selected));
+            }
+        }
+        catch (JsonException) { }
+        return chips;
     }
 
     static string Join(JsonElement t)

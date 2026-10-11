@@ -24,6 +24,7 @@ public sealed class PluginHost(IServiceProvider services, AppSettings settings, 
         public readonly List<IPlaybackSource> Sources = [];
         public readonly List<IMediaProvider> Providers = [];
         public readonly List<NavPage> Pages = [];
+        public readonly List<HomeSection> HomeSections = [];
         public readonly List<SettingsPage> SettingsPages = [];
         public readonly List<TrayEntry> TrayEntries = [];
         public readonly List<IDiagnosticsContributor> Diagnostics = [];
@@ -37,6 +38,7 @@ public sealed class PluginHost(IServiceProvider services, AppSettings settings, 
         public void AddSource(IPlaybackSource source) => Ui(() => { c.Sources.Add(source); host._player.Register(source); });
         public void AddProvider(IMediaProvider provider) => Ui(() => { c.Providers.Add(provider); host.Providers.Add(provider); });
         public void AddPage(NavPage page) => Ui(() => { c.Pages.Add(page); host.InsertSorted(page); });
+        public void AddHomeSection(HomeSection section) => Ui(() => { c.HomeSections.Add(section); host.InsertSorted(section); });
         public void AddSettingsPage(SettingsPage page) => Ui(() => { c.SettingsPages.Add(page); host.SettingsPages.Add(page); });
         public void AddTrayEntry(TrayEntry entry) => Ui(() => { c.TrayEntries.Add(entry); host.TrayEntries.Add(entry); host.RaiseChanged(); });
         public void AddDiagnostics(IDiagnosticsContributor contributor) => Ui(() => { c.Diagnostics.Add(contributor); host.Diagnostics.Add(contributor); });
@@ -62,6 +64,7 @@ public sealed class PluginHost(IServiceProvider services, AppSettings settings, 
 
     public IReadOnlyList<IPlugin> Plugins { get; } = plugins;
     public ObservableCollection<NavPage> Pages { get; } = [];
+    public ObservableCollection<HomeSection> HomeSections { get; } = [];
     public ObservableCollection<SettingsPage> SettingsPages { get; } = [];
     public ObservableCollection<TrayEntry> TrayEntries { get; } = [];
     public List<IDiagnosticsContributor> Diagnostics { get; } = [];
@@ -133,6 +136,7 @@ public sealed class PluginHost(IServiceProvider services, AppSettings settings, 
         if (!_active.Remove(p.Id, out var c)) return;
         foreach (var s in c.Sources) await _player.UnregisterAsync(s);
         foreach (var x in c.Pages) Pages.Remove(x);
+        foreach (var x in c.HomeSections) HomeSections.Remove(x);
         foreach (var x in c.SettingsPages) SettingsPages.Remove(x);
         foreach (var x in c.TrayEntries) TrayEntries.Remove(x);
         foreach (var x in c.Providers) Providers.Remove(x);
@@ -146,6 +150,16 @@ public sealed class PluginHost(IServiceProvider services, AppSettings settings, 
         }
         try { await p.DeactivateAsync(); }
         catch (Exception ex) { AppLog.Warn("Plugin", $"Freigeben von „{p.Id}“ fehlgeschlagen", ex); }
+    }
+
+    /// <summary>Hängt eine Seite der Shell selbst ein (z. B. Home). Sie gehört keinem Plugin und bleibt immer.</summary>
+    public void AddShellPage(NavPage page) => InsertSorted(page);
+
+    void InsertSorted(HomeSection section)
+    {
+        var i = 0;
+        while (i < HomeSections.Count && HomeSections[i].Order <= section.Order) i++;
+        HomeSections.Insert(i, section);
     }
 
     void InsertSorted(NavPage page)

@@ -1,24 +1,78 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Text-Varianten. Schrift nie direkt in Views setzen, sondern Classes="title|heading|body|caption|muted". -->
+    <!--
+        Text-Varianten. Schrift nie direkt in Views setzen, sondern Classes:
+          display (28, Uhrzeit) · title (22) · heading (18) = Überschriften in der Display-Schrift
+          body (14) · label (13, halbfett) · row (12,5, halbfett, Listentitel) · caption (12) · small (11,5) · micro (9,5, Sidebar)
+          muted · secondary · highlight (hell-bernstein) · accent · danger · upper (Überschrift in Großbuchstaben)
+    -->
+    <Style Selector="TextBlock.display">
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Display}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Display}" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
     <Style Selector="TextBlock.title">
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Display}" />
         <Setter Property="FontSize" Value="{DynamicResource Font.Title}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontWeight" Value="Medium" />
     </Style>
     <Style Selector="TextBlock.heading">
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Display}" />
         <Setter Property="FontSize" Value="{DynamicResource Font.Heading}" />
-        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+    <Style Selector="TextBlock.logo">
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Display}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
+        <Setter Property="FontWeight" Value="Medium" />
     </Style>
     <Style Selector="TextBlock.body">
         <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
     </Style>
+    <Style Selector="TextBlock.label">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Label}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="TextBlock.row">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Row}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
     <Style Selector="TextBlock.caption">
         <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
+    </Style>
+    <Style Selector="TextBlock.small">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Small}" />
+    </Style>
+    <Style Selector="TextBlock.tiny">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Tiny}" />
+    </Style>
+    <Style Selector="TextBlock.micro">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Micro}" />
+        <Setter Property="FontWeight" Value="Medium" />
+    </Style>
+    <Style Selector="TextBlock.upper">
+        <Setter Property="FontSize" Value="{DynamicResource Font.Small}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LetterSpacing" Value="1.4" />
     </Style>
     <Style Selector="TextBlock.muted">
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
     </Style>
+    <Style Selector="TextBlock.secondary">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+    <Style Selector="TextBlock.highlight">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Highlight}" />
+    </Style>
+    <Style Selector="TextBlock.accent">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+    </Style>
     <Style Selector="TextBlock.danger">
         <Setter Property="Foreground" Value="{DynamicResource Brush.Danger}" />
     </Style>
+
+    <!-- Schatten für Text und Icons über Verläufen: Classes="shadow" (normal), "shadow-strong" (Hero), "shadow-icon". -->
+    <Style Selector=":is(Control).shadow"><Setter Property="Effect" Value="{DynamicResource Effect.Text}" /></Style>
+    <Style Selector=":is(Control).shadow-strong"><Setter Property="Effect" Value="{DynamicResource Effect.TextStrong}" /></Style>
+    <Style Selector=":is(Control).shadow-icon"><Setter Property="Effect" Value="{DynamicResource Effect.Icon}" /></Style>
 </Styles>

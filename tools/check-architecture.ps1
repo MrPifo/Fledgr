@@ -13,28 +13,30 @@ $root = Split-Path -Parent $PSScriptRoot
 $src = Join-Path $root 'src'
 $violations = [System.Collections.Generic.List[string]]::new()
 
-# Erlaubte Verweise je Projekt (ohne Präfix YTSPlayer.)
+# Erlaubte Verweise je Projekt (ohne Präfix YTSPlayer. bzw. Fledgr.)
 $allowed = @{
     'Contracts'                   = @()
     'Ui'                          = @('Contracts')
     'Shell'                       = @('Contracts', 'Ui')
-    'Modules.MusicPlayer'         = @('Contracts', 'Ui')
+    'Audio'                       = @()
+    'Modules.MusicPlayer'         = @('Contracts', 'Ui', 'Audio')
     'Modules.YtConnect'           = @('Contracts', 'Ui')
-    'Modules.RadioPlayer'         = @('Contracts', 'Ui')
+    'Modules.RadioPlayer'         = @('Contracts', 'Ui', 'Audio')
     'Modules.YtConnect.Windows'   = @('Modules.YtConnect', 'Platform.Windows')
     'Platform.Windows'            = @('Contracts')
     'Desktop'                     = @('Contracts', 'Ui', 'Shell', 'Modules.MusicPlayer', 'Modules.YtConnect', 'Modules.YtConnect.Windows', 'Modules.RadioPlayer', 'Platform.Windows')
 }
 # Gemeinsame Projekte: dürfen keinen Windows-Code enthalten.
-$shared = @('Contracts', 'Ui', 'Shell', 'Modules.MusicPlayer', 'Modules.YtConnect', 'Modules.RadioPlayer')
+$shared = @('Contracts', 'Ui', 'Shell', 'Audio', 'Modules.MusicPlayer', 'Modules.YtConnect', 'Modules.RadioPlayer')
 
 foreach ($name in $allowed.Keys) {
-    $dir = Join-Path $src "YTSPlayer.$name"
-    $csproj = Join-Path $dir "YTSPlayer.$name.csproj"
-    if (-not (Test-Path $csproj)) { $violations.Add("Projekt fehlt: YTSPlayer.$name"); continue }
+    $project = if ($name -eq 'Audio') { 'Fledgr.Audio' } else { "YTSPlayer.$name" }
+    $dir = Join-Path $src $project
+    $csproj = Join-Path $dir "$project.csproj"
+    if (-not (Test-Path $csproj)) { $violations.Add("Projekt fehlt: $project"); continue }
 
     # 1. Projekt-Verweise
-    $refs = [regex]::Matches((Get-Content $csproj -Raw), 'ProjectReference Include="[^"]*YTSPlayer\.([^\\"]+)\.csproj"') | ForEach-Object { $_.Groups[1].Value }
+    $refs = [regex]::Matches((Get-Content $csproj -Raw), 'ProjectReference Include="[^"]*(?:YTSPlayer|Fledgr)\.([^\\"]+)\.csproj"') | ForEach-Object { $_.Groups[1].Value }
     foreach ($r in $refs) {
         if ($allowed[$name] -notcontains $r) { $violations.Add("Verweis nicht erlaubt: $name -> $r") }
     }
@@ -52,7 +54,7 @@ foreach ($name in $allowed.Keys) {
         }
 
         # 3. Feste Gestaltung in Views (Palette selbst ausgenommen)
-        foreach ($f in $files | Where-Object { $_.Extension -eq '.axaml' -and $_.Name -ne 'Palette.axaml' -and $_.Name -ne 'Metrics.axaml' }) {
+        foreach ($f in $files | Where-Object { $_.Extension -eq '.axaml' -and $_.Name -ne 'Palette.axaml' -and $_.Name -ne 'Metrics.axaml' -and $_.FullName -notmatch '\\Theme\\Themes\\' }) {
             $lines = Get-Content $f.FullName
             for ($i = 0; $i -lt $lines.Count; $i++) {
                 $l = $lines[$i]
@@ -60,6 +62,10 @@ foreach ($name in $allowed.Keys) {
                 $rel = $f.FullName.Substring($root.Length + 1)
                 if ($l -match '#[0-9A-Fa-f]{6,8}\b') { $violations.Add("Feste Farbe: ${rel}:$($i + 1)") }
                 if ($l -match '\bFontSize="\d') { $violations.Add("Feste Schriftgröße: ${rel}:$($i + 1)") }
+                # Texte nur über Übersetzungs-Schlüssel ({loc:T …}). Ausnahmen: Diagnose-Fenster (fest englisch), Markennamen, Fenstertitel.
+                if ($rel -notmatch 'DiagnosticsWindow' -and $l -match '\b(Text|Content|Header|PlaceholderText|Watermark|Message|ToolTip\.Tip)="[A-Za-zÄÖÜäöü][^"{]*"' -and $l -notmatch '="(Fledgr|YouTube Music)"') { $violations.Add("Fester Text (nicht übersetzt): ${rel}:$($i + 1)") }
+                # Farben dynamisch, damit sie mit dem Theme wechseln.
+                if ($l -match '\{StaticResource (Brush|Color)\.') { $violations.Add("StaticResource für Farbe (muss DynamicResource sein): ${rel}:$($i + 1)") }
                 if ($l -match '\b(Margin|Padding|Spacing|RowSpacing|ColumnSpacing|CornerRadius)="\d' -and -not $isUi) { $violations.Add("Fester Abstand/Radius: ${rel}:$($i + 1)") }
             }
         }

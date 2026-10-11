@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text.Json;
 using YTSPlayer.Contracts.Diagnostics;
 
@@ -33,7 +33,26 @@ public sealed class YtEngine(Func<IYtWebHost> factory)
         return h;
     }
 
-    public Task StartAsync(string url) => Host.StartAsync(url);
+    Task? _starting;
+
+    /// <summary>Startet die Web-Ansicht mit dieser Adresse oder navigiert dorthin, wenn sie schon läuft.</summary>
+    public Task StartAsync(string url) => _starting = Host.StartAsync(url);
+
+    /// <summary>
+    /// Startet die Web-Ansicht nur, wenn sie weder läuft noch gerade startet. Startet sie gerade (z. B. Wiedergabe beim App-Start),
+    /// wird nur gewartet und nicht wegnavigiert. True, wenn dieser Aufruf sie gestartet hat.
+    /// </summary>
+    public async Task<bool> EnsureRunningAsync(string url)
+    {
+        if (IsRunning) return false;
+        if (_starting is { IsCompleted: false } running)
+        {
+            try { await running; } catch { }
+            return false;
+        }
+        await StartAsync(url);
+        return true;
+    }
 
     /// <summary>Beendet die Web-Ansicht und gibt das Host-Fenster endgültig frei (beim Ausschalten des Plugins).</summary>
     public async Task DisposeHostAsync()

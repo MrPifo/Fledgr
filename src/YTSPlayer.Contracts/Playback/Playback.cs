@@ -17,6 +17,7 @@ public enum PlaybackCapabilities
     TrackMenu = 128,
     Artist = 256,
     Lyrics = 512,
+    AddToPlaylist = 1024,
 }
 
 /// <summary>Ein Songtext. <see cref="Source"/> ist die Quelle (z. B. „Quelle: LyricFind“), wenn bekannt.</summary>

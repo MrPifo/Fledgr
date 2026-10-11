@@ -1,13 +1,35 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
-        Eingabe-Elemente: TextBox, ComboBox (Dropdown), ToggleSwitch, CheckBox, Slider, Menü.
+        Eingabe-Elemente: TextBox (+ search), ComboBox (Dropdown), ToggleSwitch, CheckBox, Menü.
         Form und Größe kommen aus den Metriken, Farben aus der Fluent-Basis plus Akzent der Palette.
+        Menüs und Kontextmenüs: Verlauf-Fläche, runde Ecken, Hover-Fläche ohne Bewegung.
     -->
     <Style Selector="TextBox">
         <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
         <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+    </Style>
+    <!-- Suchfeld (Kopfzeile): rund, flach. -->
+    <Style Selector="TextBox.search">
+        <Setter Property="MinHeight" Value="{DynamicResource Height.Search}" />
+        <Setter Property="Height" Value="{DynamicResource Height.Search}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.SearchBox}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}" />
+    </Style>
+    <Style Selector="AutoCompleteBox.search /template/ TextBox#PART_TextBox">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="{DynamicResource Height.Search}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.SearchBox}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}" />
     </Style>
     <Style Selector="ComboBox">
         <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
@@ -19,7 +41,153 @@
     <Style Selector="ToggleSwitch">
         <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
     </Style>
+
+    <!-- Menüs -->
+    <!--
+        Menüs und Dropdowns (ContextMenu, MenuFlyout) haben alle dieselbe Karte: Menü-Verlauf, runder Rand, Schatten, Papier-Korn.
+        Der Rand außen (Margin) gibt dem Schatten Platz im Popup-Fenster.
+    -->
+    <Style Selector="ContextMenu">
+        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Padding="{DynamicResource Pad.PopOuter}">
+                <Border Classes="pop-card">
+                    <Grid>
+                        <Border Classes="grain g-menu" CornerRadius="{DynamicResource Radius.Card}" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="{DynamicResource Height.MenuMax}" Padding="{DynamicResource Pad.Menu}">
+                            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" Grid.IsSharedSizeScope="True" />
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="MenuFlyoutPresenter">
+        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Padding="{DynamicResource Pad.PopOuter}">
+                <Border Classes="pop-card">
+                    <Grid>
+                        <Border Classes="grain g-menu" CornerRadius="{DynamicResource Radius.Card}" />
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="{DynamicResource Height.MenuMax}" Padding="{DynamicResource Pad.Menu}">
+                            <ItemsPresenter Name="PART_ItemsPresenter" ItemsPanel="{TemplateBinding ItemsPanel}" Grid.IsSharedSizeScope="True" />
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+        <Style.Animations>
+            <Animation Duration="0:0:0.18" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1" /></KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <!-- current: der gewählte Eintrag eines Menüs (z. B. laufender Sender): weicher Bernstein-Hintergrund. -->
+    <!-- Untermenüs (z. B. Zu Playlist hinzufügen) werden nicht höher als Height.MenuMax, darüber scrollen sie. -->
+    <Style Selector="MenuItem /template/ ScrollViewer">
+        <Setter Property="MaxHeight" Value="{DynamicResource Height.MenuMax}" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+    </Style>
+    <!-- Scrollbalken in Menüs: Der leere Streifen rechts neben den Einträgen ist breiter als der Balken. Der Balken sitzt mittig darin (nur Verschiebung, kein Platzverlust). -->
+    <Style Selector="ContextMenu ScrollBar:vertical, MenuFlyoutPresenter ScrollBar:vertical, MenuItem /template/ ScrollViewer ScrollBar:vertical">
+        <Setter Property="RenderTransform" Value="translateX(-5px)" />
+    </Style>
+    <Style Selector="MenuItem.current /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentSoftFill}" />
+    </Style>
+    <Style Selector="MenuItem.current">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Highlight}" />
+    </Style>
+    <!-- fav: Eintrag mit Zeile (Favoriten im Widget), etwas höher. -->
+    <Style Selector="MenuItem.fav">
+        <Setter Property="Padding" Value="{DynamicResource Pad.MenuItemRoomy}" />
+    </Style>
+    <!-- head: Überschrift eines Menüs (nicht klickbar), Großbuchstaben, klein und gedämpft. -->
+    <Style Selector="MenuItem.head">
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.MenuHead}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Tiny}" />
+        <Setter Property="LetterSpacing" Value="0.8" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+    </Style>
+    <!-- Kleines Fenster über einem Knopf (z. B. Lautstärke im Widget): FlyoutPresenterClasses="pop". Die Karte selbst ist Border.pop-card (mit Schatten und Korn). -->
+    <Style Selector="Border.pop-card">
+        <Setter Property="Background" Value="{DynamicResource Brush.Menu}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Pop}" />
+    </Style>
+    <!-- pop volume: flaches Lautstärke-Fenster im Widget. -->
+    <Style Selector="FlyoutPresenter.pop.volume">
+        <Setter Property="Padding" Value="{DynamicResource Pad.PopVolume}" />
+    </Style>
+    <Style Selector="FlyoutPresenter.pop">
+        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.PopOuter}" />
+        <Style.Animations>
+            <Animation Duration="0:0:0.18" Easing="CubicEaseOut">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0" />
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1" />
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <!-- ListBox.menu: Auswahlliste in einem Dropdown-Fenster, sieht aus wie ein Menü (Hover wie MenuItem, Auswahl in weichem Bernstein). -->
+    <Style Selector="ListBox.menu">
+        <Setter Property="Background" Value="{x:Null}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MaxHeight" Value="{DynamicResource Height.MenuMax}" />
+    </Style>
+    <Style Selector="ListBox.menu ListBoxItem">
+        <Setter Property="Padding" Value="{DynamicResource Pad.MenuItem}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Row}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+    <Style Selector="ListBox.menu ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.MenuHover}" />
+    </Style>
+    <Style Selector="ListBox.menu ListBoxItem:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.MenuText}" />
+    </Style>
+    <Style Selector="ListBox.menu ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.AccentSoftFill}" />
+    </Style>
+    <Style Selector="ListBox.menu ListBoxItem:selected">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Highlight}" />
+    </Style>
     <Style Selector="MenuItem">
-        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Row}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.MenuItem}" />
+    </Style>
+    <Style Selector="MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource Brush.MenuHover}" />
+    </Style>
+    <Style Selector="MenuItem:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.MenuText}" />
+    </Style>
+    <Style Selector="MenuItem:selected /template/ Border#PART_LayoutRoot">
+        <Setter Property="Background" Value="{DynamicResource Brush.MenuHover}" />
     </Style>
 </Styles>

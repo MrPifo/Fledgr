@@ -64,7 +64,7 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
     async Task TrimNow()
     {
         var n = await Task.Run(_monitor.TrimAll);
-        Info = $"Arbeitssatz geleert bei {n} Prozessen.";
+        Info = $"Working set trimmed for {n} processes.";
     }
 
     [RelayCommand]
@@ -83,11 +83,11 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
             Directory.CreateDirectory(_paths.Export);
             var file = Path.Combine(_paths.Export, $"diagnose-{DateTime.Now:yyyyMMdd-HHmmss}.csv");
             File.WriteAllLines(file, lines, Encoding.UTF8);
-            Info = "Gespeichert: " + file;
+            Info = "Saved: " + file;
         }
         catch (Exception ex)
         {
-            Info = "Fehler: " + ex.Message;
+            Info = "Error: " + ex.Message;
         }
     }
 
@@ -102,9 +102,9 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
             foreach (var r in sample.Rows.OrderByDescending(r => r.Mb)) Rows.Add(r);
             var total = sample.TotalMb;
             var parts = string.Join(" · ", sample.GroupMb.Select(kv => $"{kv.Key} {kv.Value:F0} MB"));
-            TotalText = $"{total:F0} MB gesamt  (Host {sample.HostMb:F0} MB{(parts.Length > 0 ? " · " + parts : "")})";
+            TotalText = $"{total:F0} MB total  (host {sample.HostMb:F0} MB{(parts.Length > 0 ? " · " + parts : "")})";
             TargetMb = _settings.TargetMb;
-            TargetText = $"Ziel: {_settings.TargetMb} MB";
+            TargetText = $"Target: {_settings.TargetMb} MB";
             Percent = _settings.TargetMb > 0 ? Math.Min(100, total / _settings.TargetMb * 100) : 0;
             _values.Add(total);
             if (_values.Count > MaxHistory) _values.RemoveAt(0);
@@ -121,7 +121,7 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            Info = "Messfehler: " + ex.Message;
+            Info = "Measurement error: " + ex.Message;
         }
         finally
         {

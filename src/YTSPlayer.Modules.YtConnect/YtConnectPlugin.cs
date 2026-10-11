@@ -1,4 +1,4 @@
-using Avalonia.Controls.Templates;
+﻿using Avalonia.Controls.Templates;
 using YTSPlayer.Contracts;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Media;
@@ -25,13 +25,15 @@ public sealed class YtConnectPlugin(Func<YtSettings, IYtWebHost> hostFactory) : 
     public const string SettingsId = "yt-settings";
 
     public string Id => "yt";
-    public string DisplayName => "YouTube Music (YT-Connect)";
+    public string DisplayName => "yt.plugin.name";
     public bool IsCore => false;
     public bool EnabledByDefault => true;
 
     public IEnumerable<IDataTemplate> GetTemplates() =>
     [
         new FuncDataTemplate<YtViewModel>((_, _) => new YtView()),
+        new FuncDataTemplate<YtHomeViewModel>((_, _) => new YtHomeView()),
+        new FuncDataTemplate<YtSearchHeader>((_, _) => new YtSearchBox()),
         new FuncDataTemplate<YtSettingsViewModel>((_, _) => new YtSettingsView()),
     ];
 
@@ -46,19 +48,23 @@ public sealed class YtConnectPlugin(Func<YtSettings, IYtWebHost> hostFactory) : 
 
         var settings = store.Load<YtSettings>("yt");
         var engine = _engine = new YtEngine(() => hostFactory(settings));
-        _source = new YtPlaybackSource(engine, settings, store, stats, perf);
+        _source = new YtPlaybackSource(engine, settings, store, stats, perf, sp.Get<YTSPlayer.Contracts.Playback.IChildAudioVolume>());
         _account = new YtAccountSession(engine, store, perf, nav, () => player.ActiveSourceId == YtPlaybackSource.SourceKey ? player.StopAsync() : Task.CompletedTask);
         var library = new YtLibrary(engine, _source, store, perf);
         var vm = new YtViewModel(_account, library, player, engine, sp.Require<IThumbnailCache>(), store);
 
         var source = _source;
-        source.TrackMenuHandler = anchor => YtMenus.ShowCurrent(vm, source.State, source.CurrentArtistId, anchor);
+        source.TrackMenuHandler = (anchor, extras) => YtMenus.ShowCurrent(vm, source.State, source.CurrentArtistId, anchor, extras);
+        source.AddToPlaylistHandler = anchor => YtMenus.ShowAddToPlaylist(vm, source.State, source.CurrentArtistId, anchor);
         vm.ShowPage = () => nav.NavigateTo("yt");
         source.LyricsHandler = library.GetLyricsAsync;
         source.ArtistHandler = () => vm.OpenArtistOfAsync(source.CurrentArtistId, source.State.Artist);
         context.AddSource(_source);
-        context.AddPage(new NavPage("yt", "YouTube Music", Icons.Cloud, vm, 20));
-        context.AddSettingsPage(new SettingsPage(SettingsId, "YouTube Music",new YtSettingsViewModel(settings, _source)));
+        context.AddPage(new NavPage("yt", "yt.nav", Icons.Youtube, vm, 20, "yt"));
+        var home = new YtHomeViewModel(vm);
+        context.AddHomeSection(new HomeSection("yt-home", "yt.nav", "yt", 10, home, "yt",
+            [new HomeAction("yt.home.mix", Icons.PlayOutline, home.StartMix), new HomeAction("yt.home.shuffle", Icons.Shuffle, home.StartShuffle)]));
+        context.AddSettingsPage(new SettingsPage(SettingsId, "yt.settings.title", new YtSettingsViewModel(settings, _source, sp.Require<AppSettings>(), store, _account) { ClearSearchHistoryHandler = vm.ClearSearchHistory }));
         context.AddDiagnostics(new YtDiagnostics(engine, _source));
         context.SetAccount(_account);
         _ = RefreshAvatarLaterAsync(_account, player);

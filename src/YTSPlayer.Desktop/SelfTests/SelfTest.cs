@@ -46,6 +46,11 @@ a.play();
             _ = RunLocalAsync(store, quit);
             return;
         }
+        if (args.Contains("--selftest-radio"))
+        {
+            _ = RadioSelfTest.RunAsync(quit);
+            return;
+        }
         var s = new YtSettings();
         var host = new WebView2YtHost(s, paths);
         async Task Finish(string file, StringBuilder o)

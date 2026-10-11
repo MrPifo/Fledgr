@@ -1,10 +1,11 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:YTSPlayer.Shell.ViewModels"
         xmlns:views="using:YTSPlayer.Shell.Views"
         xmlns:plugins="using:YTSPlayer.Contracts.Plugins"
         xmlns:ui="using:YTSPlayer.Ui.Controls"
         xmlns:icons="using:YTSPlayer.Ui"
+        xmlns:loc="using:YTSPlayer.Ui.Localization"
         xmlns:mi="using:Material.Icons.Avalonia"
         x:Class="YTSPlayer.Shell.Views.MainWindow"
         x:DataType="vm:ShellViewModel"
@@ -12,171 +13,246 @@
         WindowStartupLocation="CenterScreen"
         Title="Fledgr">
 
-    <Window.DataTemplates>
-        <DataTemplate DataType="vm:SettingsViewModel">
-            <views:SettingsView />
-        </DataTemplate>
-    </Window.DataTemplates>
+    <Window.Styles>
+        <!-- Einstellungs-Popup: Hintergrund und Karte blenden weich ein, die Karte gleitet dabei leicht nach oben. -->
+        <Style Selector="Grid.settings">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="Transitions">
+                <Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.2" Easing="CubicEaseOut" /></Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Grid.settings.open"><Setter Property="Opacity" Value="1" /></Style>
+        <Style Selector="Grid.settings > Border.pop-card">
+            <Setter Property="RenderTransform" Value="translateY(16px) scale(0.98)" />
+            <Setter Property="Transitions">
+                <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="CubicEaseOut" /></Transitions>
+            </Setter>
+        </Style>
+        <Style Selector="Grid.settings.open > Border.pop-card"><Setter Property="RenderTransform" Value="translateY(0px) scale(1)" /></Style>
+        <!-- Player-Leiste: schwebende Karte (Standard) oder fest unten über die volle Breite (Einstellung). -->
+        <Style Selector="Border.player.island">
+            <Setter Property="MaxWidth" Value="{DynamicResource Size.PlayerMax}" />
+            <Setter Property="Margin" Value="{DynamicResource Pad.PlayerOuter}" />
+        </Style>
+        <Style Selector="Grid.docked > TransitioningContentControl">
+            <Setter Property="Grid.RowSpan" Value="1" />
+            <Setter Property="Margin" Value="{DynamicResource Pad.ContentDocked}" />
+        </Style>
+        <Style Selector="Grid.docked > Border.player">
+            <Setter Property="Grid.Row" Value="1" />
+            <Setter Property="CornerRadius" Value="0" />
+            <Setter Property="BorderThickness" Value="{DynamicResource Pad.PlayerDocked}" />
+            <Setter Property="BoxShadow" Value="none" />
+        </Style>
+    </Window.Styles>
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Escape" Command="{Binding CloseSettingsCommand}" />
+    </Window.KeyBindings>
 
-        <!-- Kopfzeile: Titel und Konto -->
-        <Border Classes="panel flat">
-            <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}">
-                <TextBlock Classes="heading" Text="Fledgr" VerticalAlignment="Center" />
-                <Button Grid.Column="2" Classes="icon ghost" Classes.active="{Binding SleepOn}" Command="{Binding ToggleSleepCommand}" VerticalAlignment="Center"
-                        ToolTip.Tip="{Binding SleepTip}">
-                    <mi:MaterialIcon Kind="{Binding SleepIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                </Button>
-                <Button Grid.Column="3" Classes="icon ghost" Command="{Binding OpenSettingsCommand}" VerticalAlignment="Center"
-                        ToolTip.Tip="Einstellungen">
-                    <mi:MaterialIcon Kind="Cog" />
-                </Button>
-                <Button Grid.Column="4" Classes="ghost" Command="{Binding WidgetCommand}" VerticalAlignment="Center"
-                        ToolTip.Tip="Die App in ein kleines Widget verwandeln">
-                    <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
-                        <mi:MaterialIcon Kind="PictureInPictureBottomRight" />
-                        <TextBlock Text="Widget" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{DynamicResource Space.M}"
-                            IsVisible="{Binding HasAccount}" VerticalAlignment="Center">
-                    <Button Classes="ghost" IsVisible="{Binding IsLoggedIn}">
-                        <ui:Avatar Classes="small" Source="{Binding Avatar}" Initial="{Binding AccountInitial}" />
-                        <!-- Rechtsklick auf das Profil: Einstellungen des Kontos (bei YouTube Music dessen Einstellungen) und Abmelden -->
-                        <Button.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Einstellungen" Command="{Binding OpenAccountSettingsCommand}">
-                                    <MenuItem.Icon><mi:MaterialIcon Kind="Cog" /></MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="Abmelden" Command="{Binding SignOutCommand}" IsVisible="{Binding CanSignOut}">
-                                    <MenuItem.Icon><mi:MaterialIcon Kind="Logout" /></MenuItem.Icon>
-                                </MenuItem>
-                            </ContextMenu>
-                        </Button.ContextMenu>
-                        <Button.Flyout>
-                            <Flyout Placement="BottomEdgeAlignedRight">
-                                <StackPanel Spacing="{DynamicResource Space.M}" MinWidth="220">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding AccountName}" />
-                                        <TextBlock Text="{Binding AccountEmail}" Classes="caption muted" />
-                                    </StackPanel>
-                                    <Button Content="Abmelden" Classes="danger" Command="{Binding SignOutCommand}" IsVisible="{Binding CanSignOut}" HorizontalAlignment="Stretch" />
-                                </StackPanel>
-                            </Flyout>
-                        </Button.Flyout>
-                    </Button>
-                    <TextBlock Text="{Binding AccountBusyText}" Classes="muted" IsVisible="{Binding AccountBusy}" VerticalAlignment="Center" />
-                    <Button Content="Anmelden" Classes="primary" Command="{Binding SignInCommand}" IsVisible="{Binding CanSignIn}" />
-                </StackPanel>
-            </Grid>
-        </Border>
+    <Grid>
+        <Border Classes="grain g-window" />
 
-        <!-- Navigation und Inhalt -->
-        <Grid Grid.Row="1" ColumnDefinitions="200,*,Auto">
-            <DockPanel Margin="{DynamicResource Pad.S}">
-                <StackPanel DockPanel.Dock="Bottom" Spacing="{DynamicResource Space.XS}">
-                    <Button Content="Diagnose" Classes="ghost" Command="{Binding DiagnosticsCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
-                    <Button Content="Beenden" Classes="ghost" Command="{Binding QuitCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" />
-                </StackPanel>
-                <ListBox ItemsSource="{Binding Nav}" SelectedItem="{Binding SelectedPage}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate x:DataType="plugins:NavPage">
-                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
-                                <mi:MaterialIcon Kind="{Binding Icon, Converter={x:Static icons:IconConverters.Kind}}" />
-                                <TextBlock Text="{Binding Title}" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </DockPanel>
-            <ContentControl Grid.Column="1" Content="{Binding CurrentContent}" Margin="{DynamicResource Pad.M}" />
+        <Grid ColumnDefinitions="Auto,*">
 
-            <!-- Songtext: rechts eingeblendet, wenn man ihn über den Knopf in der Player-Leiste einschaltet -->
-            <Border Grid.Column="2" Classes="panel flat" Width="320" IsVisible="{Binding ShowLyrics}">
-                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="{DynamicResource Space.S}">
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="heading" Text="Songtext" VerticalAlignment="Center" />
-                        <Button Grid.Column="1" Classes="icon ghost" Command="{Binding ToggleLyricsCommand}" ToolTip.Tip="Songtext ausblenden">
-                            <mi:MaterialIcon Kind="Close" />
+            <!-- Schiene links: Marke, Module, unten Einstellungen, Diagnose, Beenden -->
+            <Border Background="{DynamicResource Brush.Side}" Width="{DynamicResource Size.Rail}">
+                <Grid>
+                <Border Classes="halftone rail" />
+                <Border Classes="rail-fade" />
+                <Grid RowDefinitions="Auto,Auto,*,Auto">
+                    <Border Height="{DynamicResource Height.Header}">
+                        <TextBlock Classes="logo" Text="Fledgr" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <Border Grid.Row="1" Classes="separator" HorizontalAlignment="Center" Margin="{DynamicResource Pad.RailGap}" />
+                    <ListBox Grid.Row="2" Classes="rail" ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="plugins:NavPage">
+                                <ContentControl Classes="module" Tag="{Binding Tone}" Height="{DynamicResource Size.ModuleH}">
+                                    <Grid>
+                                        <Border Classes="mark" IsVisible="{Binding $parent[ListBoxItem].IsSelected}"
+                                                Background="{Binding $parent[ContentControl].Foreground}" />
+                                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="{DynamicResource Space.XXS}">
+                                            <mi:MaterialIcon Kind="{Binding Icon, Converter={x:Static icons:IconConverters.Kind}}"
+                                                             Width="{DynamicResource Size.IconM}" Height="{DynamicResource Size.IconM}" HorizontalAlignment="Center" />
+                                            <TextBlock Classes="micro" Text="{Binding Title, Converter={x:Static loc:LocConverters.ShortKey}}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Grid>
+                                </ContentControl>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <StackPanel Grid.Row="3" Spacing="{DynamicResource Space.XS}" HorizontalAlignment="Center" Margin="{DynamicResource Pad.RailGap}">
+                        <Border Classes="separator" HorizontalAlignment="Center" />
+                        <Button Classes="icon nav" Classes.active="{Binding IsSettingsOpen}" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="{loc:T shell.nav.settings}">
+                            <mi:MaterialIcon Kind="Cog" />
                         </Button>
+                        <Button Classes="icon nav" Command="{Binding DiagnosticsCommand}" ToolTip.Tip="{loc:T shell.nav.diagnostics}">
+                            <mi:MaterialIcon Kind="Pulse" />
+                        </Button>
+                        <Button Classes="icon nav" Command="{Binding QuitCommand}" ToolTip.Tip="{loc:T shell.nav.quit}">
+                            <mi:MaterialIcon Kind="Power" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Column="1" RowDefinitions="Auto,*">
+
+                <!-- Kopfzeile: Seite, Suche (je Seite), Schlafen, Widget, Konto -->
+                <Border Height="{DynamicResource Height.Header}" Background="{DynamicResource Brush.Header}" BorderBrush="{DynamicResource Brush.BorderSoft}" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Border Classes="halftone" />
+                        <Grid ColumnDefinitions="Auto,*,Auto" Margin="{DynamicResource Pad.Header}" ColumnSpacing="{DynamicResource Space.L}">
+                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}" Width="{DynamicResource Size.Source}" VerticalAlignment="Center">
+                                <ContentControl Classes="tone" Tag="{Binding SelectedPage.Tone}" VerticalAlignment="Center">
+                                    <mi:MaterialIcon Kind="{Binding SelectedPage.Icon, Converter={x:Static icons:IconConverters.Kind}}" />
+                                </ContentControl>
+                                <TextBlock Classes="label" Text="{Binding SelectedPage.Title, Converter={x:Static loc:LocConverters.Key}}"
+                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+
+                            <ContentControl x:Name="HeaderHost" Grid.Column="1" Content="{Binding HeaderContent}" MaxWidth="{DynamicResource Size.SearchMax}"
+                                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" VerticalAlignment="Center" />
+
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center">
+                                <Button Classes="icon header" Classes.active="{Binding SleepOn}" Command="{Binding ToggleSleepCommand}"
+                                        ToolTip.Tip="{Binding SleepTip}">
+                                    <mi:MaterialIcon Kind="{Binding SleepIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                                </Button>
+                                <Button Classes="icon header" Command="{Binding WidgetCommand}" ToolTip.Tip="{loc:T shell.header.widget}">
+                                    <mi:MaterialIcon Kind="PictureInPictureBottomRight" />
+                                </Button>
+                                <Border Classes="separator vertical" IsVisible="{Binding HasAccount}" />
+                                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.M}"
+                                            IsVisible="{Binding HasAccount}" VerticalAlignment="Center">
+                                    <!-- Klick aufs Profil öffnet die Einstellungen des Kontos (dort auch „Abmelden“). -->
+                                    <Button Classes="ghost avatar" IsVisible="{Binding IsLoggedIn}" Command="{Binding OpenAccountSettingsCommand}"
+                                            ToolTip.Tip="{Binding AccountName}">
+                                        <ui:Avatar Classes="small" Source="{Binding Avatar}" Initial="{Binding AccountInitial}" />
+                                    </Button>
+                                    <TextBlock Text="{Binding AccountBusyText}" Classes="caption muted" IsVisible="{Binding AccountBusy}" VerticalAlignment="Center" />
+                                    <Button Content="{loc:T shell.account.signin}" Classes="primary small" Command="{Binding SignInCommand}" IsVisible="{Binding CanSignIn}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
                     </Grid>
-                    <ScrollViewer Grid.Row="1">
-                        <TextBlock Text="{Binding LyricsText}" TextWrapping="Wrap" />
-                    </ScrollViewer>
-                    <TextBlock Grid.Row="2" Text="{Binding LyricsSource}" Classes="caption muted" TextWrapping="Wrap" />
+                </Border>
+
+                <!-- Inhalt, Player-Karte (schwebt unten) und Songtext -->
+                <Grid Grid.Row="1" ColumnDefinitions="*,Auto">
+                    <Grid RowDefinitions="*,Auto" Classes.docked="{Binding SettingsVm.PlayerDocked}">
+                        <!-- Modulwechsel: Seiten blenden ein und schieben sich leicht von links ein. -->
+                        <TransitioningContentControl Grid.RowSpan="2" Content="{Binding CurrentContent}" Margin="{DynamicResource Pad.Content}">
+                            <TransitioningContentControl.PageTransition>
+                                <ui:SlideInTransition />
+                            </TransitioningContentControl.PageTransition>
+                        </TransitioningContentControl>
+
+                        <!-- Player-Karte: Cover, Titel, Like | Transport | Lautstärke, Menü; darunter der Fortschritt -->
+                        <Border Grid.Row="1" Classes="player" Classes.island="{Binding !SettingsVm.PlayerDocked}" VerticalAlignment="Bottom" HorizontalAlignment="Stretch">
+                            <Grid>
+                                <Border Classes="grain g-player" CornerRadius="{DynamicResource Radius.Player}" />
+                                <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource Space.XS}">
+                                    <Grid ColumnDefinitions="*,Auto,*" ColumnSpacing="{DynamicResource Space.M}">
+                                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.M}" VerticalAlignment="Center">
+                                            <Border Classes="cover" Width="{DynamicResource Size.CoverPlayer}" Height="{DynamicResource Size.CoverPlayer}"
+                                                    CornerRadius="{DynamicResource Radius.M}" IsVisible="{Binding HasCover}" BoxShadow="{DynamicResource Shadow.Cover}">
+                                                <Grid>
+                                                    <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                                    <!-- Klick aufs Cover öffnet den Titel im Browser (nur wenn die Quelle eine Adresse anbietet). -->
+                                                    <Border Classes="scrim" IsVisible="{Binding CanOpenExternal}" PointerPressed="OnCoverPressed"
+                                                            ToolTip.Tip="{Binding ExternalLabel}">
+                                                        <mi:MaterialIcon Kind="OpenInNew" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                </Grid>
+                                            </Border>
+                                            <StackPanel VerticalAlignment="Center" Width="{DynamicResource Size.PlayerTitle}">
+                                                <ui:MarqueeText Text="{Binding Title}" Classes="row shadow" />
+                                                <!-- Bei YouTube Music öffnet ein Klick auf den Künstlernamen dessen Seite -->
+                                                <Border Background="Transparent" Cursor="Hand" IsHitTestVisible="{Binding CanOpenArtist}" PointerPressed="OnArtistPressed"
+                                                        ToolTip.Tip="{loc:T shell.player.artistpage}">
+                                                    <ui:MarqueeText Text="{Binding ArtistLine}" Classes="small secondary shadow" />
+                                                </Border>
+                                                <TextBlock Text="{Binding Status}" Classes="small muted" IsVisible="{Binding StatusVisible}" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center">
+                                            <Button Classes="icon" Classes.active="{Binding IsShuffle}" Command="{Binding ToggleShuffleCommand}"
+                                                    IsVisible="{Binding CanShuffle}" ToolTip.Tip="{Binding ShuffleTip}">
+                                                <mi:MaterialIcon Kind="{Binding ShuffleIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                                            </Button>
+                                            <Button Classes="icon" Command="{Binding PreviousCommand}" IsVisible="{Binding CanPrevious}"><mi:MaterialIcon Kind="SkipPrevious" /></Button>
+                                            <Button Classes="play" Command="{Binding TogglePlayCommand}"><mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" /></Button>
+                                            <Button Classes="icon" Command="{Binding NextCommand}" IsVisible="{Binding CanNext}"><mi:MaterialIcon Kind="SkipNext" /></Button>
+                                            <Button Classes="icon" Click="OnAddToPlaylist" IsVisible="{Binding CanAddToPlaylist}" ToolTip.Tip="{loc:T shell.player.addToPlaylist}">
+                                                <mi:MaterialIcon Kind="PlaylistPlus" />
+                                            </Button>
+                                            <Border Width="{DynamicResource Size.IconButton}" IsVisible="{Binding ShowAddSpacer}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}" IsVisible="{Binding CanVolume}" VerticalAlignment="Center">
+                                                <Button Classes="icon" Command="{Binding ToggleMuteCommand}" ToolTip.Tip="{loc:T shell.player.mute}">
+                                                    <mi:MaterialIcon Kind="{Binding VolumeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                                                </Button>
+                                                <Slider Classes="volume" Minimum="0" Maximum="1" Value="{Binding Volume}" Width="{DynamicResource Size.VolumeSlider}" VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <Button Classes="icon header" Click="OnTrackMenu" IsVisible="{Binding CanMore}" ToolTip.Tip="{loc:T shell.player.more}">
+                                                <mi:MaterialIcon Kind="DotsVertical" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}" IsVisible="{Binding CanSeek}">
+                                        <TextBlock Text="{Binding PositionText}" Classes="tiny muted" VerticalAlignment="Center" />
+                                        <views:PlayerSeekBar Grid.Column="1" Classes="progress slim" Minimum="0" Maximum="{Binding SliderMax}" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="tiny muted" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- Songtext: rechts eingeblendet, wenn man ihn über das Menü der Player-Karte einschaltet -->
+                    <Border Grid.Column="1" Classes="panel flat" Width="320" IsVisible="{Binding ShowLyrics}">
+                        <Grid RowDefinitions="Auto,*,Auto" RowSpacing="{DynamicResource Space.S}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="heading" Text="{loc:T shell.lyrics.title}" VerticalAlignment="Center" />
+                                <Button Grid.Column="1" Classes="icon header" Command="{Binding ToggleLyricsCommand}" ToolTip.Tip="{loc:T shell.lyrics.hide}">
+                                    <mi:MaterialIcon Kind="Close" />
+                                </Button>
+                            </Grid>
+                            <ScrollViewer Grid.Row="1">
+                                <TextBlock Text="{Binding LyricsText}" TextWrapping="Wrap" />
+                            </ScrollViewer>
+                            <TextBlock Grid.Row="2" Text="{Binding LyricsSource}" Classes="caption muted" TextWrapping="Wrap" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- Einstellungen als Popup über der Seite: Klick auf den Hintergrund, Esc oder das X schließen es. -->
+        <Grid Classes="settings" Classes.open="{Binding IsSettingsOpen}" IsVisible="{Binding SettingsVisible}">
+            <Border Background="{DynamicResource Brush.Scrim}" PointerPressed="OnSettingsBackdropPressed" />
+            <Border Classes="pop-card" MaxWidth="{DynamicResource Size.SettingsMax}" Margin="{DynamicResource Pad.Dialog}">
+                <Grid>
+                    <Border Classes="grain g-menu" CornerRadius="{DynamicResource Radius.Card}" />
+                    <ContentControl Content="{Binding SettingsVm}" Margin="{DynamicResource Pad.DialogInner}">
+                        <ContentControl.ContentTemplate>
+                            <DataTemplate x:DataType="vm:SettingsViewModel">
+                                <views:SettingsView />
+                            </DataTemplate>
+                        </ContentControl.ContentTemplate>
+                    </ContentControl>
+                    <Button Classes="icon ghost" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="{DynamicResource Pad.DialogClose}"
+                            Command="{Binding CloseSettingsCommand}" ToolTip.Tip="{loc:T ui.close}">
+                        <mi:MaterialIcon Kind="Close" />
+                    </Button>
                 </Grid>
             </Border>
         </Grid>
-
-        <!-- Player-Leiste -->
-        <Border Grid.Row="2" Classes="panel flat">
-            <Grid RowDefinitions="Auto,Auto" RowSpacing="{DynamicResource Space.S}">
-                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.L}">
-                    <Border Classes="cover" Width="56" Height="56" IsVisible="{Binding HasCover}">
-                        <Grid>
-                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
-                            <!-- Klick aufs Cover öffnet den Titel im Browser (nur wenn die Quelle eine Adresse anbietet). -->
-                            <Border Classes="scrim" IsVisible="{Binding CanOpenExternal}" PointerPressed="OnCoverPressed"
-                                    ToolTip.Tip="{Binding ExternalLabel}">
-                                <mi:MaterialIcon Kind="OpenInNew" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                        </Grid>
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsVisible="{Binding HasYear}" VerticalAlignment="Center">
-                                <mi:MaterialIcon Kind="CircleSmall" />
-                                <TextBlock Text="{Binding Year}" Classes="heading muted" />
-                            </StackPanel>
-                            <ui:MarqueeText Text="{Binding Title}" Classes="heading" />
-                        </DockPanel>
-                        <!-- Bei YouTube Music öffnet ein Klick auf den Künstlernamen dessen Seite -->
-                        <Border Background="Transparent" Cursor="Hand" IsHitTestVisible="{Binding CanOpenArtist}" PointerPressed="OnArtistPressed"
-                                ToolTip.Tip="Künstler-Seite öffnen">
-                            <ui:MarqueeText Text="{Binding Artist}" Classes="muted" />
-                        </Border>
-                        <TextBlock Text="{Binding Status}" Classes="caption muted" />
-                    </StackPanel>
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center">
-                        <Button Classes="icon" Classes.active="{Binding IsLiked}" Command="{Binding ToggleLikeCommand}"
-                                IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding LikeTip}">
-                            <mi:MaterialIcon Kind="{Binding LikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                        </Button>
-                        <Button Classes="icon" Classes.active="{Binding IsDisliked}" Command="{Binding ToggleDislikeCommand}"
-                                IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding DislikeTip}">
-                            <mi:MaterialIcon Kind="{Binding DislikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                        </Button>
-                        <Button Classes="icon" Classes.active="{Binding ShowLyrics}" Command="{Binding ToggleLyricsCommand}" IsVisible="{Binding CanLyrics}"
-                                ToolTip.Tip="Songtext ein- oder ausblenden">
-                            <mi:MaterialIcon Kind="TextLong" />
-                        </Button>
-                        <Button Classes="icon" Click="OnTrackMenu" IsVisible="{Binding CanTrackMenu}" ToolTip.Tip="Mehr: Playlist, Mix, Teilen …">
-                            <mi:MaterialIcon Kind="DotsVertical" />
-                        </Button>
-                        <Button Classes="icon" Classes.active="{Binding IsShuffle}" Command="{Binding ToggleShuffleCommand}"
-                                IsVisible="{Binding CanShuffle}" ToolTip.Tip="{Binding ShuffleTip}">
-                            <mi:MaterialIcon Kind="{Binding ShuffleIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                        </Button>
-                        <Button Classes="icon" Command="{Binding PreviousCommand}" IsVisible="{Binding CanPrevious}"><mi:MaterialIcon Kind="SkipPrevious" /></Button>
-                        <Button Classes="icon large primary" Command="{Binding TogglePlayCommand}"><mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" /></Button>
-                        <Button Classes="icon" Command="{Binding NextCommand}" IsVisible="{Binding CanNext}"><mi:MaterialIcon Kind="SkipNext" /></Button>
-                        <Button Classes="icon" Classes.active="{Binding IsRadioMix}" Command="{Binding RadioMixCommand}"
-                                IsVisible="{Binding CanRadioMix}" ToolTip.Tip="{Binding RadioMixTip}">
-                            <mi:MaterialIcon Kind="RadioTower" />
-                        </Button>
-                    </StackPanel>
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="{DynamicResource Space.S}" VerticalAlignment="Center" IsVisible="{Binding CanVolume}">
-                        <mi:MaterialIcon Kind="VolumeHigh" VerticalAlignment="Center" />
-                        <Slider Minimum="0" Maximum="1" Value="{Binding Volume}" Width="120" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Grid>
-                <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}" IsVisible="{Binding CanSeek}">
-                    <TextBlock Text="{Binding PositionText}" Classes="caption muted" VerticalAlignment="Center" />
-                    <views:PlayerSeekBar Grid.Column="1" Minimum="0" Maximum="{Binding SliderMax}" />
-                    <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="caption muted" VerticalAlignment="Center" />
-                </Grid>
-            </Grid>
-        </Border>
     </Grid>
 </Window>

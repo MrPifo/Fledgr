@@ -1,6 +1,7 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Modules.YtConnect.Scripts;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.YtConnect;
 
@@ -35,7 +36,7 @@ public sealed class YtApi
             if (done != tcs.Task)
             {
                 AppLog.Warn("YouTube", $"Keine Antwort auf {path}");
-                return (0, "YouTube Music antwortet nicht.");
+                return (0, Loc.T("yt.err.noResponse"));
             }
             var r = tcs.Task.Result;
             var status = r.TryGetProperty("status", out var s) && s.ValueKind == JsonValueKind.Number ? s.GetInt32() : 0;

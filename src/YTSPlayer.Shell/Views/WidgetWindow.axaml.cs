@@ -1,5 +1,6 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Shell.ViewModels;
@@ -11,7 +12,6 @@ public partial class WidgetWindow : Window
     /// <summary>Abstand in Bildschirm-Pixeln, ab dem das Widget beim Ziehen an einen Rand einrastet.</summary>
     const int SnapDistance = 18;
 
-    readonly IWindowEffects? _effects;
     bool _dragging;
     PixelPoint _pointerStart;
     PixelPoint _windowStart;
@@ -22,17 +22,45 @@ public partial class WidgetWindow : Window
 
     public WidgetWindow(IWindowEffects? effects)
     {
-        _effects = effects;
+        // Das Fenster ist durchsichtig, die runden Ecken zeichnet die Karte selbst (effects bleibt für den Aufrufer).
         InitializeComponent();
-        Opened += (_, _) =>
-        {
-            if (TryGetPlatformHandle() is { } h) _effects?.SquareCorners(h.Handle);
-        };
+        // Das Lautstärke-Fenster schließt, sobald das Widget den Fokus verliert (Klick in eine andere App oder aufs Desktop).
+        Deactivated += (_, _) => CloseVolume();
     }
+
+    long _volumeClosedTick;
+
+    /// <summary>Mausrad-Klick auf das Lautstärke-Symbol: stumm oder wieder die letzte Lautstärke.</summary>
+    void OnVolumePressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsMiddleButtonPressed || DataContext is not ShellViewModel vm) return;
+        vm.ToggleMute();
+        e.Handled = true;
+    }
+
+    void CloseVolume() => FlyoutBase.GetAttachedFlyout(VolumeButton)?.Hide();
+
+    /// <summary>
+    /// Öffnet oder schließt das Lautstärke-Fenster. Ein offenes Fenster schließt schon beim Drücken (Klick daneben),
+    /// darum merkt sich der Klick den Schließzeitpunkt und öffnet dann nicht gleich wieder.
+    /// </summary>
+    void OnVolumeClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        var flyout = FlyoutBase.GetAttachedFlyout(VolumeButton);
+        if (flyout == null) return;
+        if (flyout.IsOpen) { flyout.Hide(); return; }
+        if (Environment.TickCount64 - _volumeClosedTick < 300) return;
+        flyout.Closed -= OnVolumeClosed;
+        flyout.Closed += OnVolumeClosed;
+        flyout.ShowAt(VolumeButton);
+    }
+
+    void OnVolumeClosed(object? sender, EventArgs e) => _volumeClosedTick = Environment.TickCount64;
 
     /// <summary>Ziehen beginnt: Mausposition und Fensterposition am Bildschirm merken.</summary>
     void OnDrag(object? sender, PointerPressedEventArgs e)
     {
+        CloseVolume();
         if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
         _dragging = true;
         _pointerStart = this.PointToScreen(e.GetPosition(this));
@@ -68,7 +96,12 @@ public partial class WidgetWindow : Window
 
     void OnTrackMenu(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        if (sender is Control c && DataContext is ShellViewModel vm) vm.ShowTrackMenu(c);
+        if (sender is Control c && DataContext is ShellViewModel vm) vm.ShowTrackMenu(c, withActions: true);
+    }
+
+    void OnFavorites(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (sender is Control c && DataContext is ShellViewModel vm) vm.ShowFavorites(c);
     }
 
     void OnCoverPressed(object? sender, PointerPressedEventArgs e)

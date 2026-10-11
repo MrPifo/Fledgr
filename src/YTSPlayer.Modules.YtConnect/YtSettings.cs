@@ -1,7 +1,40 @@
+﻿using YTSPlayer.Contracts.Localization;
 namespace YTSPlayer.Modules.YtConnect;
 
 /// <summary>Eine Playlist aus der YT-Music-Bibliothek.</summary>
-public sealed record PlaylistInfo(string Id, string Title, string Sub);
+public sealed record PlaylistInfo(string Id, string Title, string Sub) : System.ComponentModel.INotifyPropertyChanged
+{
+    bool _playingHere;
+    bool _playerRunning;
+
+    public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
+
+    void Set(ref bool field, bool value, string name)
+    {
+        if (field == value) return;
+        field = value;
+        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(name));
+    }
+
+    /// <summary>Der laufende Titel steckt in dieser Playlist (die Zeile wird hervorgehoben und zeigt die Balken).</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool PlayingHere { get => _playingHere; private set => Set(ref _playingHere, value, nameof(PlayingHere)); }
+
+    /// <summary>Der Titel läuft gerade (nicht pausiert): die Balken bewegen sich.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool PlayerRunning { get => _playerRunning; private set => Set(ref _playerRunning, value, nameof(PlayerRunning)); }
+
+    /// <summary>Setzt beide Zustände (nur die Anzeige, nicht Teil der gespeicherten Daten).</summary>
+    public void SetPlaying(bool here, bool running)
+    {
+        PlayingHere = here;
+        PlayerRunning = here && running;
+    }
+
+    /// <summary>Untertitel für die Anzeige. Die feste „Gefällt mir“-Zeile trägt intern einen Marker, der hier durch den übersetzten Text ersetzt wird.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string DisplaySub => Id == YtLibrary.LikedId && Sub == YtLibrary.LikedSub ? Loc.T("yt.liked.sub") : Sub;
+}
 
 /// <summary>
 /// Ein Titel in einer Playlist oder ein Suchtreffer. <paramref name="Thumb"/> ist die Adresse des Vorschaubilds, <paramref name="SetId"/> die Eintrags-Id
@@ -37,6 +70,14 @@ public sealed class YtPlaylistCache
     public int Version { get; set; }
     public List<PlaylistInfo> Items { get; set; } = [];
     public DateTime CheckedUtc { get; set; }
+}
+
+/// <summary>Zuletzt geladene Startseite (Abschnitt „yt-home“): nur die erste Seite ohne Stimmungsfilter, damit sie beim Start sofort da ist.</summary>
+public sealed class YtHomeCache
+{
+    public List<ArtistSectionData> Sections { get; set; } = [];
+    public List<HomeChip> Chips { get; set; } = [];
+    public DateTime SavedUtc { get; set; }
 }
 
 /// <summary>Gespeicherte Titel einer Playlist (Abschnitt „yt-pl-…“).</summary>

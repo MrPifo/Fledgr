@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -14,31 +14,12 @@ public partial class YtView : UserControl
         InitializeComponent();
         DataContextChanged += (_, _) =>
         {
-            if (DataContext is YtViewModel vm) vm.AttachScroll(ApplyScroll);
+            if (DataContext is not YtViewModel vm) return;
+            vm.AttachScroll(ApplyScroll);
         };
+        // Füllt der Inhalt der Startseite das Fenster nicht (oder fast nicht), gibt es keinen Scroll-Anstoß zum Nachladen: bei jedem Layout selbst prüfen.
+        LayoutUpdated += (_, _) => CheckHomeFill();
         AddHandler(ScrollViewer.ScrollChangedEvent, OnScrollChanged);
-    }
-
-    /// <summary>Enter im Suchfeld sucht (außer ein Vorschlag ist gerade ausgewählt, den übernimmt das Feld selbst).</summary>
-    void OnSearchKeyUp(object? sender, KeyEventArgs e)
-    {
-        if (e.Key != Key.Enter || DataContext is not YtViewModel vm || SearchBox.IsDropDownOpen) return;
-        vm.SearchCommand.Execute(null);
-    }
-
-    /// <summary>Beim Anklicken des leeren Felds zeigt die Liste den Suchverlauf.</summary>
-    void OnSearchGotFocus(object? sender, RoutedEventArgs e)
-    {
-        if (DataContext is YtViewModel { Suggestions.Count: > 0 }) SearchBox.IsDropDownOpen = true;
-    }
-
-    /// <summary>Ein Klick auf einen Vorschlag setzt den Text und schließt die Liste: dann wird gesucht.</summary>
-    void OnSearchDropDownClosed(object? sender, EventArgs e)
-    {
-        if (DataContext is not YtViewModel vm || SearchBox.SelectedItem is not string chosen) return;
-        SearchBox.SelectedItem = null;
-        vm.SearchText = chosen;
-        vm.SearchCommand.Execute(null);
     }
 
     /// <summary>Der Doppelklick auf einen Menü-Knopf soll nicht die Playlist öffnen oder den Titel abspielen.</summary>
@@ -88,6 +69,14 @@ public partial class YtView : UserControl
     void OnTrackDoubleTapped(object? sender, TappedEventArgs e)
     {
         if (DataContext is YtViewModel vm) vm.PlayTrackCommand.Execute(null);
+    }
+
+    /// <summary>Ist die Startseite kürzer als das Fenster (oder fast am Ende), lädt sie weitere Bereiche nach.</summary>
+    void CheckHomeFill()
+    {
+        if (DataContext is YtViewModel vm && this.FindControl<ScrollViewer>("HomeScroll") is { } sv
+            && sv.Extent.Height - (sv.Offset.Y + sv.Viewport.Height) < 300)
+            _ = vm.LoadMoreHomeAsync();
     }
 
     /// <summary>Meldet die Scroll-Stelle der Playlist- oder Titelliste an das ViewModel (zum Speichern).</summary>

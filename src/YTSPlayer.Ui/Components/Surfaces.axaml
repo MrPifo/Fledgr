@@ -1,10 +1,20 @@
 ﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Flächen. Border mit Classes="panel|raised|cover" (+ flat, flush). -->
+    <!--
+        Flächen. Border mit Classes:
+          panel · raised · cover · thumb · scrim (+ flat, flush)
+          row (+ active) = Listenzeile · card = Karte · hero = Start-Verlauf · player = schwebende Player-Karte
+          segment = Like-Kapsel · separator (+ vertical) = Trennlinie · badge = kleine Zahl in Rot
+          grain (+ g-window | g-header | g-main | g-player | g-menu) = Papier-Korn, liegt als erstes Kind hinter dem Inhalt
+    -->
     <Style Selector="Border.panel">
         <Setter Property="Background" Value="{DynamicResource Brush.Surface1}" />
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
         <Setter Property="Padding" Value="{DynamicResource Pad.M}" />
+    </Style>
+    <!-- dots: Fläche mit feinem Punktraster (Einstellungen). -->
+    <Style Selector="Border.panel.dots">
+        <Setter Property="Background" Value="{DynamicResource Brush.PanelDots}" />
     </Style>
     <Style Selector="Border.raised">
         <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
@@ -15,15 +25,15 @@
     </Style>
     <Style Selector="Border.cover">
         <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
-        <Setter Property="CornerRadius" Value="{DynamicResource Radius.L}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.CoverL}" />
         <Setter Property="ClipToBounds" Value="True" />
     </Style>
     <!-- Vorschaubild in Listenzeilen (quadratisch, kleine Ecken). -->
     <Style Selector="Border.thumb">
         <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
-        <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
-        <Setter Property="Width" Value="{DynamicResource Size.Thumb}" />
-        <Setter Property="Height" Value="{DynamicResource Size.Thumb}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Cover}" />
+        <Setter Property="Width" Value="{DynamicResource Size.Cover}" />
+        <Setter Property="Height" Value="{DynamicResource Size.Cover}" />
         <Setter Property="ClipToBounds" Value="True" />
     </Style>
     <!-- Klickbare Fläche über einem Bild (z. B. Cover): beim Darüberfahren blendet sie abgedunkelt ein und zeigt ein Symbol. -->
@@ -40,6 +50,242 @@
     <Style Selector="Border.scrim:pointerover">
         <Setter Property="Opacity" Value="1" />
     </Style>
+
+    <!-- Listenzeile: Hover und Auswahl wie in der Vorlage. -->
+    <Style Selector="Border.row">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface1}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Row}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Row}" />
+    </Style>
+    <Style Selector="Border.row:pointerover">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHoverDots}" />
+    </Style>
+    <Style Selector="Border.row.active">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentRing}" />
+    </Style>
+    <!-- plain: Zeile ohne eigene Fläche (in Listen, die schon Hover und Auswahl zeigen), active hebt sie nur leicht hervor (dezente Fläche, kein Rand). -->
+    <Style Selector="Border.row.plain">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Border.row.plain.active">
+        <Setter Property="Background" Value="{DynamicResource Brush.RowSoft}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <!-- Beim Überfahren der Zeile verschwindet die Hervorhebung, damit die Hover-Fläche der Liste zu sehen ist. -->
+    <Style Selector="ListBoxItem:pointerover Border.row.plain.active">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface1}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.M}" />
+    </Style>
+    <Style Selector="Border.hero">
+        <Setter Property="Background" Value="{DynamicResource Brush.Hero}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.L}" />
+        <Setter Property="Height" Value="{DynamicResource Height.Hero}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Hero}" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="Border.player">
+        <Setter Property="Background" Value="{DynamicResource Brush.PlayerCard}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.PlayerBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Player}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Player}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Player}" />
+    </Style>
+    <!-- Miniplayer-Widget: dieselbe Karte, aber kleiner Innenabstand und Radius L. -->
+    <Style Selector="Border.player.widget">
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.L}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Widget}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Widget}" />
+    </Style>
+    <!-- zoom: das Bild im Cover wächst beim Überfahren leicht (Vorlage: Karten-Cover). -->
+    <Style Selector="Border.cover.zoom Image">
+        <Setter Property="RenderTransform" Value="scale(1)" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.cover.zoom:pointerover Image">
+        <Setter Property="RenderTransform" Value="scale(1.06)" />
+    </Style>
+    <!-- tile: klickbare Karte (Cover mit Titel darunter). Hover: Cover dunkelt ab (Border.dim) und das Bild wächst leicht. Kein Rand. -->
+    <Style Selector="StackPanel.tile Border.cover">
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style Selector="StackPanel.tile Border.cover Image">
+        <Setter Property="RenderTransform" Value="scale(1)" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2" Easing="CubicEaseOut" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="StackPanel.tile:pointerover Border.cover Image">
+        <Setter Property="RenderTransform" Value="scale(1.06)" />
+    </Style>
+    <Style Selector="Border.dim">
+        <Setter Property="Background" Value="{DynamicResource Brush.DimDots}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Opacity" Value="0" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="StackPanel.tile:pointerover Border.dim">
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="Border.segment">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
+        <Setter Property="Height" Value="{DynamicResource Height.Like}" />
+        <Setter Property="BoxShadow" Value="{DynamicResource Shadow.Like}" />
+    </Style>
+    <Style Selector="Border.separator">
+        <Setter Property="Background" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Width" Value="{DynamicResource Space.XL}" />
+    </Style>
+    <Style Selector="Border.separator.vertical">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Height" Value="{DynamicResource Size.Icon}" />
+    </Style>
+    <!-- Strich links an der aktiven Seite der Schiene. -->
+    <Style Selector="Border.mark">
+        <Setter Property="Width" Value="{DynamicResource Size.RailMark}" />
+        <Setter Property="Height" Value="{DynamicResource Size.RailMarkH}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!--
+        Signal-Balken (StackPanel.bars mit vier Border.bar b1 bis b4, blau): stehen ruhig und flach.
+        Mit der zusätzlichen Klasse "on" (spielt, Stream steht) zucken sie unregelmäßig wie Rauschen.
+        Die Höhen-Transition lässt sie beim Stoppen weich in den Ruhezustand zurückgehen.
+    -->
+    <Style Selector="StackPanel.bars">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Spacing" Value="2" />
+        <Setter Property="Height" Value="{DynamicResource Size.BarsH}" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+    </Style>
+    <Style Selector="StackPanel.bars > Border.bar">
+        <Setter Property="Width" Value="{DynamicResource Size.BarW}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.ModuleRadio}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Height" Value="3" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <DoubleTransition Property="Height" Duration="0:0:0.45" Easing="CubicEaseOut" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="StackPanel.bars.on > Border.bar.b1">
+        <Style.Animations>
+            <Animation Duration="0:0:0.43" IterationCount="INFINITE" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%"><Setter Property="Height" Value="3" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="Height" Value="9" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="Height" Value="4" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="Height" Value="10" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="Height" Value="2" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="Height" Value="7" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="Height" Value="3" /></KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <Style Selector="StackPanel.bars.on > Border.bar.b2">
+        <Style.Animations>
+            <Animation Duration="0:0:0.59" IterationCount="INFINITE" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%"><Setter Property="Height" Value="8" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="Height" Value="3" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="Height" Value="10" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="Height" Value="5" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="Height" Value="2" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="Height" Value="9" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="Height" Value="8" /></KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <Style Selector="StackPanel.bars.on > Border.bar.b3">
+        <Style.Animations>
+            <Animation Duration="0:0:0.37" IterationCount="INFINITE" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%"><Setter Property="Height" Value="4" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="Height" Value="10" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="Height" Value="3" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="Height" Value="7" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="Height" Value="9" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="Height" Value="2" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="Height" Value="4" /></KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <Style Selector="StackPanel.bars.on > Border.bar.b4">
+        <Style.Animations>
+            <Animation Duration="0:0:0.51" IterationCount="INFINITE" Easing="SineEaseInOut">
+                <KeyFrame Cue="0%"><Setter Property="Height" Value="6" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="Height" Value="2" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="Height" Value="8" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="Height" Value="10" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="Height" Value="4" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="Height" Value="9" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="Height" Value="6" /></KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+    <!-- accent: Balken in Bernstein (laufender Titel in Listen), nur drei Balken, nicht auf dem Boden festgenagelt. -->
+    <Style Selector="StackPanel.bars.accent > Border.bar">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Border.badge">
+        <Setter Property="Background" Value="{DynamicResource Brush.Danger}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
+        <Setter Property="Padding" Value="{DynamicResource Space.XS}" />
+        <Setter Property="MinWidth" Value="{DynamicResource Size.IconXS}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+
+    <!-- Papier-Korn: Kachel aus dem Theme, Deckkraft je Fläche. -->
+    <Style Selector="Border.grain">
+        <Setter Property="Background" Value="{DynamicResource Brush.Grain}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <!-- Halftone: feines Punktraster der Kopfzeile. -->
+    <Style Selector="Border.halftone">
+        <Setter Property="Background" Value="{DynamicResource Brush.Halftone}" />
+        <Setter Property="Opacity" Value="{DynamicResource Halftone.Header}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="Border.halftone.card">
+        <Setter Property="Opacity" Value="{DynamicResource Halftone.Rail}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}" />
+    </Style>
+    <Style Selector="Border.halftone.rail">
+        <Setter Property="Opacity" Value="{DynamicResource Halftone.Rail}" />
+    </Style>
+    <Style Selector="Border.rail-fade">
+        <Setter Property="Background" Value="{DynamicResource Brush.RailFade}" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+    </Style>
+    <Style Selector="Border.grain.g-window"><Setter Property="Opacity" Value="{DynamicResource Grain.Window}" /></Style>
+    <Style Selector="Border.grain.g-header"><Setter Property="Opacity" Value="{DynamicResource Grain.Header}" /></Style>
+    <Style Selector="Border.grain.g-main"><Setter Property="Opacity" Value="{DynamicResource Grain.Main}" /></Style>
+    <Style Selector="Border.grain.g-player"><Setter Property="Opacity" Value="{DynamicResource Grain.Player}" /></Style>
+    <Style Selector="Border.grain.g-hero"><Setter Property="Opacity" Value="{DynamicResource Grain.Hero}" /></Style>
+    <Style Selector="Border.grain.g-menu"><Setter Property="Opacity" Value="{DynamicResource Grain.Menu}" /></Style>
+
     <!-- Varianten: flat = eckig (Leisten am Fensterrand), flush = ohne Innenabstand. -->
     <Style Selector="Border.flat">
         <Setter Property="CornerRadius" Value="0" />

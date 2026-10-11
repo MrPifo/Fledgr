@@ -1,15 +1,16 @@
-using LibVLCSharp.Shared;
+﻿using Fledgr.Audio;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Media;
 using YTSPlayer.Contracts.Playback;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.MusicPlayer.Playback;
 
 /// <summary>
-/// Spielt lokale Dateien mit LibVLC (ohne Video). LibVLC wird erst beim ersten Abspielen geladen und beim Stoppen wieder freigegeben,
-/// damit im Leerlauf kein Speicher belegt bleibt.
+/// Spielt lokale Dateien über den gemeinsamen Audio-Motor (ohne Video). Der Motor wird erst beim ersten Abspielen geladen
+/// und beim Stoppen wieder freigegeben, damit im Leerlauf kein Speicher belegt bleibt.
 /// </summary>
-public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirectory = null) : IPlaybackSource, IStartAtSource, IShuffleSource, IQueueSource, ILyricsSource
+public sealed class LibVlcSource : IPlaybackSource, YTSPlayer.Contracts.Playback.IExternalVolumeSource, IStartAtSource, IShuffleSource, IQueueSource, ILyricsSource
 {
     /// <summary>
     /// Songtext des laufenden Titels: erst aus den Tags der Datei, sonst aus einer Datei gleichen Namens (.lrc oder .txt).
@@ -27,7 +28,7 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
         try
         {
             using var f = TagLib.File.Create(path, TagLib.ReadStyle.None);
-            if (!string.IsNullOrWhiteSpace(f.Tag.Lyrics)) return new LyricsResult(f.Tag.Lyrics.Trim(), "Aus den Tags der Datei");
+            if (!string.IsNullOrWhiteSpace(f.Tag.Lyrics)) return new LyricsResult(f.Tag.Lyrics.Trim(), Loc.T("music.lyrics.tags"));
         }
         catch (Exception)
         {
@@ -55,27 +56,40 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
     TimeSpan _startAt;
     readonly ShuffleOrder _shuffle = new();
     bool _shuffleOn;
+    readonly IPerfTracker _perf;
+    readonly LibVlcEngine _engine;
 
     public const string SourceKey = "local";
 
-    static bool _coreReady;
-
     readonly object _lock = new();
-    LibVLC? _vlc;
-    MediaPlayer? _mp;
-    Media? _media;
     List<MediaItem> _queue = [];
     int _index = -1;
     double _volume = 1;
     PlaybackState _state = PlaybackState.Empty;
+    /// <summary>Länge des laufenden Titels, sobald LibVLC sie meldet (sonst 0).</summary>
+    TimeSpan _length;
     long _lastReport;
     int _generation;
 
+    public LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirectory = null)
+    {
+        _perf = perf;
+        _engine = new LibVlcEngine(libVlcDirectory);
+        _engine.VolumeChangedExternally += gain => { _volume = gain; VolumeChangedExternally?.Invoke(gain); };
+        _engine.Playing += () => Update(playing: true);
+        _engine.Paused += () => Update(playing: false);
+        _engine.TimeChanged += Tick;
+        _engine.LengthChanged += UpdateLength;
+        _engine.EndReached += () => _ = Task.Run(OnEndedAsync);
+        _engine.Error += () => _ = Task.Run(OnEndedAsync);
+    }
+
     public string Id => SourceKey;
-    public string DisplayName => "Lokale Musik";
+    public string DisplayName => Loc.T("music.source");
     public PlaybackCapabilities Capabilities => PlaybackCapabilities.Seek | PlaybackCapabilities.Next | PlaybackCapabilities.Previous | PlaybackCapabilities.Volume | PlaybackCapabilities.Shuffle | PlaybackCapabilities.Lyrics;
     public PlaybackState State => _state;
     public event Action<PlaybackState>? StateChanged;
+    public event Action<double>? VolumeChangedExternally;
 
     public async Task StartAsync(MediaItem item, IReadOnlyList<MediaItem>? queue = null, CancellationToken ct = default)
     {
@@ -97,29 +111,31 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
 
     public Task PlayAsync()
     {
-        if (_mp == null) return _index >= 0 ? PlayIndexAsync(_index, CancellationToken.None) : Task.CompletedTask;
-        if (!_mp.IsPlaying) _mp.SetPause(false);
+        if (!_engine.IsLoaded) return _index >= 0 ? PlayIndexAsync(_index, CancellationToken.None) : Task.CompletedTask;
+        if (!_engine.IsPlaying) _engine.SetPaused(false);
         return Task.CompletedTask;
     }
 
     public Task PauseAsync()
     {
-        if (_mp is { IsPlaying: true }) _mp.SetPause(true);
+        if (_engine.IsPlaying) _engine.SetPaused(true);
         return Task.CompletedTask;
     }
 
     public Task SeekAsync(TimeSpan position)
     {
-        if (_mp is { IsSeekable: true }) _mp.Time = (long)position.TotalMilliseconds;
+        if (_engine.IsSeekable) _engine.TimeMs = (long)position.TotalMilliseconds;
         return Task.CompletedTask;
     }
 
     public Task SetVolumeAsync(double volume)
     {
         _volume = Math.Clamp(volume, 0, 1);
-        if (_mp != null) _mp.Volume = (int)Math.Round(_volume * 100);
+        _engine.SetGain(_volume);
         return Task.CompletedTask;
     }
+
+    int VolumePercent => (int)Math.Round(_volume * 100);
 
     public bool Shuffle => _shuffleOn;
 
@@ -151,16 +167,16 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
 
     public async Task PreviousAsync()
     {
-        if (_mp != null && _mp.Time > 3000) { _mp.Time = 0; return; }
+        if (_engine.TimeMs > 3000) { _engine.TimeMs = 0; return; }
         var prev = _shuffleOn ? _shuffle.Previous() : _index > 0 ? _index - 1 : -1;
         if (prev >= 0) await PlayIndexAsync(prev, CancellationToken.None);
-        else if (_mp != null) _mp.Time = 0;
+        else _engine.TimeMs = 0;
     }
 
     public async Task StopAsync()
     {
         Interlocked.Increment(ref _generation);
-        await ReleaseAsync();
+        await _engine.ReleaseAsync();
         _queue = [];
         _index = -1;
         Publish(PlaybackState.Empty);
@@ -170,25 +186,25 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
 
     async Task PlayIndexAsync(int index, CancellationToken ct)
     {
-        using var scope = perf.Begin("Local.Start");
+        using var scope = _perf.Begin("Local.Start");
         try
         {
             var gen = Interlocked.Increment(ref _generation);
             _index = index;
             var item = _queue[index];
-            await Task.Run(() => EnsurePlayer(), ct);
-            var media = new Media(_vlc!, item.Id, FromType.FromPath);
-            if (_startAt > TimeSpan.Zero)
+            var startAt = _startAt;
+            _startAt = TimeSpan.Zero;
+            // Die Länge gehört zum neuen Titel. Die alte darf nicht stehen bleiben.
+            lock (_lock) _length = TimeSpan.Zero;
+            await Task.Run(() =>
             {
-                media.AddOption(":start-time=" + _startAt.TotalSeconds.ToString("F1", System.Globalization.CultureInfo.InvariantCulture));
-                _startAt = TimeSpan.Zero;
-            }
-            var old = _media;
-            _media = media;
-            _mp!.Volume = (int)Math.Round(_volume * 100);
-            _mp.Play(media);
-            old?.Dispose();
-            Publish(new PlaybackState(item, item.Title, item.Artist, item.Album, null, null, true, TimeSpan.Zero, TimeSpan.Zero, _volume, Shuffle: _shuffleOn));
+                _engine.SetGain(_volume);
+                _engine.Play(item.Id, isUrl: false, startAt: startAt);
+            }, ct);
+            // Die Länge kann schon vor diesem Schritt gemeldet worden sein (eigener Thread). Deshalb aus _length nehmen, nicht auf 0 setzen.
+            lock (_lock)
+                _state = new PlaybackState(item, item.Title, item.Artist, item.Album, null, null, true, TimeSpan.Zero, _length, _volume, Shuffle: _shuffleOn);
+            Raise();
             _ = LoadTagsAsync(item, gen);
         }
         catch
@@ -198,53 +214,12 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
         }
     }
 
-    void EnsurePlayer()
-    {
-        lock (_lock)
-        {
-            if (_mp != null) return;
-            if (!_coreReady)
-            {
-                Core.Initialize(libVlcDirectory?.Invoke());
-                _coreReady = true;
-            }
-            _vlc = new LibVLC("--no-video", "--no-osd", "--no-snapshot-preview", "--no-stats");
-            _mp = new MediaPlayer(_vlc);
-            _mp.Playing += (_, _) => Update(playing: true);
-            _mp.Paused += (_, _) => Update(playing: false);
-            _mp.TimeChanged += (_, e) => Tick(e.Time);
-            _mp.LengthChanged += (_, e) => UpdateLength(e.Length);
-            _mp.EndReached += (_, _) => _ = Task.Run(OnEndedAsync);
-            _mp.EncounteredError += (_, _) => _ = Task.Run(OnEndedAsync);
-        }
-    }
-
     async Task OnEndedAsync()
     {
         // Aus dem LibVLC-Ereignis heraus nie direkt auf den Player zugreifen. Deshalb eigener Task.
         var next = NextIndex();
         if (next >= 0) await PlayIndexAsync(next, CancellationToken.None);
         else Update(playing: false, ended: true);
-    }
-
-    async Task ReleaseAsync()
-    {
-        MediaPlayer? mp;
-        LibVLC? vlc;
-        Media? media;
-        lock (_lock)
-        {
-            mp = _mp; vlc = _vlc; media = _media;
-            _mp = null; _vlc = null; _media = null;
-        }
-        if (mp == null && vlc == null) return;
-        await Task.Run(() =>
-        {
-            try { mp?.Stop(); } catch { }
-            media?.Dispose();
-            mp?.Dispose();
-            vlc?.Dispose();
-        });
     }
 
     async Task LoadTagsAsync(MediaItem item, int gen)
@@ -289,18 +264,22 @@ public sealed class LibVlcSource(IPerfTracker perf, Func<string?>? libVlcDirecto
         Raise();
     }
 
-    void UpdateLength(long ms)
+    void UpdateLength(TimeSpan length)
     {
-        lock (_lock) _state = _state with { Duration = TimeSpan.FromMilliseconds(ms) };
+        lock (_lock)
+        {
+            _length = length;
+            _state = _state with { Duration = length };
+        }
         Raise();
     }
 
-    void Tick(long ms)
+    void Tick(TimeSpan position)
     {
         var now = Environment.TickCount64;
         if (now - _lastReport < 400) return;
         _lastReport = now;
-        lock (_lock) _state = _state with { Position = TimeSpan.FromMilliseconds(ms) };
+        lock (_lock) _state = _state with { Position = position };
         Raise();
     }
 

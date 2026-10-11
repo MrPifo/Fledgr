@@ -10,6 +10,12 @@
     <PackageReference Include="Material.Icons.Avalonia" Version="3.0.2" />
   </ItemGroup>
   <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings\*.xml" />
   </ItemGroup>
 </Project>

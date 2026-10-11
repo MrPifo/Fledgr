@@ -1,9 +1,10 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Avalonia.Threading;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Media;
 using YTSPlayer.Contracts.Playback;
 using YTSPlayer.Contracts.Settings;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.YtConnect;
 
@@ -11,7 +12,7 @@ namespace YTSPlayer.Modules.YtConnect;
 /// Spielt YouTube Music über die versteckte Web-Ansicht. Steuert den Speicher-Sparmodus:
 /// nach kurzer Ruhe „Low“ und Arbeitssatz leeren, nach langer Ruhe die Web-Ansicht beenden.
 /// </summary>
-public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffleSource, IRadioMixSource, ILikeSource, YTSPlayer.Ui.ITrackMenuProvider, IArtistSource, ILyricsSource
+public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffleSource, IRadioMixSource, ILikeSource, YTSPlayer.Ui.ITrackMenuProvider, YTSPlayer.Ui.IAddToPlaylistProvider, IArtistSource, ILyricsSource, IExternalVolumeSource
 {
     /// <summary>Das Plugin setzt hier das Laden des Songtexts ein (Video-Id, Abbruch → Text).</summary>
     public Func<string, CancellationToken, Task<LyricsResult?>>? LyricsHandler { get; set; }
@@ -28,9 +29,14 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
     public Task OpenArtistAsync() => ArtistHandler?.Invoke() ?? Task.CompletedTask;
 
     /// <summary>Das Plugin setzt hier das Menü des laufenden Titels ein (die Menü-Logik liegt in der Ansicht).</summary>
-    public Action<Avalonia.Controls.Control>? TrackMenuHandler { get; set; }
+    public Action<Avalonia.Controls.Control, IReadOnlyList<Avalonia.Controls.Control>>? TrackMenuHandler { get; set; }
 
-    public void ShowTrackMenu(Avalonia.Controls.Control anchor) => TrackMenuHandler?.Invoke(anchor);
+    public void ShowTrackMenu(Avalonia.Controls.Control anchor, IReadOnlyList<Avalonia.Controls.Control> extraItems) => TrackMenuHandler?.Invoke(anchor, extraItems);
+
+    /// <summary>Das Plugin setzt hier die Playlist-Auswahl für den laufenden Titel ein.</summary>
+    public Action<Avalonia.Controls.Control>? AddToPlaylistHandler { get; set; }
+
+    public void ShowAddToPlaylist(Avalonia.Controls.Control anchor) => AddToPlaylistHandler?.Invoke(anchor);
 
     // Bewertung des laufenden Titels wie auf der Seite: LIKE, DISLIKE oder INDIFFERENT.
     string _rating = Indifferent;
@@ -61,8 +67,16 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
     bool _low;
     int _idleSec;
 
-    public YtPlaybackSource(YtEngine engine, YtSettings settings, ISettingsStore store, IProcessStats stats, IPerfTracker perf)
+    readonly IChildAudioVolume? _audio;
+    long _volumeSetTick;
+    long _volumePollTick;
+
+    /// <summary>Die Lautstärke wurde im Windows-Lautstärkemixer geändert (Eintrag der WebView). Wert 0–1.</summary>
+    public event Action<double>? VolumeChangedExternally;
+
+    public YtPlaybackSource(YtEngine engine, YtSettings settings, ISettingsStore store, IProcessStats stats, IPerfTracker perf, IChildAudioVolume? audio = null)
     {
+        _audio = audio;
         _engine = engine;
         _s = settings;
         _store = store;
@@ -75,7 +89,7 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
 
     public string Id => SourceKey;
     public string DisplayName => "YouTube Music";
-    public PlaybackCapabilities Capabilities => PlaybackCapabilities.Seek | PlaybackCapabilities.Next | PlaybackCapabilities.Previous | PlaybackCapabilities.Volume | PlaybackCapabilities.Shuffle | PlaybackCapabilities.RadioMix | PlaybackCapabilities.Like | PlaybackCapabilities.TrackMenu | PlaybackCapabilities.Artist | PlaybackCapabilities.Lyrics;
+    public PlaybackCapabilities Capabilities => PlaybackCapabilities.Seek | PlaybackCapabilities.Next | PlaybackCapabilities.Previous | PlaybackCapabilities.Volume | PlaybackCapabilities.Shuffle | PlaybackCapabilities.RadioMix | PlaybackCapabilities.Like | PlaybackCapabilities.TrackMenu | PlaybackCapabilities.AddToPlaylist | PlaybackCapabilities.Artist | PlaybackCapabilities.Lyrics;
 
     public Task ToggleLikeAsync() => RateAsync(Like);
 
@@ -165,14 +179,32 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
 
     bool CanShuffleQueue => _shuffle && _queue.Count > 1 && _queueList != null;
 
+    /// <summary>
+    /// Ohne Zufall: Index des laufenden Titels in der gespeicherten Playlist (die App geht dann selbst Titel für Titel durch,
+    /// statt die Seite weiterzuschalten, deren eigene Warteschlange gemischt sein kann). -1, wenn es keine passende Liste gibt.
+    /// </summary>
+    int SequentialIndex()
+    {
+        if (_shuffle || _queueList == null || _queue.Count < 2 || UrlNormalizer.PlaylistId(_state.Item?.Id) != _queueList) return -1;
+        var vid = UrlNormalizer.VideoId(_state.Item?.Id);
+        return vid == null ? -1 : _queue.FindIndex(t => t.Id == vid);
+    }
+
+    /// <summary>Gibt es einen nächsten Titel, den die App selbst spielen kann (Zufall oder Reihenfolge der Playlist)?</summary>
+    bool CanAdvance => CanShuffleQueue || SequentialIndex() is var i and >= 0 && i + 1 < _queue.Count;
+
     async Task PlayNextShuffledAsync()
     {
         _advancing = true;
         try
         {
-            SyncOrder(UrlNormalizer.VideoId(_state.Item?.Id));
-            var i = _order.Next();
-            if (i >= 0) await PlayQueueAsync(i);
+            if (CanShuffleQueue)
+            {
+                SyncOrder(UrlNormalizer.VideoId(_state.Item?.Id));
+                var i = _order.Next();
+                if (i >= 0) await PlayQueueAsync(i);
+            }
+            else if (SequentialIndex() is var si and >= 0 && si + 1 < _queue.Count) await PlayQueueAsync(si + 1);
         }
         catch { }
         finally { _advancing = false; }
@@ -281,17 +313,45 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
         return Task.CompletedTask;
     }
 
+    /// <summary>Setzt den Mixer-Eintrag der WebView auf den Reglerwert. Gibt es ihn noch nicht, klappt es beim nächsten Abgleich.</summary>
+    void ApplyAudio()
+    {
+        if (_audio == null) return;
+        _audio.Set(_volume);
+    }
+
+    /// <summary>
+    /// Gleicht (höchstens einmal pro Sekunde) mit dem Mixer ab: Hat dort jemand die Lautstärke geändert, übernimmt der Regler sie.
+    /// Direkt nach einer Änderung am Regler zählt der Mixer-Wert nicht (Windows braucht kurz).
+    /// </summary>
+    void SyncAudio()
+    {
+        if (_audio == null) return;
+        var now = Environment.TickCount64;
+        if (now - _volumePollTick < 1000 || now - _volumeSetTick < 1500) return;
+        _volumePollTick = now;
+        var actual = _audio.Get();
+        if (actual == null) { ApplyAudio(); return; }
+        if (Math.Abs(actual.Value - _volume) <= 0.01) return;
+        _volume = actual.Value;
+        _s.Gain = _volume;
+        VolumeChangedExternally?.Invoke(_volume);
+    }
+
     public Task SetVolumeAsync(double volume)
     {
         _volume = volume;
         _s.Gain = volume;
-        if (_engine.IsRunning) _engine.Cmd("volume", volume);
+        _volumeSetTick = Environment.TickCount64;
+        ApplyAudio();
+        if (_engine.IsRunning) _engine.Cmd("volume", 1.0);
         return Task.CompletedTask;
     }
 
     public Task NextAsync()
     {
-        if (CanShuffleQueue) return PlayNextShuffledAsync();
+        AppLog.Info("YouTube", $"Weiter: Zufall={_shuffle}, Liste={(_queueList ?? "-")}, Titel in Liste={_queue.Count}, Seitenliste={(UrlNormalizer.PlaylistId(_state.Item?.Id) ?? "-")}, Index={SequentialIndex()}");
+        if (CanAdvance) return PlayNextShuffledAsync();
         _engine.Cmd("next");
         return Task.CompletedTask;
     }
@@ -305,6 +365,13 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
             var i = _state.Position.TotalSeconds > 3 ? -1 : _order.Previous();
             if (i >= 0) return PlayQueueAsync(i);
             _engine.Cmd("seek", 0);
+            return Task.CompletedTask;
+        }
+        if (SequentialIndex() is var si and >= 0)
+        {
+            // Wie üblich: nach den ersten Sekunden springt „Zurück“ an den Anfang, sonst zum Titel darüber.
+            if (_state.Position.TotalSeconds > 3 || si == 0) _engine.Cmd("seek", 0);
+            else return PlayQueueAsync(si - 1);
             return Task.CompletedTask;
         }
         _engine.Cmd("prev");
@@ -415,22 +482,25 @@ public sealed class YtPlaybackSource : IPlaybackSource, IStartAtSource, IShuffle
             var dur = N("dur");
             _state = new PlaybackState(item, title, S("artist"), S("album"), art.Length > 0 ? art : null, null,
                 r.GetProperty("playing").GetBoolean(), TimeSpan.FromSeconds(N("pos")), TimeSpan.FromSeconds(dur), _volume,
-                UrlNormalizer.ToYoutubeTrackUrl(url), "Auf YouTube öffnen", _shuffle, UrlNormalizer.IsRadioMix(url), 0, _rating == Like, _rating == Dislike);
+                UrlNormalizer.ToYoutubeTrackUrl(url), Loc.T("yt.openOnYoutube"), _shuffle, UrlNormalizer.IsRadioMix(url), 0, _rating == Like, _rating == Dislike);
             if (_needInit && dur > 0)
             {
                 _needInit = false;
-                _engine.Cmd("volume", _volume);
+                AppLog.Info("YouTube", $"Titel geladen, springe zu {_pendingSeek:F0} s, abspielen {_playAfterInit}");
+                _engine.Cmd("volume", 1.0);
+                ApplyAudio();
                 if (_pendingSeek > 1) _engine.Cmd("seek", _pendingSeek);
                 if (_playAfterInit) _engine.Cmd("play");
                 _pendingSeek = 0;
                 _playAfterInit = false;
             }
             // Zufall: kurz vor dem Ende des Titels (den wir geladen haben) laden wir selbst den nächsten gemischten, bevor die Seite weiterspringt.
-            if (!_needInit && !_advancing && _state.IsPlaying && CanShuffleQueue && dur > 5 && dur - N("pos") <= 1.5 && UrlNormalizer.VideoId(url) == _expect)
+            if (!_needInit && !_advancing && _state.IsPlaying && CanAdvance && dur > 5 && dur - N("pos") <= 1.5 && UrlNormalizer.VideoId(url) == _expect)
                 _ = PlayNextShuffledAsync();
             // Die YT-Seite setzt die Lautstärke selbst um (z. B. beim Titelwechsel). Wir halten sie auf dem Wert vom Regler.
-            if (!_needInit && r.TryGetProperty("vol", out var pv) && pv.ValueKind == JsonValueKind.Number && Math.Abs(pv.GetDouble() - _volume) > 0.01)
-                _engine.Cmd("volume", _volume);
+            if (!_needInit && r.TryGetProperty("vol", out var pv) && pv.ValueKind == JsonValueKind.Number && Math.Abs(pv.GetDouble() - 1.0) > 0.01)
+                _engine.Cmd("volume", 1.0);
+            SyncAudio();
             if (_state.IsPlaying) { _idleSec = 0; SetLow(false); }
             if (wasPlaying && !_state.IsPlaying) { Remember(); Save(); _ = PauseSaveMemoryAsync(); }
             Raise();

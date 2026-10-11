@@ -1,18 +1,25 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using YTSPlayer.Contracts;
 using YTSPlayer.Contracts.Media;
 using YTSPlayer.Contracts.Playback;
 using YTSPlayer.Modules.MusicPlayer.Library;
+using YTSPlayer.Modules.MusicPlayer.Playback;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.MusicPlayer.ViewModels;
 
 /// <summary>Bibliotheks-Seite: Ordner durchsuchen, Playlists, Favoriten, Suche. Alles asynchron mit Lade-Zustand.</summary>
-public sealed partial class LibraryViewModel : ObservableObject
+public sealed partial class LibraryViewModel : ObservableObject, YTSPlayer.Contracts.Plugins.IHeaderContent
 {
     const int MaxQueue = 2000;
-    static readonly string[] Modes = ["Ordner", "Interpreten", "Alben", "Playlists", "Favoriten"];
+
+    MusicSearchHeader? _header;
+
+    /// <summary>Die Suche in der Kopfzeile der App.</summary>
+    public object? HeaderViewModel => _header ??= new MusicSearchHeader(this);
+    static string[] Modes => [Loc.T("music.mode.folders"), Loc.T("music.mode.artists"), Loc.T("music.mode.albums"), Loc.T("music.mode.playlists"), Loc.T("music.mode.favorites")];
 
     readonly LibraryService _lib;
     readonly LibraryProvider _provider;
@@ -40,11 +47,18 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     readonly LocalCovers _covers = new();
 
-    public LibraryViewModel(LibraryService lib, LibraryProvider provider, IPlayer player)
+    readonly YTSPlayer.Contracts.Settings.ISettingsStore _store;
+    bool _restoring;
+
+    public LibraryViewModel(LibraryService lib, LibraryProvider provider, IPlayer player, YTSPlayer.Contracts.Settings.ISettingsStore store)
     {
         _lib = lib;
         _provider = provider;
         _player = player;
+        _store = store;
+        RestoreView();
+        player.StateChanged += OnPlayerState;
+        OnPlayerState(player.State);
         _autoPreview = lib.Settings.AutoPreview;
         Playlists = [.. lib.Settings.Playlists];
         TargetPlaylist = Playlists.FirstOrDefault();
@@ -68,20 +82,64 @@ public sealed partial class LibraryViewModel : ObservableObject
         if (_lib.Settings.Folders.Count > 0) _ = RescanAsync();
     }
 
+    /// <summary>Stellt Ansicht und geöffneten Ordner der letzten Sitzung wieder her (geladen wird in <see cref="InitializeAsync"/>).</summary>
+    void RestoreView()
+    {
+        try
+        {
+            var s = _store.Load<MusicViewState>("music-view");
+            _restoring = true;
+            ModeIndex = Math.Clamp(s.ModeIndex, 0, Modes.Length - 1);
+            if (s.CurrentId.Length > 0) _current = new MediaNode(s.CurrentId, s.CurrentTitle, (MediaNodeKind)s.CurrentKind);
+            // Ein Ebene tiefer in Künstlern, Alben oder Playlists: „Zurück“ führt zur Wurzel der Ansicht.
+            if (ModeIndex > 0 && _current != null && ModeRoot(ModeIndex) is { } root && root.Id != _current.Id) _back.Push(root);
+        }
+        catch (Exception)
+        {
+            // Ein kaputter Speicher: Start in der Ordneransicht.
+        }
+        finally
+        {
+            _restoring = false;
+        }
+    }
+
+    void SaveView()
+    {
+        if (_restoring) return;
+        try
+        {
+            _store.Save("music-view", new MusicViewState
+            {
+                ModeIndex = ModeIndex,
+                CurrentId = _current?.Id ?? "",
+                CurrentTitle = _current?.Title ?? "",
+                CurrentKind = (int)(_current?.Kind ?? MediaNodeKind.Folder),
+            });
+        }
+        catch (Exception)
+        {
+            // Speichern darf die Oberfläche nie stören.
+        }
+    }
+
     partial void OnModeIndexChanged(int value)
     {
+        if (_restoring) return;
         _back.Clear();
-        _current = value switch
-        {
-            1 => LibraryProvider.ArtistsNode,
-            2 => LibraryProvider.AlbumsNode,
-            3 => LibraryProvider.PlaylistsNode,
-            4 => LibraryProvider.FavoritesNode,
-            _ => null,
-        };
+        _current = ModeRoot(value);
         SearchText = "";
         _ = LoadAsync();
     }
+
+    static MediaNode? ModeRoot(int mode) => mode switch
+    {
+        1 => LibraryProvider.ArtistsNode,
+        2 => LibraryProvider.AlbumsNode,
+        3 => LibraryProvider.PlaylistsNode,
+        4 => LibraryProvider.FavoritesNode,
+        _ => null,
+    };
 
     partial void OnAutoPreviewChanged(bool value)
     {
@@ -91,7 +149,7 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     partial void OnSelectedItemChanged(LibraryItem? value)
     {
-        if (AutoPreview && value is { IsTrack: true } && value.Node.Item is { } item)
+        if (!_syncingSelection && AutoPreview && value is { IsTrack: true } && value.Node.Item is { } item)
             _ = Run(() => _player.PlayAsync(item));
     }
 
@@ -107,14 +165,14 @@ public sealed partial class LibraryViewModel : ObservableObject
             if (string.IsNullOrWhiteSpace(text)) { await LoadAsync(); return; }
             _loadCts?.Cancel();
             State = LoadState.Loading;
-            Message = "Suche …";
+            Message = Loc.T("music.search.busy");
             var nodes = await _provider.SearchAsync(text, cts.Token);
             if (cts.IsCancellationRequested) return;
             Fill(nodes);
-            PathText = $"Suche: {nodes.Count}{(nodes.Count >= 500 ? "+" : "")} Treffer";
+            PathText = Loc.F("music.search.count", nodes.Count + (nodes.Count >= 500 ? "+" : ""));
             CanGoUp = false;
             State = nodes.Count == 0 ? LoadState.Empty : LoadState.Ready;
-            Message = "Keine Treffer.";
+            Message = Loc.T("music.search.none");
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -132,30 +190,31 @@ public sealed partial class LibraryViewModel : ObservableObject
         _loadCts?.Cancel();
         var cts = _loadCts = new CancellationTokenSource();
         State = LoadState.Loading;
-        Message = "Lädt …";
+        Message = Loc.T("music.loading");
         try
         {
             var nodes = await _provider.GetChildrenAsync(_current, cts.Token);
             if (cts.IsCancellationRequested) return;
             if (ModeIndex == 0 && _current == null) nodes = nodes.Where(n => !n.Id.StartsWith('@')).ToList();
             Fill(nodes);
-            PathText = _current?.Title ?? "Ordner";
+            PathText = _current?.Title ?? Loc.T("music.mode.folders");
             CanGoUp = _back.Count > 0 || _current != null && ModeIndex == 0;
             InPlaylist = _current?.Kind == MediaNodeKind.Playlist;
             if (Items.Count == 0)
             {
                 Message = _current?.Id switch
                 {
-                    "@playlists" => "Noch keine Playlist. Unten eine neue anlegen.",
-                    "@favorites" => "Noch keine Favoriten. Mit dem Stern markieren.",
+                    "@playlists" => Loc.T("music.empty.playlists"),
+                    "@favorites" => Loc.T("music.empty.favorites"),
                     "@artists" or "@albums" => _lib.Settings.SearchTags
-                        ? "Noch keine Tags gelesen. Ordner hinzufügen und „Neu scannen“ klicken."
-                        : "Dafür müssen die Tags gelesen werden: Einstellungen, Musik, „Tags berücksichtigen“ einschalten und neu scannen.",
-                    null => ModeIndex == 0 ? "Noch kein Ordner. Mit „Ordner hinzufügen“ einen Musik- oder Sound-Ordner wählen." : "Hier ist nichts.",
-                    _ => "Hier ist nichts.",
+                        ? Loc.T("music.empty.noTags")
+                        : Loc.T("music.empty.needTags"),
+                    null => ModeIndex == 0 ? Loc.T("music.empty.noFolder") : Loc.T("music.empty.nothing"),
+                    _ => Loc.T("music.empty.nothing"),
                 };
             }
             State = Items.Count == 0 ? LoadState.Empty : LoadState.Ready;
+            SaveView();
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -169,6 +228,41 @@ public sealed partial class LibraryViewModel : ObservableObject
     {
         Items.Clear();
         foreach (var n in nodes) Items.Add(new LibraryItem(n, n.Kind == MediaNodeKind.Track && _lib.IsFavorite(n.Id), ToggleFavorite, _covers));
+        MarkCurrent(select: true);
+    }
+
+    string _curId = "";
+    bool _curPlaying;
+    bool _syncingSelection;
+
+    void OnPlayerState(PlaybackState st)
+    {
+        var id = st.Item is { } it && it.SourceId == LibVlcSource.SourceKey ? it.Id : "";
+        var playing = id.Length > 0 && st.IsPlaying;
+        if (id == _curId && playing == _curPlaying) return;
+        var idChanged = id != _curId;
+        _curId = id;
+        _curPlaying = playing;
+        MarkCurrent(select: idChanged);
+    }
+
+    /// <summary>Markiert den laufenden Titel in der Liste (Balken) und wählt ihn aus. Die Auswahl löst keine Vorschau aus.</summary>
+    void MarkCurrent(bool select)
+    {
+        if (_curId.Length == 0 && !Items.Any(i => i.IsCurrent)) return;
+        LibraryItem? row = null;
+        foreach (var i in Items)
+        {
+            var current = _curId.Length > 0 && i.IsTrack && i.Node.Id == _curId;
+            i.SetPlaying(current, _curPlaying);
+            if (current) row = i;
+        }
+        if (select && row != null && !ReferenceEquals(SelectedItem, row))
+        {
+            _syncingSelection = true;
+            try { SelectedItem = row; }
+            finally { _syncingSelection = false; }
+        }
     }
 
     void ToggleFavorite(LibraryItem item)
@@ -241,17 +335,17 @@ public sealed partial class LibraryViewModel : ObservableObject
         _scanCts?.Cancel();
         var cts = _scanCts = new CancellationTokenSource();
         IsScanning = true;
-        ScanText = "Scan startet …";
+        ScanText = Loc.T("music.scan.start");
         try
         {
             var progress = new Progress<ScanProgress>(p =>
-                ScanText = p.Tags ? $"Tags lesen: {p.Files} von {p.Total} …" : p.Files == 0 ? "Scan …" : $"{p.Files} Dateien gefunden …");
+                ScanText = p.Tags ? Loc.F("music.scan.tags", Loc.Current.Integer(p.Files), Loc.Current.Integer(p.Total)) : p.Files == 0 ? Loc.T("music.scan.running") : Loc.P("music.scan.found", p.Files));
             await _lib.ScanAsync(progress, cts.Token);
-            ScanText = $"{_lib.FileCount} Dateien im Index.";
+            ScanText = Loc.P("music.scan.done", _lib.FileCount);
         }
         catch (Exception ex)
         {
-            ScanText = "Scan-Fehler: " + ex.Message;
+            ScanText = Loc.F("music.scan.error", ex.Message);
         }
         finally
         {
@@ -274,14 +368,24 @@ public sealed partial class LibraryViewModel : ObservableObject
     IReadOnlyList<LibraryItem> Tracks(IEnumerable<LibraryItem> selection) =>
         [.. selection.Where(i => i.IsTrack).OrderBy(i => Items.IndexOf(i))];
 
-    /// <summary>Fügt alle markierten Titel der gewählten Playlist hinzu.</summary>
-    public void AddToPlaylist(IEnumerable<LibraryItem> selection)
+    /// <summary>Fügt alle markierten Titel der Playlist <paramref name="target"/> (sonst der gewählten Playlist) hinzu.</summary>
+    public void AddToPlaylist(IEnumerable<LibraryItem> selection, PlaylistDef? target = null)
     {
-        if (TargetPlaylist is not { } p) return;
+        if ((target ?? TargetPlaylist) is not { } p) return;
         var tracks = Tracks(selection);
         foreach (var item in tracks) _lib.AddToPlaylist(p, item.Node.Id);
-        ScanText = tracks.Count == 0 ? "Keine Titel markiert." : $"{tracks.Count} Titel zu „{p.Name}“ hinzugefügt.";
+        ScanText = tracks.Count == 0 ? Loc.T("music.noSelection") : Loc.P("music.added", tracks.Count, p.Name);
         if (ModeIndex == 3) _ = LoadAsync();
+    }
+
+    /// <summary>Legt eine neue Playlist an und fügt die Titel gleich hinzu (Menü „Neue Playlist …“).</summary>
+    public void CreatePlaylistWith(string name, IEnumerable<LibraryItem> selection)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        var p = _lib.CreatePlaylist(name.Trim());
+        Playlists.Add(p);
+        TargetPlaylist = p;
+        AddToPlaylist(selection, p);
     }
 
     /// <summary>Entfernt alle markierten Titel aus der geöffneten Playlist.</summary>
@@ -296,7 +400,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     public async Task PlaySelectionAsync(IEnumerable<LibraryItem> selection)
     {
         var queue = Tracks(selection).Where(i => i.Node.Item != null).Select(i => i.Node.Item!).ToList();
-        if (queue.Count == 0) { ScanText = "Keine Titel markiert."; return; }
+        if (queue.Count == 0) { ScanText = Loc.T("music.noSelection"); return; }
         await Run(() => _player.PlayAsync(queue[0], queue));
     }
 
@@ -308,7 +412,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     {
         var folders = paths.Where(Directory.Exists).ToList();
         var files = paths.Where(p => File.Exists(p) && LibraryService.IsAudio(p)).ToList();
-        if (folders.Count == 0 && files.Count == 0) { ScanText = "Dort liegt nichts, was die Bibliothek abspielen kann."; return; }
+        if (folders.Count == 0 && files.Count == 0) { ScanText = Loc.T("music.drop.nothing"); return; }
         if (folders.Count > 0)
         {
             foreach (var f in folders) _lib.AddFolder(f);

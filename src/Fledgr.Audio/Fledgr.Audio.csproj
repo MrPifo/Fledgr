@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Gemeinsamer Audio-Motor (LibVLC, ohne Video) für lokale Musik und Radio. Kein Avalonia, kein Windows-Code. -->
+  <PropertyGroup>
+    <RootNamespace>Fledgr.Audio</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp" Version="3.10.1" />
+  </ItemGroup>
+</Project>

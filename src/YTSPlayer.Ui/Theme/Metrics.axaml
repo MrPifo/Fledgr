@@ -1,34 +1,162 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui"
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Abstände, Radien, Schriftgrößen, Höhen. Views nutzen nur diese Tokens, keine festen Zahlen. -->
+    <!-- Abstände, Radien, Schriftgrößen, Höhen. Views nutzen nur diese Tokens, keine festen Zahlen. Unabhängig vom Theme. -->
 
+    <!-- Schrift. Die Schriften liegen in Assets/Fonts (eingebettet). Fehlen sie, greift die nächste Familie der Liste (Inter ist eingebaut). -->
+    <FontFamily x:Key="FontFamily.Display">avares://YTSPlayer.Ui/Assets/Fonts#Fraunces, Georgia</FontFamily>
+    <FontFamily x:Key="FontFamily.Text">avares://YTSPlayer.Ui/Assets/Fonts#Hanken Grotesk, fonts:Inter#Inter</FontFamily>
+
+    <x:Double x:Key="Space.XXS">2</x:Double>
     <x:Double x:Key="Space.XS">4</x:Double>
     <x:Double x:Key="Space.S">8</x:Double>
     <x:Double x:Key="Space.M">12</x:Double>
     <x:Double x:Key="Space.L">16</x:Double>
     <x:Double x:Key="Space.XL">24</x:Double>
+    <!-- Freiraum unter dem Inhalt, damit die schwebende Player-Karte nichts verdeckt. -->
+    <x:Double x:Key="Space.PlayerClearance">112</x:Double>
 
     <Thickness x:Key="Pad.S">8</Thickness>
     <Thickness x:Key="Pad.M">12</Thickness>
+    <Thickness x:Key="Pad.Roomy">8,10</Thickness>
+    <x:Double x:Key="Height.Roomy">64</x:Double>
+    <Thickness x:Key="Margin.CardHalftone">-12</Thickness>
     <Thickness x:Key="Pad.L">16</Thickness>
     <Thickness x:Key="Pad.Control">12,6</Thickness>
+    <Thickness x:Key="Pad.Row">5</Thickness>
+    <Thickness x:Key="Pad.Pill">14,0</Thickness>
+    <Thickness x:Key="Pad.Chip">12,0</Thickness>
+    <Thickness x:Key="Pad.Player">16,7,10,5</Thickness>
+    <Thickness x:Key="Pad.Widget">11,11,11,6</Thickness>
+    <!-- Platz um das Widget im (durchsichtigen) Fenster, damit sein Schatten nicht abgeschnitten wird. -->
+    <Thickness x:Key="Pad.WidgetShadow">14,8,14,22</Thickness>
+    <x:Double x:Key="Size.WidgetWindow">344</x:Double>
+    <!-- Kompakter Schieber: die Fluent-Vorlage setzt die Spur 6 px unter die Mitte. Der Kasten ist 28 px hoch, damit der Griff nicht abgeschnitten wird.
+         Der negative Außenabstand (-6 oben und unten) hält das Layout bei 16 px, die Verschiebung um -6 px bringt die Spur auf die Mitte der Zeiten. -->
+    <x:Double x:Key="Height.SeekCompact">28</x:Double>
+    <Thickness x:Key="Pad.SeekCompact">0,-6</Thickness>
+    <x:Double x:Key="Offset.SeekCompact">-6</x:Double>
+    <Thickness x:Key="Pad.WidgetFav">56,0,0,0</Thickness>
+    <Thickness x:Key="Pad.WidgetNoCover">0,8,0,0</Thickness>
+    <Thickness x:Key="Pad.Pop">12,8</Thickness>
+    <Thickness x:Key="Pad.PopOuter">12,6,12,18</Thickness>
+    <!-- Lautstärke-Popup im Widget: flacher als Menüs (Schatten nach unten bleibt Platz). -->
+    <Thickness x:Key="Pad.PopVolume">6,4,6,0</Thickness>
+    <Thickness x:Key="Pad.Bare">4,4,6,4</Thickness>
+    <Thickness x:Key="Pad.MenuHead">8,4,8,3</Thickness>
+    <x:Double x:Key="Size.IconSource">13</x:Double>
+    <x:Double x:Key="Size.IconButtonStep">32</x:Double>
+    <Thickness x:Key="Pad.TileRow">0,0,0,14</Thickness>
+    <Thickness x:Key="Pad.Bars">0,0,6,2</Thickness>
+    <Thickness x:Key="Pad.Dialog">40,28,40,28</Thickness>
+    <Thickness x:Key="Pad.DialogInner">20,16,20,16</Thickness>
+    <Thickness x:Key="Pad.DialogClose">0,10,10,0</Thickness>
+    <x:Double x:Key="Size.SettingsMax">900</x:Double>
+    <Thickness x:Key="Pad.ScrollBar">2,0,0,0</Thickness>
+    <Thickness x:Key="Margin.Page">0,0,-16,0</Thickness>
+    <Thickness x:Key="Pad.Page">0,0,16,0</Thickness>
+    <Thickness x:Key="Pad.PageScrollBar">-12,0,4,0</Thickness>
+    <Thickness x:Key="Pad.ScrollThumb">2</Thickness>
+    <x:Double x:Key="Size.ScrollBar">8</x:Double>
+    <x:Double x:Key="Size.ScrollThumbMin">24</x:Double>
+    <x:Double x:Key="Size.BarsH">10</x:Double>
+    <x:Double x:Key="Size.BarW">3</x:Double>
+    <x:Double x:Key="Size.VolumeText">38</x:Double>
+    <x:Double x:Key="Height.MenuMax">320</x:Double>
+    <x:Double x:Key="Size.VolumePop">190</x:Double>
+    <!-- Höhe des Lautstärke-Fensters im Widget. Der Inhalt sitzt mittig darin. -->
+    <x:Double x:Key="Size.VolumePopH">34</x:Double>
+    <x:Double x:Key="Size.MenuRow">190</x:Double>
+    <Thickness x:Key="Pad.Menu">6</Thickness>
+    <Thickness x:Key="Pad.MenuItem">8,5</Thickness>
+    <!-- Favoriten-Menü im Widget: 2 px mehr oben und unten. -->
+    <Thickness x:Key="Pad.MenuItemRoomy">8,7</Thickness>
+    <Thickness x:Key="Pad.Hero">20,0</Thickness>
+    <Thickness x:Key="Pad.Header">16,0</Thickness>
+    <!-- Inhaltsbereich: unten Platz für die schwebende Player-Karte (Höhe der Karte plus Abstand). -->
+    <Thickness x:Key="Pad.Content">16,12,16,112</Thickness>
+    <Thickness x:Key="Pad.ContentDocked">16,12,16,12</Thickness>
+    <Thickness x:Key="Pad.PlayerDocked">0,1,0,0</Thickness>
+    <!-- Abstand der Player-Karte zum Rand. -->
+    <Thickness x:Key="Pad.PlayerOuter">16,0,16,14</Thickness>
+    <Thickness x:Key="Pad.RailGap">0,0,0,8</Thickness>
+    <Thickness x:Key="Pad.Gap">3</Thickness>
+    <Thickness x:Key="Pad.SearchBox">32,0,12,0</Thickness>
+    <Thickness x:Key="Pad.SearchIcon">10,0,0,0</Thickness>
+    <Thickness x:Key="Margin.HeroGrain">-20,0</Thickness>
+    <Thickness x:Key="Pad.HeroTitle">0,2,0,0</Thickness>
+    <x:Double x:Key="Size.RowCover">36</x:Double>
 
     <CornerRadius x:Key="Radius.S">4</CornerRadius>
+    <CornerRadius x:Key="Radius.Cover">6</CornerRadius>
     <CornerRadius x:Key="Radius.M">8</CornerRadius>
+    <CornerRadius x:Key="Radius.Row">9</CornerRadius>
+    <CornerRadius x:Key="Radius.CoverL">10</CornerRadius>
+    <CornerRadius x:Key="Radius.Card">12</CornerRadius>
     <CornerRadius x:Key="Radius.L">14</CornerRadius>
+    <CornerRadius x:Key="Radius.Player">16</CornerRadius>
     <CornerRadius x:Key="Radius.Round">999</CornerRadius>
 
+    <x:Double x:Key="Font.Micro">9.5</x:Double>
+    <x:Double x:Key="Font.Tiny">10.5</x:Double>
+    <x:Double x:Key="Font.Small">11.5</x:Double>
     <x:Double x:Key="Font.Caption">12</x:Double>
+    <x:Double x:Key="Font.Row">12.5</x:Double>
+    <x:Double x:Key="Font.Label">13</x:Double>
     <x:Double x:Key="Font.Body">14</x:Double>
     <x:Double x:Key="Font.Heading">18</x:Double>
     <x:Double x:Key="Font.Title">22</x:Double>
+    <x:Double x:Key="Font.Display">28</x:Double>
 
     <x:Double x:Key="Height.Control">34</x:Double>
+    <x:Double x:Key="Height.Pill">34</x:Double>
+    <x:Double x:Key="Height.Chip">24</x:Double>
+    <x:Double x:Key="Height.Search">28</x:Double>
+    <x:Double x:Key="Height.Header">48</x:Double>
+    <x:Double x:Key="Height.Hero">96</x:Double>
+    <x:Double x:Key="Height.Like">26</x:Double>
+    <x:Double x:Key="Height.Progress">6</x:Double>
+    <x:Double x:Key="Height.Volume">3</x:Double>
+
     <x:Double x:Key="Size.IconButton">40</x:Double>
     <x:Double x:Key="Size.IconButtonL">56</x:Double>
+    <x:Double x:Key="Size.IconButtonS">30</x:Double>
+    <x:Double x:Key="Size.NavButton">38</x:Double>
     <x:Double x:Key="Size.AvatarS">28</x:Double>
+    <x:Double x:Key="Size.AvatarHeader">24</x:Double>
     <x:Double x:Key="Size.AvatarM">44</x:Double>
     <x:Double x:Key="Size.Thumb">44</x:Double>
+    <x:Double x:Key="Size.ThumbL">64</x:Double>
+    <x:Double x:Key="Size.HistoryWhen">84</x:Double>
+    <x:Double x:Key="Size.HomeTile">120</x:Double>
+    <x:Double x:Key="Size.Cover">36</x:Double>
+    <x:Double x:Key="Size.CoverPlayer">42</x:Double>
+    <x:Double x:Key="Size.CoverWidget">48</x:Double>
+    <x:Double x:Key="Size.IconButtonW">28</x:Double>
+    <x:Double x:Key="Size.PlayButtonW">38.5</x:Double>
+    <x:Double x:Key="Size.IconPlayW">27.5</x:Double>
+    <x:Double x:Key="Height.ProgressPlayer">8</x:Double>
+    <x:Double x:Key="Size.ThumbProgress">14</x:Double>
+    <x:Double x:Key="Size.PlayButton">42</x:Double>
+    <x:Double x:Key="Size.Rail">64</x:Double>
+    <x:Double x:Key="Size.ModuleW">46</x:Double>
+    <x:Double x:Key="Size.ModuleH">44</x:Double>
+    <x:Double x:Key="Size.Source">170</x:Double>
+    <x:Double x:Key="Size.SearchMax">340</x:Double>
+    <x:Double x:Key="Size.PlayerMax">840</x:Double>
+    <x:Double x:Key="Size.ContentMax">1040</x:Double>
+    <x:Double x:Key="Size.PlayerTitle">120</x:Double>
+    <x:Double x:Key="Size.VolumeSlider">140</x:Double>
+    <x:Double x:Key="Size.Like">28</x:Double>
     <x:Double x:Key="Size.Icon">20</x:Double>
+    <x:Double x:Key="Size.IconXS">15</x:Double>
+    <x:Double x:Key="Size.IconS">16</x:Double>
+    <x:Double x:Key="Size.IconM">18</x:Double>
     <x:Double x:Key="Size.IconL">28</x:Double>
+    <x:Double x:Key="Size.IconPlay">22</x:Double>
+    <x:Double x:Key="Size.RailMark">3</x:Double>
+    <x:Double x:Key="Size.RailMarkH">20</x:Double>
+    <!-- Breite von Auswahl-Listen (Dropdowns). Fest, unabhängig vom Inhalt. -->
+    <x:Double x:Key="Size.Dropdown">280</x:Double>
+    <!-- Größte Breite der Titel-Anzeige beim Songwechsel. -->
+    <x:Double x:Key="Size.NowPlaying">420</x:Double>
 </ResourceDictionary>

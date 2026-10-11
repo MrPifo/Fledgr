@@ -1,8 +1,9 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using YTSPlayer.Modules.MusicPlayer.ViewModels;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.MusicPlayer.Views;
 
@@ -13,7 +14,6 @@ public partial class LibraryView : UserControl
         InitializeComponent();
         DragDrop.AddDragOverHandler(this, OnDragOver);
         DragDrop.AddDropHandler(this, OnDrop);
-        KeyBindings.Add(new KeyBinding { Gesture = new KeyGesture(Key.F, KeyModifiers.Control), Command = new FocusSearchCommand(this) });
     }
 
     LibraryViewModel? Vm => DataContext as LibraryViewModel;
@@ -22,7 +22,7 @@ public partial class LibraryView : UserControl
     {
         var top = TopLevel.GetTopLevel(this);
         if (top == null || Vm == null) return;
-        var folders = await top.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "Musik- oder Sound-Ordner wählen", AllowMultiple = false });
+        var folders = await top.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = Loc.T("music.pickFolder"), AllowMultiple = false });
         if (folders.Count == 0) return;
         var path = folders[0].TryGetLocalPath();
         if (path != null) await Vm.AddFolderAsync(path);
@@ -30,6 +30,15 @@ public partial class LibraryView : UserControl
 
     /// <summary>Die markierten Zeilen der Liste (bei Mehrfachauswahl alle).</summary>
     List<LibraryItem> Selected => [.. List.SelectedItems?.OfType<LibraryItem>() ?? []];
+
+    /// <summary>Drei-Punkte-Menü einer Zeile. Gehört die Zeile zur Auswahl, gilt das Menü für die ganze Auswahl, sonst nur für sie.</summary>
+    void OnRowMenu(object? sender, RoutedEventArgs e)
+    {
+        if (Vm is not { } vm || sender is not Control anchor || anchor.DataContext is not LibraryItem row) return;
+        var sel = Selected;
+        LibraryMenus.ShowTrack(vm, sel.Contains(row) ? sel : [row], row, anchor);
+        e.Handled = true;
+    }
 
     void OnPlaySelection(object? sender, RoutedEventArgs e) => _ = Vm?.PlaySelectionAsync(Selected);
 
@@ -56,17 +65,5 @@ public partial class LibraryView : UserControl
         if (e.Key != Key.Enter) return;
         Vm?.OpenSelectedCommand.Execute(null);
         e.Handled = true;
-    }
-
-    sealed class FocusSearchCommand(LibraryView view) : System.Windows.Input.ICommand
-    {
-        public event EventHandler? CanExecuteChanged { add { } remove { } }
-        public bool CanExecute(object? parameter) => true;
-
-        public void Execute(object? parameter)
-        {
-            view.SearchBox.Focus();
-            view.SearchBox.SelectAll();
-        }
     }
 }

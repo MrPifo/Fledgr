@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 
 namespace YTSPlayer.Ui;
 
@@ -8,6 +8,9 @@ namespace YTSPlayer.Ui;
 /// </summary>
 public interface ITrackMenuProvider
 {
-    /// <summary>Zeigt das Menü des laufenden Titels unter <paramref name="anchor"/>.</summary>
-    void ShowTrackMenu(Control anchor);
+    /// <summary>
+    /// Zeigt das Menü des laufenden Titels unter <paramref name="anchor"/>. <paramref name="extraItems"/> sind Einträge der Shell
+    /// (z. B. „Songtext“), die am Ende des Menüs angehängt werden.
+    /// </summary>
+    void ShowTrackMenu(Control anchor, IReadOnlyList<Control> extraItems);
 }

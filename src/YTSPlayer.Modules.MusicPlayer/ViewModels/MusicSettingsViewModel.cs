@@ -1,13 +1,28 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Modules.MusicPlayer.Library;
+using YTSPlayer.Modules.MusicPlayer.Playback;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.MusicPlayer.ViewModels;
 
 /// <summary>Einstellungen des Musikplayers (Eintrag „Musik“ in den Einstellungen).</summary>
-public sealed partial class MusicSettingsViewModel(LibraryService library, LibraryViewModel view) : ObservableObject
+public sealed partial class MusicSettingsViewModel(LibraryService library, LibraryViewModel view, AppSettings app, ISettingsStore store) : ObservableObject
 {
     [ObservableProperty] string _info = "";
+
+    /// <summary>Titel, Künstler und Jahr kurz oben einblenden, wenn ein neuer Titel startet.</summary>
+    public bool ShowNowPlaying
+    {
+        get => app.NowPlayingShown(LibVlcSource.SourceKey);
+        set
+        {
+            app.SetNowPlayingShown(LibVlcSource.SourceKey, value);
+            store.Save("app", app);
+            OnPropertyChanged();
+        }
+    }
 
     /// <summary>Titel, Interpret und Album in der Suche berücksichtigen (liest die Tags beim Scan).</summary>
     public bool SearchTags
@@ -19,14 +34,14 @@ public sealed partial class MusicSettingsViewModel(LibraryService library, Libra
             library.Settings.SearchTags = value;
             library.Save();
             OnPropertyChanged();
-            Info = value ? "Beim nächsten Scan werden die Tags gelesen. „Jetzt neu scannen“ startet ihn gleich." : "Beim nächsten Scan werden keine Tags mehr gelesen.";
+            Info = value ? Loc.T("music.settings.tags.on") : Loc.T("music.settings.tags.off");
         }
     }
 
     [RelayCommand]
     async Task RescanNow()
     {
-        Info = "Scan läuft. Der Fortschritt steht auf der Seite „Musik“.";
+        Info = Loc.T("music.settings.scanning");
         await view.RescanNowAsync();
     }
 }

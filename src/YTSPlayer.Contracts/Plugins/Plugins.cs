@@ -5,11 +5,25 @@ using YTSPlayer.Contracts.Playback;
 
 namespace YTSPlayer.Contracts.Plugins;
 
-/// <summary>Eine Seite in der Navigation. Die Shell findet die passende View über das ViewModel.</summary>
-public sealed record NavPage(string Id, string Title, string Icon, object ViewModel, int Order = 100);
+/// <summary>
+/// Eine Seite in der Navigation. Die Shell findet die passende View über das ViewModel.
+/// <paramref name="Title"/> ist ein Übersetzungs-Schlüssel (z. B. <c>music.nav</c>). <paramref name="Tone"/> wählt die Farbe, wenn die Seite aktiv ist:
+/// <c>music</c>, <c>yt</c>, <c>radio</c> oder <c>accent</c> (Standard).
+/// </summary>
+public sealed record NavPage(string Id, string Title, string Icon, object ViewModel, int Order = 100, string Tone = "accent");
 
-/// <summary>Eine Einstellungs-Seite eines Plugins.</summary>
+/// <summary>Eine Einstellungs-Seite eines Plugins. <paramref name="Title"/> ist ein Übersetzungs-Schlüssel.</summary>
 public sealed record SettingsPage(string Id, string Title, object ViewModel);
+
+/// <summary>
+/// Optional für das ViewModel einer Seite: bietet etwas für die Mitte der Kopfzeile an (z. B. die Suche).
+/// Das Objekt ist ein ViewModel, zu dem das Modul eine View über <c>IViewProvider</c> meldet. Null = die Kopfzeile bleibt dort leer.
+/// </summary>
+public interface IHeaderContent
+{
+    /// <summary>ViewModel für die Mitte der Kopfzeile oder null.</summary>
+    object? HeaderViewModel { get; }
+}
 
 /// <summary>Ein Eintrag im Tray-Menü.</summary>
 public sealed record TrayEntry(string Id, string Text, Action Invoke);
@@ -23,6 +37,9 @@ public interface IPluginContext
     void AddSource(IPlaybackSource source);
     void AddProvider(IMediaProvider provider);
     void AddPage(NavPage page);
+
+    /// <summary>Hängt einen Abschnitt in die Home-Seite ein.</summary>
+    void AddHomeSection(HomeSection section);
     void AddSettingsPage(SettingsPage page);
     void AddTrayEntry(TrayEntry entry);
     void AddDiagnostics(IDiagnosticsContributor contributor);

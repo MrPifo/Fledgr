@@ -1,6 +1,8 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using YTSPlayer.Contracts.Diagnostics;
+using YTSPlayer.Contracts.Localization;
 using YTSPlayer.Contracts.Plugins;
 using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Shell.Services;
@@ -21,7 +23,7 @@ public sealed partial class PluginToggle : ObservableObject
     {
         _host = host;
         _id = plugin.Id;
-        Name = plugin.DisplayName;
+        Name = Loc.Current[plugin.DisplayName];
         CanChange = !plugin.IsCore;
         _isEnabled = host.IsEnabled(plugin.Id);
     }
@@ -49,7 +51,7 @@ public sealed partial class PluginToggle : ObservableObject
     }
 }
 
-/// <summary>Ein Eintrag in der Liste links in den Einstellungen.</summary>
+/// <summary>Ein Eintrag in der Liste links in den Einstellungen. <paramref name="Title"/> ist ein Übersetzungs-Schlüssel.</summary>
 public sealed record SettingsCategory(string Id, string Title);
 
 /// <summary>Einstellungs-Seite: links die Kategorien (Allgemein, Module, je ein Eintrag pro Modul), rechts der Inhalt.</summary>
@@ -65,9 +67,39 @@ public sealed partial class SettingsViewModel : ObservableObject
     SettingsCategory? _selectedCategory;
 
     readonly SleepTimer _sleep;
+    readonly IAppPaths _paths;
 
-    public SettingsViewModel(AppSettings settings, ISettingsStore store, PluginHost host, SleepTimer sleep)
+    [ObservableProperty] string _cacheSizeText = "";
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(ClearCacheCommand))] bool _cacheBusy;
+
+    /// <summary>Misst den Cache im Hintergrund und zeigt die Größe an.</summary>
+    public async Task RefreshCacheSizeAsync()
     {
+        var bytes = await Task.Run(() => AppCache.Measure(_paths));
+        CacheSizeText = FormatSize(bytes);
+    }
+
+    /// <summary>Leert den Cache (Bilder und gespeicherte Listen). Login und Einstellungen bleiben.</summary>
+    [RelayCommand(CanExecute = nameof(CanClearCache))]
+    async Task ClearCache()
+    {
+        CacheBusy = true;
+        try { await Task.Run(() => AppCache.Clear(_paths)); }
+        finally { CacheBusy = false; }
+        await RefreshCacheSizeAsync();
+    }
+
+    bool CanClearCache() => !CacheBusy;
+
+    static string FormatSize(long bytes) =>
+        bytes >= 1024 * 1024 ? Loc.Current.Number(bytes / 1048576.0, 1) + " MB"
+        : bytes >= 1024 ? Loc.Current.Number(bytes / 1024.0, 0) + " KB"
+        : Loc.Current.Integer(bytes) + " B";
+
+    public SettingsViewModel(AppSettings settings, ISettingsStore store, PluginHost host, SleepTimer sleep, IAppPaths paths)
+    {
+        _paths = paths;
+        _ = RefreshCacheSizeAsync();
         _settings = settings;
         _store = store;
         _sleep = sleep;
@@ -98,8 +130,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         var keep = SelectedCategory?.Id;
         Categories.Clear();
-        Categories.Add(new SettingsCategory(GeneralId, "Allgemein"));
-        Categories.Add(new SettingsCategory(ModulesId, "Module"));
+        Categories.Add(new SettingsCategory(GeneralId, "shell.settings.general"));
+        Categories.Add(new SettingsCategory(ModulesId, "shell.settings.modules"));
         foreach (var p in PluginPages) Categories.Add(new SettingsCategory(p.Id, p.Title));
         Select(keep);
     }
@@ -109,6 +141,23 @@ public sealed partial class SettingsViewModel : ObservableObject
         get => _settings.MinimizeOnClose;
         set { _settings.MinimizeOnClose = value; _store.Save("app", _settings); OnPropertyChanged(); }
     }
+
+    /// <summary>Player-Leiste fest unten über die volle Breite. Gilt sofort.</summary>
+    public bool PlayerDocked
+    {
+        get => _settings.PlayerDocked;
+        set { _settings.PlayerDocked = value; _store.Save("app", _settings); OnPropertyChanged(); }
+    }
+
+    /// <summary>Lautstärke-Regler mit Kubik-Kurve. Gilt ab der nächsten Änderung am Regler.</summary>
+    public bool CubicVolume
+    {
+        get => _settings.CubicVolume;
+        set { _settings.CubicVolume = value; _store.Save("app", _settings); OnPropertyChanged(); VolumeCurveChanged?.Invoke(); }
+    }
+
+    /// <summary>Wird nach dem Umschalten der Lautstärke-Kurve aufgerufen: Die laufende Quelle bekommt sofort den neuen Wert.</summary>
+    public Action? VolumeCurveChanged { get; set; }
 
     /// <summary>Sleep-Timer an/aus (gilt für alle Player).</summary>
     public bool SleepTimerEnabled
@@ -125,6 +174,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     }
 
     /// <summary>Ordner der Logdateien (leer, wenn nicht eingerichtet).</summary>
+    /// <summary>Version der App für die Anzeige in den Einstellungen.</summary>
+    public string VersionText => HomeViewModel.AppVersion;
     public string LogDirectory => AppLog.Directory ?? "";
 
     public int TargetMb

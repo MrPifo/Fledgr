@@ -1,13 +1,20 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
         Buttons. Eine Basis plus Varianten über Classes:
           (ohne)    = secondary (Standard)
-          primary   = Hauptaktion (Akzent)
-          danger    = gefährliche Aktion (z. B. Abmelden, Löschen)
+          primary   = Hauptaktion (Creme)
+          accent    = betonte Aktion (Bernstein)
+          danger    = gefährliche Aktion (z. B. Abmelden, Löschen) (+ dots = mit Punktraster)
           ghost     = ohne Fläche
-          icon      = rund, nur Icon (MaterialIcon als Inhalt)  (+ large = größer, z. B. Play)
-          active    = eingeschaltet (z. B. Zufall an): Akzentfläche. Zusammen mit icon/ghost nutzbar.
+          icon      = rund, nur Icon (MaterialIcon als Inhalt)  (+ large = größer, header = Kopfzeile, nav = Sidebar unten)
+          active    = eingeschaltet (z. B. Zufall an): nur die Farbe wechselt (Icon/Text in Akzent), keine Fläche.
+          pill      = Schnellzugriff (Icon + Text, groß)
+          chip      = kleine Auswahl-Pille (+ active = gewählt)
+          hero      = dunkel durchsichtig, für Knöpfe über dem Hero-Verlauf
+          segment   = Knopf in der Like-Kapsel
+          play      = Play-Knopf im Player (Creme-Kreis)
+          small     = kleine Variante
         Neue Variante? Erst prüfen, ob eine bestehende passt. Dann hier ergänzen und im Katalog (CLAUDE.md) eintragen.
     -->
 
@@ -15,11 +22,12 @@
     <Style Selector="Button">
         <Setter Property="Padding" Value="{DynamicResource Pad.Control}" />
         <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
-        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
-        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Label}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -38,18 +46,50 @@
         <Setter Property="Foreground" Value="{DynamicResource Brush.TextDisabled}" />
     </Style>
 
-    <!-- primary -->
+    <!-- Kleine Bewegung bei Text-Knöpfen: Hover hebt 1 px, Klick drückt auf 97 %. Icons, Pillen, Chips, Segmente und der Player bewegen sich nicht. -->
+    <Style Selector="Button">
+        <Setter Property="RenderTransformOrigin" Value="50%,50%" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.12" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button:pointerover:not(.icon):not(.chip):not(.pill):not(.segment):not(.avatar):not(.play):not(.bare)">
+        <Setter Property="RenderTransform" Value="translateY(-1px)" />
+    </Style>
+    <Style Selector="Button:pressed:not(.icon):not(.chip):not(.pill):not(.segment):not(.avatar):not(.play):not(.bare)">
+        <Setter Property="RenderTransform" Value="scale(0.97)" />
+    </Style>
+
+    <!-- primary (Creme) -->
     <Style Selector="Button.primary">
+        <Setter Property="Background" Value="{DynamicResource Brush.Primary}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Primary}" />
+    </Style>
+    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.PrimaryHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.PrimaryHover}" />
+    </Style>
+    <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.PrimaryPressed}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+    </Style>
+
+    <!-- accent (Bernstein) -->
+    <Style Selector="Button.accent">
         <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
     </Style>
-    <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
     </Style>
-    <Style Selector="Button.primary:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Style Selector="Button.accent:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Brush.AccentPressed}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
     </Style>
@@ -57,17 +97,25 @@
     <!-- danger -->
     <Style Selector="Button.danger">
         <Setter Property="Background" Value="{DynamicResource Brush.Danger}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.Danger}" />
     </Style>
     <Style Selector="Button.danger:pointerover /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Brush.DangerHover}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Brush.DangerHover}" />
     </Style>
     <Style Selector="Button.danger:pressed /template/ ContentPresenter#PART_ContentPresenter">
         <Setter Property="Background" Value="{DynamicResource Brush.DangerPressed}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnDanger}" />
+    </Style>
+
+    <!-- dots: danger mit Punktraster (Halftone) -->
+    <Style Selector="Button.danger.dots">
+        <Setter Property="Background" Value="{DynamicResource Brush.DangerDots}" />
+    </Style>
+    <Style Selector="Button.danger.dots:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.DangerHoverDots}" />
     </Style>
 
     <!-- ghost -->
@@ -83,28 +131,177 @@
         <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
     </Style>
 
-    <!-- icon (rund, nur Symbol) -->
+    <!-- icon (rund, nur Symbol). Ohne Fläche, Hover färbt Icon heller. -->
     <Style Selector="Button.icon">
         <Setter Property="Width" Value="{DynamicResource Size.IconButton}" />
         <Setter Property="Height" Value="{DynamicResource Size.IconButton}" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.Round}" />
-        <Setter Property="FontFamily" Value="Segoe UI Symbol" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+    <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter, Button.icon:flyout-open /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHover}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+    </Style>
+    <Style Selector="Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfacePressed}" />
+    </Style>
+    <Style Selector="Button.icon:disabled /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
     </Style>
     <Style Selector="Button.icon.large">
         <Setter Property="Width" Value="{DynamicResource Size.IconButtonL}" />
         <Setter Property="Height" Value="{DynamicResource Size.IconButtonL}" />
     </Style>
+    <Style Selector="Button.icon.header">
+        <Setter Property="Width" Value="{DynamicResource Size.IconButtonS}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconButtonS}" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="Button.icon.compact">
+        <Setter Property="Width" Value="{DynamicResource Size.IconButtonW}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconButtonW}" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="Button.icon.step">
+        <Setter Property="Width" Value="{DynamicResource Size.IconButtonStep}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconButtonStep}" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+    <Style Selector="Button.icon.nav">
+        <Setter Property="Width" Value="{DynamicResource Size.NavButton}" />
+        <Setter Property="Height" Value="{DynamicResource Size.NavButton}" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+    </Style>
 
-    <!-- active (eingeschalteter Zustand, z. B. Zufall) -->
+    <!-- active (eingeschalteter Zustand, z. B. Zufall): nur Farbe, keine Fläche -->
     <Style Selector="Button.active">
-        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Accent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
     </Style>
     <Style Selector="Button.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-        <Setter Property="Background" Value="{DynamicResource Brush.AccentHover}" />
-        <Setter Property="Foreground" Value="{DynamicResource Brush.OnAccent}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.AccentHover}" />
+    </Style>
+
+    <!-- pill (Schnellzugriff) -->
+    <Style Selector="Button.pill">
+        <Setter Property="Height" Value="{DynamicResource Height.Pill}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Pill}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}" />
+    </Style>
+    <Style Selector="Button.pill:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentRing}" />
+    </Style>
+
+    <!-- chip -->
+    <Style Selector="Button.chip">
+        <Setter Property="Height" Value="{DynamicResource Height.Chip}" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Chip}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface1}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.chip.active">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+    <Style Selector="Button.chip.active:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+    </Style>
+
+    <!-- hero (über dem Verlauf) -->
+    <Style Selector="Button.hero">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="{DynamicResource Height.Like}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Scrim}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.BorderSoft}" />
+    </Style>
+    <Style Selector="Button.hero.primary">
+        <Setter Property="Background" Value="{DynamicResource Brush.Primary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Primary}" />
+    </Style>
+
+    <!-- segment (Like-Kapsel) -->
+    <Style Selector="Button.segment">
+        <Setter Property="Width" Value="{DynamicResource Size.Like}" />
+        <Setter Property="Height" Value="{DynamicResource Height.Like}" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+    </Style>
+    <Style Selector="Button.segment:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHover}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.segment.like.active">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Button.segment.dislike.active">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Dislike}" />
+    </Style>
+
+    <!-- play (Creme-Kreis) -->
+    <Style Selector="Button.play">
+        <Setter Property="Width" Value="{DynamicResource Size.PlayButton}" />
+        <Setter Property="Height" Value="{DynamicResource Size.PlayButton}" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Play}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <!-- Schatten als Effekt: folgt der runden Form (BoxShadow zeichnete ein Eck). -->
+    <Style Selector="Button.play">
+        <Setter Property="Effect" Value="{DynamicResource Effect.Play}" />
+    </Style>
+    <!-- compact (Widget): steht bewusst NACH Button.play, sonst gewinnt dessen Größe (Avalonia wendet Stile in Reihenfolge an). -->
+    <Style Selector="Button.play.compact">
+        <Setter Property="Width" Value="{DynamicResource Size.PlayButtonW}" />
+        <Setter Property="Height" Value="{DynamicResource Size.PlayButtonW}" />
+    </Style>
+    <!-- bare: ohne Innenabstand, bündig mit dem Icon darüber (z. B. Favoriten im Widget). -->
+    <!-- bare: flacher Knopf ohne Bewegung (z. B. Favoriten im Widget), beim Überfahren nur eine Fläche. -->
+    <Style Selector="Button.bare:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Shade}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.bare">
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.M}" />
+        <Setter Property="Padding" Value="{DynamicResource Pad.Bare}" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.play:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.PrimaryHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="Button.play:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.PrimaryPressed}" />
+    </Style>
+
+    <!-- avatar (Profilbild als Knopf, ohne Innenabstand) -->
+    <Style Selector="Button.avatar">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
+
+    <!-- small -->
+    <Style Selector="Button.small">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="{DynamicResource Height.Search}" />
+        <Setter Property="FontSize" Value="{DynamicResource Font.Caption}" />
     </Style>
 </Styles>

@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<translations language="en" country="GB">
+  <t key="radio.nav">Radio</t>
+  <t key="radio.plugin.name">Radio</t>
+  <t key="radio.settings.title">Radio</t>
+  <t key="radio.search.placeholder">Search stations, e.g. BBC</t>
+  <t key="radio.status.playFailed">Playback is not possible.</t>
+  <t key="radio.status.checking">The stream is not responding. Checking the station …</t>
+  <t key="radio.status.noDb">No connection to the station database. Try again.</t>
+  <t key="radio.status.gone">Station gone: no longer in the database.</t>
+  <t key="radio.status.dead">Station dead: the stream is not responding.</t>
+  <t key="radio.status.noResponse">The stream is not responding.</t>
+  <t key="radio.countries.all">All countries</t>
+  <t key="radio.search.none">No stations found.</t>
+  <t key="radio.add.noStream">The playlist contains no stream address.</t>
+  <t key="radio.add.failed">The address could not be loaded.</t>
+  <t key="radio.error.noDb">No connection to the station database.</t>
+  <t key="radio.error.inactive">Radio is not active. Switch the module on.</t>
+  <t key="radio.add.title">Add address</t>
+  <t key="radio.add.prompt">Address of the stream or of a playlist (.m3u or .pls), starting with http:// or https://</t>
+  <t key="radio.add.ok">Add</t>
+  <t key="radio.view.country.search">Search country</t>
+  <t key="radio.view.country">Country</t>
+  <t key="radio.view.genre">Genre, e.g. jazz</t>
+  <t key="radio.view.addUrl.tip">Add a stream or a playlist (.m3u, .pls) by address</t>
+  <t key="radio.view.back.tip">Back to the favourites</t>
+  <t key="radio.view.results">Results</t>
+  <t key="radio.view.noFavorites">No favourites yet. Press the star on a station to keep it here.</t>
+  <t key="radio.view.recent">Recently played</t>
+  <t key="radio.view.favorite">Favourite</t>
+  <t key="radio.view.play">Play</t>
+  <t key="radio.view.favorites">Favourites</t>
+  <t key="radio.settings.display">Display</t>
+  <t key="radio.settings.nowPlaying">Show new track on top</t>
+</translations>

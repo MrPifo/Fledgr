@@ -1,52 +1,64 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:YTSPlayer.Shell.ViewModels"
              xmlns:plugins="using:YTSPlayer.Contracts.Plugins"
+             xmlns:loc="using:YTSPlayer.Ui.Localization"
              x:Class="YTSPlayer.Shell.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
     <Grid RowDefinitions="Auto,*" RowSpacing="{DynamicResource Space.M}">
-        <TextBlock Classes="title" Text="Einstellungen" />
+        <TextBlock Classes="title" Text="{loc:T shell.nav.settings}" />
 
         <Grid Grid.Row="1" ColumnDefinitions="200,*" ColumnSpacing="{DynamicResource Space.L}">
             <!-- Kategorien: Allgemein, Module und ein Eintrag je Modul -->
             <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}">
                 <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:SettingsCategory">
-                        <TextBlock Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Title, Converter={x:Static loc:LocConverters.Key}}" TextTrimming="CharacterEllipsis" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
             <ScrollViewer Grid.Column="1">
-                <StackPanel Spacing="{DynamicResource Space.L}">
+                <StackPanel x:Name="Panels" Spacing="{DynamicResource Space.L}">
 
-                    <Border Classes="panel" IsVisible="{Binding ShowGeneral}">
+                    <Border Classes="panel dots" IsVisible="{Binding ShowGeneral}">
                         <StackPanel Spacing="{DynamicResource Space.S}">
-                            <TextBlock Classes="heading" Text="Allgemein" />
-                            <CheckBox Content="Schließen minimiert in die Taskleiste (statt Tray)" IsChecked="{Binding MinimizeOnClose}" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.general}" />
+                            <CheckBox Content="{loc:T shell.settings.minimize}" IsChecked="{Binding MinimizeOnClose}" />
+                            <CheckBox Content="{loc:T shell.settings.cubicvolume}" IsChecked="{Binding CubicVolume}" />
+                            <CheckBox Content="{loc:T shell.settings.playerdocked}" IsChecked="{Binding PlayerDocked}" />
                             <Grid ColumnDefinitions="Auto,100" ColumnSpacing="{DynamicResource Space.S}">
-                                <TextBlock Text="RAM-Ziel (MB)" VerticalAlignment="Center" />
+                                <TextBlock Text="{loc:T shell.settings.ram}" VerticalAlignment="Center" />
                                 <TextBox Grid.Column="1" Text="{Binding TargetMb}" />
                             </Grid>
-                            <TextBlock Classes="heading" Text="Sleep-Timer" />
-                            <CheckBox Content="Wiedergabe pausieren, wenn nichts bedient wird (gilt für lokale Musik und YouTube Music)" IsChecked="{Binding SleepTimerEnabled}" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.sleep}" />
+                            <CheckBox Content="{loc:T shell.settings.sleep.enable}" IsChecked="{Binding SleepTimerEnabled}" />
                             <Grid ColumnDefinitions="Auto,100,*" ColumnSpacing="{DynamicResource Space.S}">
-                                <TextBlock Text="Pause nach (Minuten)" VerticalAlignment="Center" />
+                                <TextBlock Text="{loc:T shell.settings.sleep.after}" VerticalAlignment="Center" />
                                 <TextBox Grid.Column="1" Text="{Binding SleepTimerMinutes}" IsEnabled="{Binding SleepTimerEnabled}" />
                             </Grid>
                             <TextBlock Classes="caption muted" TextWrapping="Wrap"
-                                       Text="Als Bedienung zählen Maus, Tastatur, Medientasten und das Tray-Menü. Eine Minute vorher erscheint ein Hinweis. Schnell aus: Mond-Symbol oben in der Kopfzeile oder im Tray." />
-                            <TextBlock Classes="heading" Text="Fehlerprotokoll" />
+                                       Text="{loc:T shell.settings.sleep.hint}" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.cache}" />
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                                <TextBlock Text="{loc:T shell.settings.cache.size}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{Binding CacheSizeText}" Classes="muted" VerticalAlignment="Center" />
+                                <Button Grid.Column="2" Content="{loc:T shell.settings.cache.clear}" Command="{Binding ClearCacheCommand}" />
+                            </Grid>
+                            <TextBlock Classes="caption muted" TextWrapping="Wrap" Text="{loc:T shell.settings.cache.hint}" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.version}" />
+                            <TextBlock Classes="caption muted" Text="{Binding VersionText}" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.log}" />
                             <TextBlock Classes="caption muted" Text="{Binding LogDirectory}" TextWrapping="Wrap" />
-                            <Button Content="Logordner öffnen" HorizontalAlignment="Left" Click="OnOpenLogFolder" />
+                            <Button Content="{loc:T shell.settings.log.open}" HorizontalAlignment="Left" Click="OnOpenLogFolder" />
                         </StackPanel>
                     </Border>
 
-                    <Border Classes="panel" IsVisible="{Binding ShowModules}">
+                    <Border Classes="panel dots" IsVisible="{Binding ShowModules}">
                         <StackPanel Spacing="{DynamicResource Space.S}">
-                            <TextBlock Classes="heading" Text="Module" />
-                            <TextBlock Classes="caption muted" Text="Ausgeschaltete Module verschwinden aus der Oberfläche und geben ihren Speicher frei." TextWrapping="Wrap" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.modules}" />
+                            <TextBlock Classes="caption muted" Text="{loc:T shell.settings.modules.hint}" TextWrapping="Wrap" />
                             <ItemsControl ItemsSource="{Binding Plugins}">
                                 <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="{DynamicResource Space.S}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -65,9 +77,9 @@
                     </Border>
 
                     <!-- Einstellungen des gewählten Moduls (z. B. YouTube Music) -->
-                    <Border Classes="panel" IsVisible="{Binding ShowPlugin}">
+                    <Border Classes="panel dots" IsVisible="{Binding ShowPlugin}">
                         <StackPanel Spacing="{DynamicResource Space.S}">
-                            <TextBlock Classes="heading" Text="{Binding SelectedPluginPage.Title}" />
+                            <TextBlock Classes="heading" Text="{Binding SelectedPluginPage.Title, Converter={x:Static loc:LocConverters.Key}}" />
                             <ContentControl Content="{Binding SelectedPluginPage.ViewModel}" />
                         </StackPanel>
                     </Border>

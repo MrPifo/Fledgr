@@ -1,27 +1,58 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
              x:Class="YTSPlayer.Modules.YtConnect.Views.ShelvesView">
 
-    <!-- Bereiche mit waagerechten Reihen von Karten (Künstler-Seite und Startseite). Die Quelle kommt über „Sections“. -->
+    <!--
+        Bereiche der Startseite und der Künstler-Seite. Je nach Bereich als Zeilen (zwei Spalten, kleines Cover) oder als Karten (waagerechte Reihe).
+        Die Quelle kommt über „Sections“.
+    -->
     <ItemsControl x:Name="Shelves">
         <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="{DynamicResource Space.L}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate x:DataType="vm:ArtistSectionVm">
                 <StackPanel Spacing="{DynamicResource Space.S}">
                     <TextBlock Classes="heading" Text="{Binding Title}" />
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+
+                    <!-- Zeilen -->
+                    <ItemsControl IsVisible="{Binding IsRows}" ItemsSource="{Binding RowItems}">
+                        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TrackItem">
+                                <Border Classes="row" Classes.active="{Binding IsCurrent}" Margin="{DynamicResource Pad.Gap}" Background="{DynamicResource Brush.Surface1}" Cursor="Hand"
+                                        Tapped="OnCardTapped" ContextRequested="OnCardContext">
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.M}">
+                                        <Border Classes="thumb">
+                                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" Classes="row" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Artist}" Classes="small secondary" TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+                                        <ui:PlayingBars Grid.Column="2" Playing="{Binding IsPlayingNow}" IsVisible="{Binding IsCurrent}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Karten -->
+                    <ScrollViewer IsVisible="{Binding IsCards}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                         <ItemsControl ItemsSource="{Binding Items}">
                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.M}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="vm:TrackItem">
-                                    <StackPanel Width="150" Spacing="{DynamicResource Space.XS}" Background="Transparent" Cursor="Hand"
+                                    <StackPanel Classes="tile" Width="{DynamicResource Size.HomeTile}" Spacing="{DynamicResource Space.XS}" Background="Transparent" Cursor="Hand"
                                                 Tapped="OnCardTapped" ContextRequested="OnCardContext">
-                                        <Border Classes="cover" Width="150" Height="150">
-                                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                        <Border Classes="cover" Width="{DynamicResource Size.HomeTile}" Height="{DynamicResource Size.HomeTile}">
+                                            <Grid>
+                                                <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                                <Border Classes="dim" />
+                                            </Grid>
                                         </Border>
-                                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Artist}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Title}" Classes="row" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Artist}" Classes="small secondary" TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>

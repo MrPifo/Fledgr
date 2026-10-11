@@ -4,6 +4,7 @@ using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Playback;
 using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Modules.YtConnect.Scripts;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.YtConnect;
 
@@ -22,6 +23,16 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
 
     /// <summary>Zuletzt gespeicherte Playlists.</summary>
     public List<PlaylistInfo> LoadCached() => store.Load<YtPlaylistCache>("yt-playlists").Items;
+
+    /// <summary>Zuletzt gespeicherte Startseite (leer, wenn es noch keine gibt).</summary>
+    public YtHomeCache LoadCachedHome() => store.Load<YtHomeCache>("yt-home");
+
+    /// <summary>Speichert die Startseite für den nächsten Start.</summary>
+    public void SaveCachedHome(IEnumerable<ArtistSectionData> sections, IEnumerable<HomeChip> chips)
+    {
+        try { store.Save("yt-home", new YtHomeCache { Sections = [.. sections], Chips = [.. chips], SavedUtc = DateTime.UtcNow }); }
+        catch (Exception ex) { AppLog.Warn("YouTube", "Startseite konnte nicht gespeichert werden", ex); }
+    }
 
     /// <summary>Wann die Playlists zuletzt erfolgreich geprüft wurden (UTC).</summary>
     public DateTime LastChecked => store.Load<YtPlaylistCache>("yt-playlists") is { Version: >= CacheVersion } c ? c.CheckedUtc : DateTime.MinValue;
@@ -85,13 +96,13 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
     /// <summary>Fügt einen Titel einer Playlist hinzu. Gibt null bei Erfolg zurück, sonst einen Fehlertext. Die gespeicherte Liste wird gleich mit ergänzt.</summary>
     public Task<string?> AddTrackAsync(string playlistId, TrackInfo track) =>
         EditAsync(new { playlistId, actions = new[] { new { action = "ACTION_ADD_VIDEO", addedVideoId = track.Id } } },
-            "Nicht hinzugefügt. Ist der Titel schon in der Playlist, oder gehört sie dir nicht?",
+            Loc.T("yt.err.addTrack"),
             () => AppendCachedAsync(playlistId, [WithThumb(track)]));
 
     /// <summary>Fügt alle Titel einer Playlist einer anderen hinzu.</summary>
     public Task<string?> AddPlaylistAsync(string targetId, string sourceId) =>
         EditAsync(new { playlistId = targetId, actions = new[] { new { action = "ACTION_ADD_PLAYLIST", addedFullListId = sourceId } } },
-            "Nicht hinzugefügt. Gehört die Ziel-Playlist dir?",
+            Loc.T("yt.err.addPlaylist"),
             async () =>
             {
                 var tracks = LoadCachedTracks(sourceId);
@@ -239,17 +250,17 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return "YouTube Music ist gerade nicht erreichbar.";
+            if (!await PreparePageAsync()) return Loc.T("yt.err.unreachable");
             var setId = track.SetId;
             if (setId.Length == 0)
             {
                 var (st, text) = await _api.CallAsync("browse", new { browseId = "VL" + playlistId });
                 setId = st == 200 ? FindSetId(text, track.Id) ?? "" : "";
-                if (setId.Length == 0) return "Der Eintrag wurde nicht gefunden. „Aktualisieren“ in der Playlist klicken und nochmal versuchen.";
+                if (setId.Length == 0) return Loc.T("yt.err.entryNotFound");
             }
             return await CallEditAsync("browse/edit_playlist",
                 new { playlistId, actions = new[] { new { action = "ACTION_REMOVE_VIDEO", removedVideoId = track.Id, setVideoId = setId } } },
-                "Nicht entfernt. Gehört die Playlist dir?", ok: t => t.Contains("STATUS_SUCCEEDED"));
+                Loc.T("yt.err.notRemoved"), ok: t => t.Contains("STATUS_SUCCEEDED"));
         }
         catch (Exception ex) { return ex.Message; }
         finally { await StopIfStartedAsync(started); }
@@ -261,14 +272,14 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return ("YouTube Music ist gerade nicht erreichbar.", null);
+            if (!await PreparePageAsync()) return (Loc.T("yt.err.unreachable"), null);
             var body = new { title, description = "", privacyStatus = "PRIVATE", videoIds = videoId == null ? Array.Empty<string>() : [videoId] };
             var (status, text) = await _api.CallAsync("playlist/create", body);
             if (status == 0) return (text, null);
-            if (status != 200) return ($"Nicht angelegt (Status {status}).", null);
+            if (status != 200) return (Loc.F("yt.err.notCreated", status), null);
             using var d = JsonDocument.Parse(text);
             if (!d.RootElement.TryGetProperty("playlistId", out var id) || id.GetString() is not { Length: > 0 } pid)
-                return ("YouTube hat keine Playlist angelegt.", null);
+                return (Loc.T("yt.err.noPlaylistCreated"), null);
             return (null, new PlaylistInfo(pid, title, videoId == null ? "0 Titel" : "1 Titel"));
         }
         catch (Exception ex) { return (ex.Message, null); }
@@ -296,10 +307,10 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return ("YouTube Music ist gerade nicht erreichbar.", [], null);
+            if (!await PreparePageAsync()) return (Loc.T("yt.err.unreachable"), [], null);
             var (status, text) = await _api.CallAsync("search", new { query, @params = SearchParams(kind) }, ct);
             if (status == 0) return (text, [], null);
-            if (status != 200) return ($"Suche fehlgeschlagen (Status {status}).", [], null);
+            if (status != 200) return (Loc.F("yt.err.searchFailed", status), [], null);
             var (items, next) = ParseSearchPage(text, kind);
             if (items.Count == 0)
             {
@@ -320,10 +331,10 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return ("YouTube Music ist gerade nicht erreichbar.", [], null);
+            if (!await PreparePageAsync()) return (Loc.T("yt.err.unreachable"), [], null);
             var (status, text) = await _api.CallAsync("search", new { continuation = token }, ct);
             if (status == 0) return (text, [], null);
-            if (status != 200) return ($"Weitere Treffer konnten nicht geladen werden (Status {status}).", [], null);
+            if (status != 200) return (Loc.F("yt.err.moreFailed", status), [], null);
             var (items, next) = ParseSearchPage(text, kind);
             return (null, items.Select(WithThumb).ToList(), next);
         }
@@ -473,12 +484,12 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return ("YouTube Music ist gerade nicht erreichbar.", null);
+            if (!await PreparePageAsync()) return (Loc.T("yt.err.unreachable"), null);
             var (status, text) = await _api.CallAsync("browse", new { browseId }, ct);
             if (status == 0) return (text, null);
-            if (status != 200) return ($"Die Künstler-Seite konnte nicht geladen werden (Status {status}).", null);
+            if (status != 200) return (Loc.F("yt.err.artistFailed", status), null);
             var page = YtArtistParser.Parse(text, browseId);
-            if (page == null) return ("Die Künstler-Seite hat ein unbekanntes Format.", null);
+            if (page == null) return (Loc.T("yt.err.artistFormat"), null);
             // Bilder der Karten und Top-Songs auf brauchbare Adressen bringen.
             return (null, page with
             {
@@ -513,24 +524,29 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         finally { await StopIfStartedAsync(started); }
     }
 
-    /// <summary>Lädt die Startseite (Empfehlungen). Mit <paramref name="token"/> die nächsten Bereiche. Gibt Fehlertext oder Bereiche und das Zeichen für mehr zurück.</summary>
-    public async Task<(string? Error, List<ArtistSectionData> Sections, string? Next)> LoadHomeAsync(string? token, CancellationToken ct)
+    /// <summary>
+    /// Lädt die Startseite (Empfehlungen). Mit <paramref name="token"/> die nächsten Bereiche, mit <paramref name="chipParams"/> die Startseite einer Stimmung.
+    /// Gibt Fehlertext oder Bereiche, das Zeichen für mehr und (nur bei der ersten Seite) die Stimmungen zurück.
+    /// </summary>
+    public async Task<(string? Error, List<ArtistSectionData> Sections, string? Next, List<HomeChip> Chips)> LoadHomeAsync(string? token, CancellationToken ct, string? chipParams = null)
     {
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return ("YouTube Music ist gerade nicht erreichbar.", [], null);
-            object body = token == null ? new { browseId = "FEmusic_home" } : new { continuation = token };
+            if (!await PreparePageAsync()) return (Loc.T("yt.err.unreachable"), [], null, []);
+            object body = token != null ? new { continuation = token }
+                : chipParams != null ? new Dictionary<string, string> { ["browseId"] = "FEmusic_home", ["params"] = chipParams }
+                : new { browseId = "FEmusic_home" };
             var (status, text) = await _api.CallAsync("browse", body, ct);
-            if (status == 0) return (text, [], null);
-            if (status != 200) return ($"Die Startseite konnte nicht geladen werden (Status {status}).", [], null);
+            if (status == 0) return (text, [], null, []);
+            if (status != 200) return (Loc.F("yt.err.homeFailed", status), [], null, []);
             var (sections, next) = YtHomeParser.Parse(text);
-            if (sections.Count == 0 && token == null) return ("Die Startseite hat ein unbekanntes Format oder ist leer.", [], null);
+            if (sections.Count == 0 && token == null) return (Loc.T("yt.err.homeFormat"), [], null, []);
             var withThumbs = sections.Select(s => s with { Items = [.. s.Items.Select(WithThumb)] }).ToList();
-            return (null, withThumbs, next);
+            return (null, withThumbs, next, token == null ? YtHomeParser.ParseChips(text) : []);
         }
         catch (OperationCanceledException) { throw; }
-        catch (Exception ex) { return (ex.Message, [], null); }
+        catch (Exception ex) { return (ex.Message, [], null, []); }
         finally { await StopIfStartedAsync(started); }
     }
 
@@ -544,9 +560,9 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return "YouTube Music ist gerade nicht erreichbar.";
+            if (!await PreparePageAsync()) return Loc.T("yt.err.unreachable");
             return await CallEditAsync(subscribe ? "subscription/subscribe" : "subscription/unsubscribe", new { channelIds = new[] { channelId } },
-                "YouTube hat die Änderung abgelehnt.", ok: t => !t.Contains("\"error\""));
+                Loc.T("yt.err.rejected"), ok: t => !t.Contains("\"error\""));
         }
         catch (Exception ex) { return ex.Message; }
         finally { await StopIfStartedAsync(started); }
@@ -558,9 +574,9 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return "YouTube Music ist gerade nicht erreichbar.";
+            if (!await PreparePageAsync()) return Loc.T("yt.err.unreachable");
             return await CallEditAsync(like ? "like/like" : "like/removelike", new { target = new { videoId } },
-                "YouTube hat die Bewertung abgelehnt.", ok: t => !t.Contains("\"error\""));
+                Loc.T("yt.err.ratingRejected"), ok: t => !t.Contains("\"error\""));
         }
         catch (Exception ex) { return ex.Message; }
         finally { await StopIfStartedAsync(started); }
@@ -572,8 +588,8 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return "YouTube Music ist gerade nicht erreichbar.";
-            return await CallEditAsync("playlist/delete", new { playlistId }, "Nicht gelöscht. Gehört die Playlist dir?", ok: t => !t.Contains("\"error\""));
+            if (!await PreparePageAsync()) return Loc.T("yt.err.unreachable");
+            return await CallEditAsync("playlist/delete", new { playlistId }, Loc.T("yt.err.notDeleted"), ok: t => !t.Contains("\"error\""));
         }
         catch (Exception ex) { return ex.Message; }
         finally { await StopIfStartedAsync(started); }
@@ -584,7 +600,7 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (!await PreparePageAsync()) return "YouTube Music ist gerade nicht erreichbar.";
+            if (!await PreparePageAsync()) return Loc.T("yt.err.unreachable");
             var error = await CallEditAsync("browse/edit_playlist", body, failText, ok: t => t.Contains("STATUS_SUCCEEDED"));
             if (error == null) await onSuccess();
             return error;
@@ -604,7 +620,10 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
     async Task<bool> PreparePageAsync()
     {
         source.Touch();
-        if (!engine.IsRunning) await engine.StartAsync(UrlNormalizer.Home);
+        // Startet oder spielt gerade ein Titel, gehört die Web-Ansicht der Wiedergabe: nicht anfassen und nicht wegnavigieren
+        // (sonst bleibt der Start hängen, weil die Seite zurück auf die Startseite springt).
+        if (source.InUse) return engine.IsRunning;
+        if (!engine.IsRunning) await engine.EnsureRunningAsync(UrlNormalizer.Home);
         else if (!await OnPageAsync("music.youtube.com")) await engine.Host.NavigateAndWaitAsync(UrlNormalizer.Home);
         return engine.IsRunning;
     }
@@ -649,7 +668,7 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         var started = !engine.IsRunning;
         try
         {
-            if (started) await engine.StartAsync("about:blank");
+            if (started) started = await engine.EnsureRunningAsync("about:blank");
             var items = await ScrapeAsync(ct, background: true);
             if (items.Count == 0) { scope.Fail(); return null; }
             var changed = !SameList(cached, items);
@@ -683,18 +702,18 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         source.Touch();
         try
         {
-            if (started) await engine.StartAsync("about:blank");
-            progress?.Report("Playlists werden gelesen …");
+            if (started) started = await engine.EnsureRunningAsync("about:blank");
+            progress?.Report(Loc.T("yt.playlists.reading"));
             var items = await ScrapeAsync(ct, background: false);
             var info = "";
             if (items.Count == 0)
             {
-                progress?.Report("Keine Treffer. Zweiter Versuch ohne Blockade …");
+                progress?.Report(Loc.T("yt.playlists.retry"));
                 info = await engine.ExecStringAsync(LibraryScripts.Diagnose);
                 engine.Host.BlockActive = false;
                 try { items = await ScrapeAsync(ct, background: false); }
                 finally { engine.Host.BlockActive = true; }
-                if (items.Count > 0) info = "Nur ohne Blockade gefunden. " + info;
+                if (items.Count > 0) info = Loc.T("yt.playlists.foundUnblocked") + info;
             }
             if (items.Count > 0) store.Save("yt-playlists", new YtPlaylistCache { Version = CacheVersion, Items = items, CheckedUtc = DateTime.UtcNow });
             else scope.Fail();
@@ -718,8 +737,11 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
     /// </summary>
     public async Task<List<TrackInfo>?> RefreshTracksAsync(string playlistId, bool background, IProgress<string>? progress, CancellationToken ct)
     {
+        // Im Hintergrund nie selbst die Web-Ansicht starten: Beim App-Start lädt sonst die Startseite gleichzeitig mit dem
+        // wiederhergestellten Titel, und der Titel kommt erst nach ~60 s. Die gespeicherte Liste reicht bis zum nächsten Mal.
+        if (background && !engine.IsRunning) return null;
         // Zuerst über die Schnittstelle: kein Seitenwechsel, die Wiedergabe läuft ungestört weiter.
-        progress?.Report("Songs werden gelesen …");
+        progress?.Report(Loc.T("yt.songs.loading"));
         var viaApi = await TryFetchTracksAsync(playlistId, ct);
         if (viaApi.Count > 0)
         {
@@ -734,8 +756,8 @@ public sealed class YtLibrary(YtEngine engine, YtPlaybackSource source, ISetting
         source.Touch();
         try
         {
-            if (started) await engine.StartAsync("about:blank");
-            progress?.Report("Songs werden gelesen …");
+            if (started) started = await engine.EnsureRunningAsync("about:blank");
+            progress?.Report(Loc.T("yt.songs.loading"));
             var items = await ScrapeTracksAsync(playlistId, background, ct);
             if (items.Count == 0) scope.Fail();
             else store.Save(TracksSection(playlistId), new YtTracksCache { Items = items, CheckedUtc = DateTime.UtcNow });

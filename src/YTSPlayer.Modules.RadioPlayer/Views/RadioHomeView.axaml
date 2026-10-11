@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.RadioPlayer.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
+             x:Class="YTSPlayer.Modules.RadioPlayer.Views.RadioHomeView"
+             x:DataType="vm:RadioHomeViewModel">
+
+    <!-- Logo-Kacheln der Favoriten und zuletzt gehörten Sender für Home. Der Kopf (Titel, „Alle anzeigen“) kommt von der Shell. -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="{DynamicResource Pad.TileRow}">
+        <ItemsControl ItemsSource="{Binding Stations}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.M}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:StationItem">
+                    <Button Classes="bare" Command="{Binding PlayCommand}">
+                        <StackPanel Classes="tile" Width="{DynamicResource Size.HomeTile}" Spacing="{DynamicResource Space.XS}">
+                            <Border Classes="cover" Width="{DynamicResource Size.HomeTile}" Height="{DynamicResource Size.HomeTile}">
+                                <Grid>
+                                    <mi:MaterialIcon Kind="Radio" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasLogo}" />
+                                    <Image Source="{Binding Logo}" Stretch="Uniform" />
+                                    <Border Classes="dim" />
+                                    <ui:PlayingBars Playing="{Binding IsPlayingNow}" IsVisible="{Binding IsCurrent}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                                </Grid>
+                            </Border>
+                            <TextBlock Text="{Binding Name}" Classes="row" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>

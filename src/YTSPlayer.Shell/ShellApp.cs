@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using YTSPlayer.Contracts;
@@ -12,6 +13,8 @@ using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Shell.Services;
 using YTSPlayer.Shell.ViewModels;
 using YTSPlayer.Shell.Views;
+using YTSPlayer.Contracts.Localization;
+using YTSPlayer.Ui;
 
 namespace YTSPlayer.Shell;
 
@@ -27,7 +30,9 @@ public sealed class ShellApp
     readonly ShellViewModel _vm;
     readonly MainWindow _main;
     readonly Func<Stream> _openIcon;
+    TrayService? _tray;
     readonly SessionRecorder _session;
+    readonly HomeViewModel _home;
     readonly SleepTimer _sleep;
 
     /// <summary>Jede Eingabe in einem Fenster zählt für den Sleep-Timer als Bedienung (auch bereits behandelte Ereignisse).</summary>
@@ -48,18 +53,28 @@ public sealed class ShellApp
         var paths = services.Require<IAppPaths>();
 
         var player = new PlayerService(_settings, perf);
+        player.Persist = () => _store.Save("app", _settings);
         var covers = new CoverLoader(perf);
         _host = new PluginHost(services, _settings, _store, player, plugins, perf);
         var monitor = new ProcessMonitor(stats, _host);
         var sleep = new SleepTimer(_settings, _store, player);
-        var settingsVm = new SettingsViewModel(_settings, _store, _host, sleep);
+        var settingsVm = new SettingsViewModel(_settings, _store, _host, sleep, paths) { VolumeCurveChanged = player.ReapplyVolume };
         _vm = new ShellViewModel(_settings, player, _host, covers, settingsVm);
+        // Home: die Startseite der App. Der globale Verlauf lebt mit dem Player.
+        var history = History = new PlayHistory(_store, player);
+        _home = new HomeViewModel(player, _host, history, covers, id => _vm.NavigateTo(id));
+        Application.Current?.DataTemplates.Add(new FuncDataTemplate<HomeViewModel>((_, _) => new HomeView()));
+        _host.AddShellPage(new NavPage("home", "home.nav", Icons.Home, _home, 0, "accent"));
+        // Titel-Anzeige über allen Programmen. Der Dienst hängt sich an den Player und lebt mit ihm.
+        _ = new NowPlayingOverlayService(_settings, player, services.Get<IWindowEffects>());
         _vm.AttachSleep(sleep);
+        if (services.Get<YTSPlayer.Contracts.Playback.ISystemAudio>() is { } systemAudio) _vm.AttachSystemAudio(systemAudio);
         _sleep = sleep;
         _session = new SessionRecorder(_store, player);
         _vm.PageChanged = _session.SetPage;
 
         services.Add<IThumbnailCache>(new ThumbnailCache(paths, perf));
+        services.Add<IPlayHistory>(history);
         services.Add<IPlayer>(player).Add<IPluginRegistry>(_host).Add<INavigator>(_vm).Add(covers);
 
         _openIcon = openIcon;
@@ -80,6 +95,7 @@ public sealed class ShellApp
             _main.Activate();
             _main.Topmost = false;
             widget?.Hide();
+            RememberWidgetMode(false);
         };
         _vm.OpenWidget = () =>
         {
@@ -91,6 +107,7 @@ public sealed class ShellApp
             }
             widget.Show();
             _main.Hide();
+            RememberWidgetMode(true);
         };
         _vm.OpenDiagnostics = () =>
         {
@@ -100,15 +117,37 @@ public sealed class ShellApp
         };
     }
 
+    /// <summary>Merkt, ob die App im Miniplayer läuft, damit der nächste Start dort beginnt.</summary>
+    void RememberWidgetMode(bool widget)
+    {
+        if (_settings.StartInWidget == widget) return;
+        _settings.StartInWidget = widget;
+        _store.Save("app", _settings);
+    }
+
     public Window MainWindow => _main;
     public ShellViewModel ViewModel => _vm;
     public PluginHost Host => _host;
+
+    /// <summary>Der globale Verlauf (für Selbsttests).</summary>
+    public PlayHistory History { get; }
 
     /// <summary>Verbindet das Beenden mit der Desktop-Lebensdauer und richtet den Tray ein.</summary>
     public void Attach(IClassicDesktopStyleApplicationLifetime desktop, Application app, Action? beforeQuit = null)
     {
         desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
         desktop.MainWindow = _main;
+
+        // Zuletzt im Miniplayer beendet: gleich nach dem Öffnen des Hauptfensters zum Widget wechseln.
+        if (_settings.StartInWidget)
+        {
+            void OpenAsWidget(object? s, EventArgs e)
+            {
+                _main.Opened -= OpenAsWidget;
+                _vm.OpenWidget?.Invoke();
+            }
+            _main.Opened += OpenAsWidget;
+        }
 
         // Medientasten und Medienanzeige des Betriebssystems, sobald das Hauptfenster eine native Kennung hat.
         if (_services.Get<IMediaTransport>() is { } transport && _services.Get<IPlayer>() is { } player)
@@ -133,7 +172,7 @@ public sealed class ShellApp
             desktop.Shutdown();
             _ = Task.Delay(TimeSpan.FromSeconds(3)).ContinueWith(_ => Environment.Exit(0));
         };
-        _ = new TrayService(app, _vm, _host, _openIcon());
+        _tray = new TrayService(app, _vm, _host, _openIcon());
     }
 
     /// <summary>Aktiviert alle eingeschalteten Plugins.</summary>
@@ -145,7 +184,7 @@ public sealed class ShellApp
         }
         catch (Exception ex)
         {
-            _vm.Status = "Fehler beim Start eines Moduls: " + ex.Message;
+            _vm.Status = Loc.F("shell.error.module", ex.Message);
         }
         if (_vm.Nav.Count > 0) _vm.SelectedPage = _vm.Nav[0];
         await RestoreSessionAsync();
@@ -156,12 +195,14 @@ public sealed class ShellApp
     {
         try
         {
-            if (_session.Restorable.PageId is { } page) _vm.NavigateTo(page);
+            // Erst den Titel: Er startet die Web-Ansicht mit seiner Adresse. Würde die Seite zuerst die Startseite laden,
+            // bräche der Titel-Aufruf direkt danach diesen Seitenaufruf ab, und der Titel käme erst nach ~60 s.
             await _session.RestoreTrackAsync();
+            // Die App startet immer auf Home. Wo man in einem Modul war, merkt sich das Modul selbst.
         }
         catch (Exception ex)
         {
-            _vm.Status = "Letzte Sitzung konnte nicht wiederhergestellt werden: " + ex.Message;
+            _vm.Status = Loc.F("shell.error.session", ex.Message);
         }
         finally
         {

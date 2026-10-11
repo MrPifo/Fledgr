@@ -9,7 +9,7 @@ using YTSPlayer.Ui;
 namespace YTSPlayer.Modules.MusicPlayer.ViewModels;
 
 /// <summary>Eine Zeile der Bibliotheks-Liste (Ordner, Playlist, Interpret, Album oder Titel).</summary>
-public sealed partial class LibraryItem : ObservableObject
+public sealed partial class LibraryItem : PlayingRow
 {
     readonly LocalCovers? _covers;
     Bitmap? _cover;

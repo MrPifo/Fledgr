@@ -1,0 +1,142 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Shell.ViewModels"
+             xmlns:loc="using:YTSPlayer.Ui.Localization"
+             xmlns:icons="using:YTSPlayer.Ui"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:ui="using:YTSPlayer.Ui.Controls"
+             x:Class="YTSPlayer.Shell.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+
+    <UserControl.Resources>
+        <!-- Eine Zeile im Verlauf: Cover, Titel, Quelle, Zeit. Ein Klick spielt den Titel erneut. -->
+        <DataTemplate x:Key="HistoryRow" x:DataType="vm:HistoryRowVm">
+            <Button Classes="bare" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Command="{Binding PlayCommand}">
+                <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}">
+                    <Border Classes="thumb" Width="{DynamicResource Size.Thumb}" Height="{DynamicResource Size.Thumb}">
+                        <Grid>
+                            <mi:MaterialIcon Kind="{Binding SourceIcon, Converter={x:Static icons:IconConverters.Kind}}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasCover}" />
+                            <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                        </Grid>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Title}" Classes="row" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Artist}" Classes="small secondary" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasArtist}" />
+                    </StackPanel>
+                    <ui:PlayingBars Grid.Column="2" Playing="{Binding IsPlayingNow}" IsVisible="{Binding IsCurrent}" VerticalAlignment="Center" />
+                    <ContentControl Grid.Column="3" Classes="tone" Tag="{Binding Tone}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SourceText}" Classes="tiny upper" />
+                    </ContentControl>
+                    <TextBlock Grid.Column="4" Text="{Binding When}" Classes="small muted" VerticalAlignment="Center" MinWidth="{DynamicResource Size.HistoryWhen}" TextAlignment="Right" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer Classes="page">
+        <StackPanel Spacing="{DynamicResource Space.L}">
+
+            <!-- Hero: Gruß, Datum, Uhrzeit und „Weitermachen“ -->
+            <Border Classes="hero">
+                <Grid>
+                <Border Classes="grain g-hero" Margin="{DynamicResource Margin.HeroGrain}" />
+                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Classes="upper secondary shadow-strong" Text="{Binding DateText}" />
+                        <TextBlock Classes="display shadow-strong" Text="{Binding TimeText}" Margin="{DynamicResource Pad.HeroTitle}" />
+                        <TextBlock Classes="body secondary shadow-strong" Text="{Binding Greeting}" />
+                    </StackPanel>
+                    <Button Grid.Column="1" Classes="hero primary" Command="{Binding ResumeCommand}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                            <mi:MaterialIcon Kind="Play" />
+                            <TextBlock Text="{loc:T home.resume}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Aktuell gespielt: Überschrift, darunter die Titelkarte (reagiert auf Play/Pause) -->
+            <StackPanel Spacing="{DynamicResource Space.S}" IsVisible="{Binding HasContinue}">
+                <TextBlock Text="{loc:T home.continue}" Classes="heading" />
+                <Border Classes="card">
+                  <Grid>
+                    <Border Classes="halftone card" Margin="{DynamicResource Margin.CardHalftone}" />
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}" DataContext="{Binding Continue}" x:DataType="vm:HistoryRowVm">
+                        <Border Classes="thumb" Width="{DynamicResource Size.ThumbL}" Height="{DynamicResource Size.ThumbL}">
+                            <Grid>
+                                <mi:MaterialIcon Kind="{Binding SourceIcon, Converter={x:Static icons:IconConverters.Kind}}" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !HasCover}" />
+                                <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                            </Grid>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" Classes="row" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Artist}" Classes="small secondary" TextTrimming="CharacterEllipsis" IsVisible="{Binding HasArtist}" />
+                        </StackPanel>
+                        <ui:PlayingBars Grid.Column="2" Playing="{Binding IsPlayingNow}" IsVisible="{Binding IsCurrent}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right">
+                            <ContentControl Classes="tone" Tag="{Binding Tone}" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding SourceText}" Classes="tiny upper" />
+                            </ContentControl>
+                            <TextBlock Text="{Binding TimeText}" Classes="small muted" HorizontalAlignment="Right" IsVisible="{Binding HasDuration}" />
+                        </StackPanel>
+                        <Button Grid.Column="4" Classes="play" Command="{ReflectionBinding $parent[UserControl].DataContext.ToggleContinueCommand}" VerticalAlignment="Center">
+                            <mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" />
+                        </Button>
+                    </Grid>
+                  </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- Abschnitte der aktiven Module -->
+            <ItemsControl ItemsSource="{Binding Sections}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Spacing="{DynamicResource Space.L}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:HomeSectionVm">
+                        <StackPanel Spacing="{DynamicResource Space.S}" IsVisible="{Binding IsVisible}">
+                            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource Space.S}">
+                                <ContentControl Classes="tone" Tag="{Binding Tone}" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" Classes="heading" />
+                                </ContentControl>
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding Actions}" IsVisible="{Binding HasActions}">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:HomeActionVm">
+                                            <Button Classes="pill" Command="{Binding Command}">
+                                                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                                                    <mi:MaterialIcon Kind="{Binding Icon, Converter={x:Static icons:IconConverters.Kind}}" />
+                                                    <TextBlock Text="{Binding Text}" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <Button Grid.Column="2" Classes="ghost small" Command="{Binding OpenMoreCommand}" IsVisible="{Binding HasMore}" Content="{loc:T home.showAll}" />
+                            </Grid>
+                            <ContentControl Content="{Binding ViewModel}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock Classes="caption muted" Text="{loc:T home.noModules}" TextWrapping="Wrap" IsVisible="{Binding NoSections}" />
+
+            <!-- Globaler Verlauf (alle Quellen), als letzter Eintrag -->
+            <StackPanel Spacing="{DynamicResource Space.S}" IsVisible="{Binding HasHistory}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="{loc:T home.history}" Classes="heading" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Classes="ghost small" Command="{Binding ClearHistoryCommand}">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                            <mi:MaterialIcon Kind="DeleteOutline" />
+                            <TextBlock Text="{loc:T home.history.clear}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <ItemsControl ItemsSource="{Binding History}" ItemTemplate="{StaticResource HistoryRow}" />
+            </StackPanel>
+
+            <!-- App-Version -->
+            <TextBlock Text="{Binding VersionText}" Classes="tiny muted" HorizontalAlignment="Center" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

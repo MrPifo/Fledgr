@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Avalonia.Controls;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,14 +6,16 @@ using CommunityToolkit.Mvvm.Input;
 using YTSPlayer.Contracts;
 using YTSPlayer.Contracts.Account;
 using YTSPlayer.Contracts.Diagnostics;
+using YTSPlayer.Contracts.Localization;
 using YTSPlayer.Contracts.Media;
 using YTSPlayer.Contracts.Playback;
+using YTSPlayer.Contracts.Plugins;
 using YTSPlayer.Contracts.Settings;
 
 namespace YTSPlayer.Modules.YtConnect.ViewModels;
 
 /// <summary>Seite „YouTube Music“: Anmelden, Link abspielen, Playlists und ihre Titel.</summary>
-public sealed partial class YtViewModel : ObservableObject
+public sealed partial class YtViewModel : ObservableObject, IHeaderContent
 {
     readonly YtAccountSession _account;
     readonly YtLibrary _library;
@@ -22,6 +24,7 @@ public sealed partial class YtViewModel : ObservableObject
     readonly IThumbnailCache _thumbs;
     readonly ISettingsStore _store;
     readonly YtViewState _view;
+    readonly YtSearchHeader _header;
     Action<bool, double>? _applyScroll;
     bool _restoringScroll;
     CancellationTokenSource? _saveCts;
@@ -40,7 +43,7 @@ public sealed partial class YtViewModel : ObservableObject
 
     [ObservableProperty] PlaylistInfo? _selected;
     [ObservableProperty] LoadState _state = LoadState.Empty;
-    [ObservableProperty] string _message = "Noch keine Playlists geladen. „Aktualisieren“ klicken.";
+    [ObservableProperty] string _message = Loc.T("yt.msg.noPlaylists");
     [ObservableProperty] string _errorText = "";
     [ObservableProperty] string _info = "";
     [ObservableProperty] bool _backgroundBusy;
@@ -60,15 +63,103 @@ public sealed partial class YtViewModel : ObservableObject
         _thumbs = thumbs;
         _store = store;
         _view = store.Load<YtViewState>("yt-view");
-        _homeMode = _view.HomeMode;
+        _header = new YtSearchHeader(this);
+        // Die Startseite ist der Einstieg (die zuletzt geöffnete Playlist zeigt sich trotzdem wieder, siehe RestoreView).
+        _homeMode = true;
         _host = engine.Host;
         Items = [.. library.LoadCached()];
         EnsureLiked();
+        Items.CollectionChanged += (_, _) => UpdatePlayingPlaylists();
         if (HasRealItems) State = LoadState.Ready;
+        HookPlaying();
+        LoadCachedHome();
         account.Changed += () => Dispatcher.UIThread.Post(RefreshAccountState);
         RefreshAccountState();
         RestoreView();
         _ = AutoCheckAsync();
+    }
+
+    // ---- Laufender Titel in den Listen markieren ----
+
+    string _curId = "";
+    bool _curPlaying;
+
+    void HookPlaying()
+    {
+        _player.StateChanged += OnPlayerState;
+        Tracks.CollectionChanged += (_, e) =>
+        {
+            if (e.NewItems == null) return;
+            foreach (TrackItem t in e.NewItems)
+            {
+                MarkRow(t);
+                if (t.IsCurrent && SelectedTrack == null && Opened != null) SelectedTrack = t;
+            }
+        };
+        ArtistSongs.CollectionChanged += (_, e) => MarkNewRows(e);
+        HomeSections.CollectionChanged += (_, e) => MarkNewSections(e);
+        ArtistSections.CollectionChanged += (_, e) => MarkNewSections(e);
+        ApplyPlayerState(_player.State, select: false);
+    }
+
+    void MarkNewRows(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems == null) return;
+        foreach (TrackItem t in e.NewItems) MarkRow(t);
+    }
+
+    void MarkNewSections(System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems == null) return;
+        foreach (ArtistSectionVm sec in e.NewItems)
+            foreach (var t in sec.Items) MarkRow(t);
+    }
+
+    void MarkRow(TrackItem t) => t.SetPlaying(_curId.Length > 0 && t.Info.Kind.Length == 0 && t.Info.Id == _curId, _curPlaying);
+
+    void OnPlayerState(PlaybackState st) => ApplyPlayerState(st, select: true);
+
+    /// <summary>Merkt, welcher YT-Titel läuft, markiert ihn in allen Listen und wählt ihn in der offenen Titelliste aus. Arbeitet nur bei Änderung (Titel oder Spielt/Pause).</summary>
+    void ApplyPlayerState(PlaybackState st, bool select)
+    {
+        var id = st.Item is { } it && it.SourceId == YtPlaybackSource.SourceKey ? UrlNormalizer.VideoId(it.Id) ?? "" : "";
+        var playing = id.Length > 0 && st.IsPlaying;
+        if (id == _curId && playing == _curPlaying) return;
+        var idChanged = id != _curId;
+        _curId = id;
+        _curPlaying = playing;
+        foreach (var t in Tracks) MarkRow(t);
+        foreach (var t in ArtistSongs) MarkRow(t);
+        foreach (var sec in HomeSections) foreach (var t in sec.Items) MarkRow(t);
+        foreach (var sec in ArtistSections) foreach (var t in sec.Items) MarkRow(t);
+        UpdatePlayingPlaylists();
+        if (select && idChanged && id.Length > 0 && Opened != null && Tracks.FirstOrDefault(t => t.IsCurrent) is { } row) SelectedTrack = row;
+    }
+
+    readonly Dictionary<string, HashSet<string>> _plIndex = [];
+    string _lastOpenedId = "";
+
+    /// <summary>
+    /// Markiert die Playlists, in denen der laufende Titel steckt (Hervorhebung und Balken in der Playlist-Liste).
+    /// Grundlage sind die gespeicherten Titellisten, sie werden einmal im Hintergrund eingelesen. Die „Gefällt mir“-Zeile zählt nicht.
+    /// </summary>
+    async void UpdatePlayingPlaylists()
+    {
+        try
+        {
+            var missing = _curId.Length == 0 ? [] : Items.Where(p => p.Id != YtLibrary.LikedId && p.Id != YtLibrary.SearchId && !_plIndex.ContainsKey(p.Id)).Select(p => p.Id).ToList();
+            if (missing.Count > 0)
+            {
+                var built = await Task.Run(() => missing.ToDictionary(id => id, id => new HashSet<string>(_library.LoadCachedTracks(id).Select(t => t.Id))));
+                foreach (var kv in built) _plIndex[kv.Key] = kv.Value;
+            }
+            foreach (var p in Items)
+                p.SetPlaying(_curId.Length > 0 && _plIndex.TryGetValue(p.Id, out var set) && set.Contains(_curId), _curPlaying);
+        }
+        catch (Exception ex)
+        {
+            AppLog.Warn("YouTube", "Playlist-Markierung fehlgeschlagen", ex);
+        }
     }
 
     /// <summary>Öffnet nach dem Start wieder die Playlist, die zuletzt offen war (mit den gespeicherten Titeln).</summary>
@@ -145,6 +236,11 @@ public sealed partial class YtViewModel : ObservableObject
         OnPropertyChanged(nameof(ShowPlaylists));
         OnPropertyChanged(nameof(ShowHomePanel));
         SaveView();
+        // Titel einer Playlist ändern sich nur, solange sie offen ist: ihren Eintrag danach neu einlesen.
+        _plIndex.Remove(_lastOpenedId);
+        _plIndex.Remove(value?.Id ?? "");
+        _lastOpenedId = value?.Id ?? "";
+        UpdatePlayingPlaylists();
     }
     partial void OnTracksStateChanged(LoadState value) => OnPropertyChanged(nameof(CanRefreshTracks));
 
@@ -155,12 +251,60 @@ public sealed partial class YtViewModel : ObservableObject
         ShowLogin = s == AccountState.LoginPanelOpen;
         ShowBusy = s is AccountState.Verifying or AccountState.LoggingOut;
         ShowLoggedIn = s == AccountState.LoggedIn;
-        BusyText = s == AccountState.Verifying ? "Anmeldung wird geprüft und Profil gelesen …" : s == AccountState.LoggingOut ? "Abmelden und Daten löschen …" : "";
+        BusyText = s == AccountState.Verifying ? Loc.T("yt.busy.verify") : s == AccountState.LoggingOut ? Loc.T("yt.busy.logout") : "";
         LoginSurface = s == AccountState.LoginPanelOpen ? _host.LoginSurface : null;
         Notice = _account.Notice;
         if (s == AccountState.LoggedOut) CloseOpened();
-        else if (s == AccountState.LoggedIn) _ = AutoCheckAsync();
+        else if (s == AccountState.LoggedIn)
+        {
+            _ = AutoCheckAsync();
+            if (HomeMode && NeedsHomeLoad) _ = LoadHomeAsync(reload: false);
+        }
     }
+
+    /// <summary>Die Startseite ist leer oder stammt noch aus dem Speicher und wurde in diesem Lauf nicht frisch geladen.</summary>
+    bool NeedsHomeLoad => !_homeLoading && (HomeSections.Count == 0 || !_homeFresh);
+
+    /// <summary>Zeigt die gespeicherte Startseite sofort an (frisch geladen wird danach im Hintergrund).</summary>
+    void LoadCachedHome()
+    {
+        try
+        {
+            var cache = _library.LoadCachedHome();
+            if (cache.Sections.Count == 0) return;
+            AddHomeSections(cache.Sections);
+            foreach (var c in cache.Chips) HomeChips.Add(new HomeChipVm(c.Title, c.Params, false));
+            HomeState = LoadState.Ready;
+        }
+        catch (Exception)
+        {
+            // Ein kaputter Speicher darf den Start nicht stören.
+        }
+    }
+
+    /// <summary>Nur für den Oberflächen-Selbsttest: zeigt die Startseite mit Beispieldaten, ohne Konto und ohne Netz.</summary>
+    public void ApplyPreview(IEnumerable<ArtistSectionData> sections, IEnumerable<HomeChip> chips)
+    {
+        ShowLoggedOut = false;
+        ShowLogin = false;
+        ShowBusy = false;
+        ShowLoggedIn = true;
+        HomeMode = true;
+        HomeSections.Clear();
+        AddHomeSections(sections);
+        HomeChips.Clear();
+        foreach (var c in chips) HomeChips.Add(new HomeChipVm(c.Title, c.Params, c.Selected));
+        OnPropertyChanged(nameof(HasHomeChips));
+        OnPropertyChanged(nameof(HasHomeTracks));
+        OnPropertyChanged(nameof(ShowList));
+        OnPropertyChanged(nameof(ShowHomePanel));
+        HomeState = LoadState.Ready;
+    }
+
+    /// <summary>Was die Kopfzeile der App in der Mitte zeigt: die Suche, solange man angemeldet ist.</summary>
+    public object? HeaderViewModel => ShowLoggedIn ? _header : null;
+
+    partial void OnShowLoggedInChanged(bool value) => OnPropertyChanged(nameof(HeaderViewModel));
 
     /// <summary>
     /// Zeigt die gespeicherten Playlists sofort und prüft danach einmal pro Start im Hintergrund auf Änderungen
@@ -214,7 +358,7 @@ public sealed partial class YtViewModel : ObservableObject
     void EnsureLiked()
     {
         if (Items.All(i => i.Id != YtLibrary.LikedId))
-            Items.Insert(0, new PlaylistInfo(YtLibrary.LikedId, "Gefällt mir", YtLibrary.LikedSub));
+            Items.Insert(0, new PlaylistInfo(YtLibrary.LikedId, Loc.T("yt.liked"), YtLibrary.LikedSub));
     }
 
     [RelayCommand] Task SignIn() => Run(_account.SignInAsync);
@@ -226,7 +370,7 @@ public sealed partial class YtViewModel : ObservableObject
     Task PlaySelected()
     {
         if ((Opened ?? Selected) is not { } p) return Task.CompletedTask;
-        Info = "Lädt …";
+        Info = Loc.T("yt.loading");
         return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, UrlNormalizer.WatchPlaylist(p.Id), p.Title)));
     }
 
@@ -244,7 +388,7 @@ public sealed partial class YtViewModel : ObservableObject
             case "artist":
                 return OpenArtistAsync(t.Info.Id);
         }
-        Info = "Lädt …";
+        Info = Loc.T("yt.loading");
         var url = IsSearch ? UrlNormalizer.ShareTrack(t.Info.Id) : UrlNormalizer.WatchTrack(t.Info.Id, p.Id);
         return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, url, t.Title, t.Artist)));
     }
@@ -255,13 +399,16 @@ public sealed partial class YtViewModel : ObservableObject
     [ObservableProperty, NotifyPropertyChangedFor(nameof(HomeMessage))] LoadState _homeState = LoadState.Empty;
 
     /// <summary>Text der Startseite, solange sie leer ist oder lädt.</summary>
-    public string HomeMessage => HomeState == LoadState.Loading ? "Startseite wird geladen …" : "Noch nicht geladen. „Aktualisieren“ holt die Empfehlungen.";
+    public string HomeMessage => Loc.T(HomeState == LoadState.Loading ? "yt.home.loading" : "yt.home.empty");
     [ObservableProperty] string _homeError = "";
 
     public ObservableCollection<ArtistSectionVm> HomeSections { get; } = [];
 
     string? _homeNext;
     bool _homeLoading;
+    bool _homeMoreLoading;
+    bool _homeTokenTried;
+    bool _homeFresh;
     CancellationTokenSource? _homeCts;
 
     /// <summary>Die Playlist-Liste ist zu sehen.</summary>
@@ -274,7 +421,55 @@ public sealed partial class YtViewModel : ObservableObject
     {
         _view.HomeMode = value;
         SaveView();
-        if (value && HomeSections.Count == 0 && !_homeLoading) _ = LoadHomeAsync(reload: false);
+        if (value && _account.State == AccountState.LoggedIn && NeedsHomeLoad) _ = LoadHomeAsync(reload: false);
+    }
+
+    // ---- Stimmungen und Schnellzugriff (Datum und Uhrzeit stehen auf der Home-Seite der Shell) ----
+
+    /// <summary>Die Stimmungen oben auf der Startseite (leer, solange YouTube keine liefert).</summary>
+    public ObservableCollection<HomeChipVm> HomeChips { get; } = [];
+
+    /// <summary>Wahr, wenn es Stimmungen gibt (sonst blendet die Seite die Reihe aus).</summary>
+    public bool HasHomeChips => HomeChips.Count > 0;
+
+    string? _homeChipParams;
+
+    /// <summary>Klick auf eine Stimmung lädt die Startseite dazu, ein zweiter Klick auf dieselbe hebt den Filter auf.</summary>
+    [RelayCommand]
+    Task SelectChip(HomeChipVm? chip)
+    {
+        if (chip == null) return Task.CompletedTask;
+        _homeChipParams = chip.Selected ? null : chip.Params;
+        return LoadHomeAsync(reload: true);
+    }
+
+    /// <summary>Der erste Titel in den Zeilen-Bereichen der Startseite (Grundlage für „Mix starten“).</summary>
+    TrackItem? FirstHomeTrack() => HomeSections.Where(s => s.IsRows).SelectMany(s => s.Items).FirstOrDefault(i => i.Info.Kind == "");
+
+    /// <summary>Wahr, wenn „Mix starten“ und „Zufällig“ etwas zu spielen haben.</summary>
+    public bool HasHomeTracks => FirstHomeTrack() != null;
+
+    /// <summary>„Mix starten“: Radio-Mix des ersten Titels der Startseite.</summary>
+    [RelayCommand]
+    Task HomeMix() => FirstHomeTrack() is { } t ? StartTrackMixAsync(t.Info) : Task.CompletedTask;
+
+    /// <summary>„Zufällig“: spielt einen zufälligen Titel aus den Zeilen-Bereichen der Startseite.</summary>
+    [RelayCommand]
+    Task HomeShuffle()
+    {
+        var tracks = HomeSections.Where(s => s.IsRows).SelectMany(s => s.Items).Where(i => i.Info.Kind == "").ToList();
+        if (tracks.Count == 0) return Task.CompletedTask;
+        var t = tracks[Random.Shared.Next(tracks.Count)];
+        Info = Loc.Current["yt.loading"];
+        return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, UrlNormalizer.ShareTrack(t.Info.Id), t.Title, t.Artist)));
+    }
+
+    /// <summary>Öffnet „Gefällt mir“ (die Liste der gemochten Titel).</summary>
+    [RelayCommand]
+    Task OpenLiked()
+    {
+        Selected = Items.FirstOrDefault(i => i.Id == YtLibrary.LikedId) ?? new PlaylistInfo(YtLibrary.LikedId, Loc.Current["yt.liked"], YtLibrary.LikedSub);
+        return OpenPlaylist(keepScroll: false);
     }
 
     [RelayCommand] void ShowPlaylistsTab() => HomeMode = false;
@@ -286,15 +481,45 @@ public sealed partial class YtViewModel : ObservableObject
         _homeCts?.Cancel();
         var cts = _homeCts = new CancellationTokenSource();
         _homeLoading = true;
-        if (reload || HomeSections.Count == 0) { HomeState = LoadState.Loading; HomeError = ""; }
+        var hadContent = HomeSections.Count > 0;
+        if (reload || !hadContent) { HomeState = LoadState.Loading; HomeError = ""; }
         try
         {
-            var (error, sections, next) = await _library.LoadHomeAsync(null, cts.Token);
+            // Die gespeicherte Startseite steht schon. Frisch laden erst, wenn die Wiederherstellung der Wiedergabe durch ist,
+            // und nie während YouTube spielt: beide teilen sich dieselbe Web-Ansicht, das ließ die Wiedergabe hängen.
+            if (hadContent && !reload)
+            {
+                await Task.Delay(20000, cts.Token);
+                if (_library.PlaybackBusy) return;
+            }
+            var (error, sections, next, chips) = await _library.LoadHomeAsync(null, cts.Token, _homeChipParams);
+            for (var retry = 0; error != null && retry < 2 && !cts.IsCancellationRequested && !_library.PlaybackBusy; retry++)
+            {
+                await Task.Delay(4000, cts.Token);
+                (error, sections, next, chips) = await _library.LoadHomeAsync(null, cts.Token, _homeChipParams);
+            }
             if (cts.IsCancellationRequested) return;
-            if (error != null) { HomeError = error; HomeState = LoadState.Error; return; }
+            if (error != null)
+            {
+                // Gespeicherte Startseite bleibt stehen, der Fehler erscheint nur bei leerer Seite.
+                if (hadContent && !reload) { HomeState = LoadState.Ready; return; }
+                HomeError = error;
+                HomeState = LoadState.Error;
+                return;
+            }
+            _homeFresh = true;
+            _homeTokenTried = false;
+            if (_homeChipParams == null) _library.SaveCachedHome(sections, chips);
             HomeSections.Clear();
             AddHomeSections(sections);
             _homeNext = next;
+            if (chips.Count > 0 || _homeChipParams == null)
+            {
+                HomeChips.Clear();
+                foreach (var c in chips) HomeChips.Add(new HomeChipVm(c.Title, c.Params, c.Selected));
+                OnPropertyChanged(nameof(HasHomeChips));
+            }
+            OnPropertyChanged(nameof(HasHomeTracks));
             HomeState = LoadState.Ready;
         }
         catch (OperationCanceledException) { }
@@ -310,29 +535,38 @@ public sealed partial class YtViewModel : ObservableObject
     void AddHomeSections(IEnumerable<ArtistSectionData> sections)
     {
         foreach (var s in sections)
-            HomeSections.Add(new ArtistSectionVm(s.Title, [.. s.Items.Select(i => new TrackItem(i, _thumbs))]));
+            HomeSections.Add(new ArtistSectionVm(s.Title, [.. s.Items.Select(i => new TrackItem(i, _thumbs, s.Layout == SectionLayout.Cards ? TrackItem.CardWidth : TrackItem.ListWidth))], s.Layout));
     }
 
-    /// <summary>Hängt weitere Bereiche der Startseite an, wenn man ans Ende scrollt (wie bei der Suche).</summary>
+    /// <summary>
+    /// Hängt weitere Bereiche der Startseite an, wenn man ans Ende scrollt (wie bei der Suche).
+    /// Steht nur die gespeicherte Startseite da (die frische Antwort wartet oder wird während der Wiedergabe nicht geholt), fehlt das
+    /// Weiter-Zeichen: dann wird einmal die erste Seite geholt, nur um es zu bekommen. Die angezeigten Bereiche bleiben dabei stehen.
+    /// </summary>
     public async Task LoadMoreHomeAsync()
     {
-        if (!ShowHomePanel || _homeNext is not { } token || _homeLoading) return;
-        _homeLoading = true;
+        if (!ShowHomePanel || _homeMoreLoading) return;
+        var token = _homeNext;
+        var tokenOnly = token == null;
+        if (tokenOnly && (_homeFresh || _homeTokenTried || HomeSections.Count == 0)) return;
+        _homeTokenTried |= tokenOnly;
+        _homeMoreLoading = true;
         BackgroundBusy = true;
         var cts = _homeCts;
         try
         {
-            var (error, sections, next) = await _library.LoadHomeAsync(token, cts?.Token ?? CancellationToken.None);
+            var (error, sections, next, _) = await _library.LoadHomeAsync(token, cts?.Token ?? CancellationToken.None);
             if (cts?.IsCancellationRequested == true) return;
             if (error != null) { Info = error; _homeNext = null; return; }
             _homeNext = next;
-            AddHomeSections(sections);
+            if (!tokenOnly) AddHomeSections(sections);
+            AppLog.Info("YouTube", tokenOnly ? "Startseite: Weiter-Zeichen geholt" : $"Startseite: {sections.Count} weitere Bereiche");
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { Info = "Weitere Empfehlungen konnten nicht geladen werden: " + ex.Message; _homeNext = null; }
+        catch (Exception ex) { Info = Loc.F("yt.home.moreFailed", ex.Message); _homeNext = null; }
         finally
         {
-            _homeLoading = false;
+            _homeMoreLoading = false;
             BackgroundBusy = false;
         }
     }
@@ -359,10 +593,10 @@ public sealed partial class YtViewModel : ObservableObject
     public bool ShowList => !ArtistOpen && Opened == null;
 
     public int DescriptionLines => DescriptionExpanded ? 0 : 3;
-    public string DescriptionToggleText => DescriptionExpanded ? "Weniger" : "Mehr";
+    public string DescriptionToggleText => Loc.T(DescriptionExpanded ? "yt.artist.less" : "yt.artist.more");
     public bool HasArtistSongs => ArtistSongs.Count > 0;
 
-    public string SubscribeText => Subscribed ? "Abonniert" : Artist is { Subscribers.Length: > 0 } a ? "Abonnieren " + a.Subscribers : "Abonnieren";
+    public string SubscribeText => Subscribed ? Loc.T("yt.artist.subscribedBtn") : Artist is { Subscribers.Length: > 0 } a ? Loc.F("yt.artist.subscribeCount", a.Subscribers) : Loc.T("yt.artist.subscribe");
 
     [RelayCommand] void ToggleDescription() => DescriptionExpanded = !DescriptionExpanded;
 
@@ -378,12 +612,12 @@ public sealed partial class YtViewModel : ObservableObject
         ShowPage?.Invoke();
         if (!string.IsNullOrEmpty(artistId)) { await OpenArtistAsync(artistId); return; }
         var name = artistName.Split([", ", " & ", " feat.", " x "], StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
-        if (name.Length == 0) { Info = "Zu diesem Titel ist kein Künstler bekannt."; return; }
-        Info = $"Künstler „{name}“ wird gesucht …";
+        if (name.Length == 0) { Info = Loc.T("yt.artist.unknown"); return; }
+        Info = Loc.F("yt.artist.searching", name);
         var (error, items, _) = await _library.SearchAsync(name, "artist", CancellationToken.None);
         if (error != null) { Info = error; return; }
         var hit = items.FirstOrDefault(i => string.Equals(i.Title, name, StringComparison.OrdinalIgnoreCase)) ?? items.FirstOrDefault();
-        if (hit == null) { Info = $"Kein Künstler „{name}“ gefunden."; return; }
+        if (hit == null) { Info = Loc.F("yt.artist.notFound", name); return; }
         Info = "";
         await OpenArtistAsync(hit.Id);
     }
@@ -406,7 +640,7 @@ public sealed partial class YtViewModel : ObservableObject
             if (cts.IsCancellationRequested) return;
             if (error != null || page == null)
             {
-                ArtistError = error ?? "Die Künstler-Seite konnte nicht geladen werden.";
+                ArtistError = error ?? Loc.T("yt.artist.loadFailed");
                 ArtistState = LoadState.Error;
                 return;
             }
@@ -453,7 +687,7 @@ public sealed partial class YtViewModel : ObservableObject
         ArtistSongs.Clear();
         foreach (var t in p.TopSongs) ArtistSongs.Add(new TrackItem(t, _thumbs));
         ArtistSections.Clear();
-        foreach (var s in p.Sections) ArtistSections.Add(new ArtistSectionVm(s.Title, [.. s.Items.Select(i => new TrackItem(i, _thumbs))]));
+        foreach (var s in p.Sections) ArtistSections.Add(new ArtistSectionVm(s.Title, [.. s.Items.Select(i => new TrackItem(i, _thumbs, TrackItem.CardWidth))]));
         OnPropertyChanged(nameof(HasArtistSongs));
         ArtistState = LoadState.Ready;
     }
@@ -495,7 +729,7 @@ public sealed partial class YtViewModel : ObservableObject
                 Selected = new PlaylistInfo(t.Info.Ref, t.Info.Title, t.Info.Artist);
                 return OpenPlaylist(keepScroll: false);
             default:
-                Info = "Lädt …";
+                Info = Loc.T("yt.loading");
                 return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, UrlNormalizer.ShareTrack(t.Info.Id), t.Title, t.Artist)));
         }
     }
@@ -512,8 +746,8 @@ public sealed partial class YtViewModel : ObservableObject
     {
         if (Artist is not { } a) return Task.CompletedTask;
         url ??= a.TopSongs.Count > 0 ? UrlNormalizer.RadioMix(a.TopSongs[0].Id) : null;
-        if (url == null) { Info = "Zu diesem Künstler gibt es keinen Mix."; return Task.CompletedTask; }
-        Info = "Lädt …";
+        if (url == null) { Info = Loc.T("yt.artist.noMix"); return Task.CompletedTask; }
+        Info = Loc.T("yt.loading");
         return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, url, a.Name)));
     }
 
@@ -522,7 +756,7 @@ public sealed partial class YtViewModel : ObservableObject
     Task ArtistAllSongs()
     {
         if (Artist is not { TopSongsMore.Length: > 0 } a) return Task.CompletedTask;
-        Selected = new PlaylistInfo(a.TopSongsMore, a.Name + ": alle Titel", "");
+        Selected = new PlaylistInfo(a.TopSongsMore, Loc.F("yt.artist.allSongs", a.Name), "");
         return OpenPlaylist(keepScroll: false);
     }
 
@@ -531,8 +765,8 @@ public sealed partial class YtViewModel : ObservableObject
     {
         if (Artist is not { } a) return Task.CompletedTask;
         var want = !Subscribed;
-        return Edit(want ? $"„{a.Name}“ wird abonniert …" : $"Abo von „{a.Name}“ wird beendet …",
-            want ? $"Du hast „{a.Name}“ abonniert." : $"Abo von „{a.Name}“ ist beendet.", () => _library.SetSubscribedAsync(a.Id, want), () => Subscribed = want);
+        return Edit(want ? Loc.F("yt.artist.subscribing", a.Name) : Loc.F("yt.artist.unsubscribing", a.Name),
+            want ? Loc.F("yt.artist.subscribed", a.Name) : Loc.F("yt.artist.unsubscribed", a.Name), () => _library.SetSubscribedAsync(a.Id, want), () => Subscribed = want);
     }
 
     [RelayCommand]
@@ -550,7 +784,7 @@ public sealed partial class YtViewModel : ObservableObject
     static readonly string[] FilterKinds = ["", "artist", "album", "playlist"];
 
     /// <summary>Die Arten, nach denen man filtern kann (Titel, Künstler, Alben, Playlists).</summary>
-    public string[] FilterNames { get; } = ["Titel", "Künstler", "Alben", "Playlists"];
+    public string[] FilterNames { get; } = [Loc.T("yt.filter.songs"), Loc.T("yt.filter.artists"), Loc.T("yt.filter.albums"), Loc.T("yt.filter.playlists")];
 
     string? _searchNext;
     string _searchKind = "";
@@ -633,19 +867,21 @@ public sealed partial class YtViewModel : ObservableObject
         SaveView();
     }
 
-    [RelayCommand]
-    void ClearHistory()
+    /// <summary>Löscht den Suchverlauf (Knopf in den Einstellungen).</summary>
+    public void ClearSearchHistory()
     {
         _view.SearchHistory.Clear();
         Suggestions.Clear();
         SaveView();
-        Info = "Suchverlauf gelöscht.";
+        Info = Loc.T("yt.search.historyCleared");
     }
 
     /// <summary>Sucht bei YouTube Music (nach Titeln, Künstlern, Alben oder Playlists) und zeigt die Treffer in der Titelliste.</summary>
     async Task RunSearch(string q)
     {
         _searchQuery = q;
+        // Merkt, wo man vor der Suche war (Playlist oder Startseite), damit „Zurück“ dorthin zurückführt.
+        if (!IsSearch) _preSearch = Opened;
         _tracksCts?.Cancel();
         var cts = _tracksCts = new CancellationTokenSource();
         _searchKind = FilterKinds[Math.Clamp(SearchFilterIndex, 0, FilterKinds.Length - 1)];
@@ -654,7 +890,7 @@ public sealed partial class YtViewModel : ObservableObject
         Tracks.Clear();
         SelectedTrack = null;
         TracksState = LoadState.Loading;
-        TracksMessage = "Suche läuft …";
+        TracksMessage = Loc.T("yt.search.busy");
         try
         {
             var (error, items, next) = await _library.SearchAsync(q, _searchKind, cts.Token);
@@ -662,7 +898,7 @@ public sealed partial class YtViewModel : ObservableObject
             if (error != null) { TracksError = error; TracksState = LoadState.Error; return; }
             _searchNext = next;
             SetTracks(items);
-            if (items.Count == 0) { TracksState = LoadState.Empty; TracksMessage = "Nichts gefunden."; }
+            if (items.Count == 0) { TracksState = LoadState.Empty; TracksMessage = Loc.T("yt.search.none"); }
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -693,7 +929,7 @@ public sealed partial class YtViewModel : ObservableObject
                 if (Tracks.All(x => x.Info.Id != t.Id)) Tracks.Add(new TrackItem(t, _thumbs));
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex) { Info = "Weitere Treffer konnten nicht geladen werden: " + ex.Message; _searchNext = null; }
+        catch (Exception ex) { Info = Loc.F("yt.search.moreFailed", ex.Message); _searchNext = null; }
         finally
         {
             _loadingMore = false;
@@ -711,19 +947,19 @@ public sealed partial class YtViewModel : ObservableObject
     bool _editing;
 
     public bool HasDeleteAsk => DeleteAsk != null;
-    public string DeleteAskText => DeleteAsk == null ? "" : $"Playlist „{DeleteAsk.Title}“ bei YouTube Music löschen? Das kann nicht rückgängig gemacht werden.";
+    public string DeleteAskText => DeleteAsk == null ? "" : Loc.F("yt.delete.ask", DeleteAsk.Title);
 
     /// <summary>Spielt den Mix zu einem Titel (Titel in ähnlichem Stil).</summary>
     public Task StartTrackMixAsync(TrackInfo t)
     {
-        Info = "Lädt …";
+        Info = Loc.T("yt.loading");
         return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, UrlNormalizer.RadioMix(t.Id), t.Title, t.Artist)));
     }
 
     /// <summary>Spielt den Mix zu einer ganzen Playlist.</summary>
     public Task StartPlaylistMixAsync(PlaylistInfo p)
     {
-        Info = "Lädt …";
+        Info = Loc.T("yt.loading");
         return Run(() => _player.PlayAsync(new MediaItem(YtPlaybackSource.SourceKey, UrlNormalizer.PlaylistRadio(p.Id), p.Title)));
     }
 
@@ -731,8 +967,8 @@ public sealed partial class YtViewModel : ObservableObject
     public async Task ShareAsync(string url)
     {
         if (CopyText == null) return;
-        try { await CopyText(url); Info = "Link kopiert."; }
-        catch (Exception ex) { Info = "Kopieren nicht möglich: " + ex.Message; }
+        try { await CopyText(url); Info = Loc.T("yt.link.copied"); }
+        catch (Exception ex) { Info = Loc.F("yt.link.copyFailed", ex.Message); }
     }
 
     /// <summary>Öffnet eine Adresse im Browser.</summary>
@@ -740,7 +976,7 @@ public sealed partial class YtViewModel : ObservableObject
 
     /// <summary>Fügt einen Titel einer Playlist hinzu.</summary>
     public Task AddTrackToAsync(TrackInfo t, PlaylistInfo target) =>
-        Edit($"„{t.Title}“ wird zu „{target.Title}“ hinzugefügt …", $"„{t.Title}“ ist jetzt in „{target.Title}“.", () => _library.AddTrackAsync(target.Id, t), () =>
+        Edit(Loc.F("yt.edit.adding", t.Title, target.Title), Loc.F("yt.edit.added", t.Title, target.Title), () => _library.AddTrackAsync(target.Id, t), () =>
         {
             // Die Liste sofort lokal ergänzen, ohne erneut bei YouTube nachzulesen.
             if (Opened?.Id == target.Id && Tracks.All(x => x.Info.Id != t.Id))
@@ -753,7 +989,7 @@ public sealed partial class YtViewModel : ObservableObject
 
     /// <summary>Fügt alle Titel einer Playlist einer anderen hinzu.</summary>
     public Task AddPlaylistToAsync(PlaylistInfo source, PlaylistInfo target) =>
-        Edit($"„{source.Title}“ wird zu „{target.Title}“ hinzugefügt …", $"Die Titel von „{source.Title}“ sind jetzt in „{target.Title}“.", () => _library.AddPlaylistAsync(target.Id, source.Id), () =>
+        Edit(Loc.F("yt.edit.adding", source.Title, target.Title), Loc.F("yt.edit.addedList", source.Title, target.Title), () => _library.AddPlaylistAsync(target.Id, source.Id), () =>
         {
             var added = _library.LoadCachedTracks(source.Id).Count;
             if (Opened?.Id == target.Id && _library.LoadCachedTracks(target.Id) is { Count: > 0 } now) SetTracks(now);
@@ -779,19 +1015,19 @@ public sealed partial class YtViewModel : ObservableObject
 
     /// <summary>Setzt „Gefällt mir“ eines Titels der Liste oder nimmt es zurück.</summary>
     public Task LikeTrackAsync(TrackInfo t, bool like) =>
-        Edit(like ? $"„{t.Title}“ wird mit „Gefällt mir“ markiert …" : $"„Gefällt mir“ von „{t.Title}“ wird entfernt …",
-            like ? $"„{t.Title}“ gefällt dir." : $"„Gefällt mir“ von „{t.Title}“ ist entfernt.", () => _library.SetLikeAsync(t.Id, like), null);
+        Edit(like ? Loc.F("yt.edit.liking", t.Title) : Loc.F("yt.edit.unliking", t.Title),
+            like ? Loc.F("yt.edit.liked", t.Title) : Loc.F("yt.edit.unliked", t.Title), () => _library.SetLikeAsync(t.Id, like), null);
 
     /// <summary>Entfernt einen Titel aus der geöffneten Playlist.</summary>
     public Task RemoveTrackAsync(TrackItem t)
     {
         if (Opened is not { } p) return Task.CompletedTask;
-        return Edit($"„{t.Title}“ wird entfernt …", $"„{t.Title}“ ist nicht mehr in „{p.Title}“.", () => _library.RemoveTrackAsync(p.Id, t.Info), () =>
+        return Edit(Loc.F("yt.edit.removing", t.Title), Loc.F("yt.edit.removed", t.Title, p.Title), () => _library.RemoveTrackAsync(p.Id, t.Info), () =>
         {
             Tracks.Remove(t);
             _library.SaveCachedTracks(p.Id, Tracks.Select(x => x.Info));
             BumpCount(p.Id, -1);
-            if (Tracks.Count == 0) { TracksState = LoadState.Empty; TracksMessage = "Keine Songs gefunden."; }
+            if (Tracks.Count == 0) { TracksState = LoadState.Empty; TracksMessage = Loc.T("yt.songs.none"); }
         });
     }
 
@@ -799,7 +1035,7 @@ public sealed partial class YtViewModel : ObservableObject
     public Task CreatePlaylistAsync(string name, string? videoId)
     {
         PlaylistInfo? created = null;
-        return Edit($"Playlist „{name}“ wird angelegt …", $"Playlist „{name}“ ist angelegt.", async () =>
+        return Edit(Loc.F("yt.edit.creating", name), Loc.F("yt.edit.created", name), async () =>
         {
             var (error, p) = await _library.CreatePlaylistAsync(name, videoId);
             created = p;
@@ -823,7 +1059,7 @@ public sealed partial class YtViewModel : ObservableObject
     {
         if (DeleteAsk is not { } p) return Task.CompletedTask;
         DeleteAsk = null;
-        return Edit($"„{p.Title}“ wird gelöscht …", $"„{p.Title}“ wurde gelöscht.", () => _library.DeletePlaylistAsync(p.Id), () =>
+        return Edit(Loc.F("yt.edit.deleting", p.Title), Loc.F("yt.edit.deleted", p.Title), () => _library.DeletePlaylistAsync(p.Id), () =>
         {
             if (Opened?.Id == p.Id) CloseOpened();
             Items.Remove(Items.FirstOrDefault(i => i.Id == p.Id)!);
@@ -836,7 +1072,7 @@ public sealed partial class YtViewModel : ObservableObject
     /// <summary>Führt eine Änderung bei YouTube aus (eine zur selben Zeit) und meldet das Ergebnis unten in der Info-Zeile.</summary>
     async Task Edit(string working, string done, Func<Task<string?>> action, Action? onSuccess)
     {
-        if (_editing) { Info = "Eine andere Änderung läuft noch."; return; }
+        if (_editing) { Info = Loc.T("yt.edit.busy"); return; }
         _editing = true;
         Info = working;
         try
@@ -845,7 +1081,7 @@ public sealed partial class YtViewModel : ObservableObject
             if (error != null) { Info = error; return; }
             // Die Änderung bei YouTube ist durch. Ein Fehler beim lokalen Nachziehen der Anzeige darf das nicht verdecken.
             try { onSuccess?.Invoke(); }
-            catch (Exception ex) { Info = done + " (Anzeige nicht aktualisiert: " + ex.Message + ")"; return; }
+            catch (Exception ex) { Info = Loc.F("yt.edit.notRefreshed", done, ex.Message); return; }
             Info = done;
         }
         finally { _editing = false; }
@@ -869,7 +1105,7 @@ public sealed partial class YtViewModel : ObservableObject
         if (cached.Count == 0)
         {
             TracksState = LoadState.Loading;
-            TracksMessage = "Songs werden gelesen …";
+            TracksMessage = Loc.T("yt.songs.loading");
         }
         // Die Titel kommen über die Schnittstelle, ohne die Musik zu stören. Nur wenn das nicht klappt und gerade etwas spielt,
         // wird nicht per Seitenwechsel gelesen (das würde die Musik unterbrechen): dann bleibt der Hinweis „Aktualisieren“.
@@ -883,12 +1119,25 @@ public sealed partial class YtViewModel : ObservableObject
         _tracksCts?.Cancel();
         var cts = _tracksCts = new CancellationTokenSource();
         TracksState = LoadState.Loading;
-        TracksMessage = "Songs werden gelesen …";
+        TracksMessage = Loc.T("yt.songs.loading");
         return LoadTracks(p, cts, background: false);
     }
 
+    PlaylistInfo? _preSearch;
+
     [RelayCommand]
-    void Back() => CloseOpened();
+    void Back()
+    {
+        // Aus der Suche zurück: wieder in die Playlist, in der man vorher war (sonst zur Startseite).
+        if (IsSearch && _preSearch is { } prev)
+        {
+            _preSearch = null;
+            Selected = prev;
+            _ = OpenPlaylist(keepScroll: false);
+            return;
+        }
+        CloseOpened();
+    }
 
     void CloseOpened()
     {
@@ -909,13 +1158,13 @@ public sealed partial class YtViewModel : ObservableObject
             if (items == null)
             {
                 // Im Hintergrund nicht geprüft (es spielt gerade etwas): gespeicherte Liste bleibt.
-                if (Tracks.Count == 0) { TracksState = LoadState.Empty; TracksMessage = "Zum Laden der Songs „Aktualisieren“ klicken."; }
+                if (Tracks.Count == 0) { TracksState = LoadState.Empty; TracksMessage = Loc.T("yt.songs.refreshHint"); }
                 else TracksState = LoadState.Ready;
                 return;
             }
             var current = Tracks.Select(t => t.Info).ToList();
             if (items.Count > 0 && !YtLibrary.SameTracks(current, items)) SetTracks(items);
-            else if (items.Count == 0 && Tracks.Count == 0) { TracksState = LoadState.Empty; TracksMessage = "Keine Songs gefunden."; }
+            else if (items.Count == 0 && Tracks.Count == 0) { TracksState = LoadState.Empty; TracksMessage = Loc.T("yt.songs.none"); }
             else TracksState = LoadState.Ready;
         }
         catch (OperationCanceledException)
@@ -924,7 +1173,7 @@ public sealed partial class YtViewModel : ObservableObject
         catch (Exception ex)
         {
             if (Opened?.Id != p.Id) return;
-            if (Tracks.Count > 0) { TracksState = LoadState.Ready; Info = "Songs konnten nicht aktualisiert werden: " + ex.Message; }
+            if (Tracks.Count > 0) { TracksState = LoadState.Ready; Info = Loc.F("yt.songs.refreshFailed", ex.Message); }
             else { TracksError = ex.Message; TracksState = LoadState.Error; }
         }
         finally
@@ -938,7 +1187,7 @@ public sealed partial class YtViewModel : ObservableObject
         Tracks.Clear();
         foreach (var t in items) Tracks.Add(new TrackItem(t, _thumbs));
         TracksState = Tracks.Count == 0 ? LoadState.Empty : LoadState.Ready;
-        if (Tracks.Count == 0) TracksMessage = "Keine Songs gefunden.";
+        if (Tracks.Count == 0) TracksMessage = Loc.T("yt.songs.none");
     }
 
     [RelayCommand]
@@ -947,7 +1196,7 @@ public sealed partial class YtViewModel : ObservableObject
         _refreshCts?.Cancel();
         var cts = _refreshCts = new CancellationTokenSource();
         State = LoadState.Loading;
-        Message = "Playlists werden gelesen (kann bis zu 30 Sekunden dauern) …";
+        Message = Loc.T("yt.playlists.loading");
         Info = "";
         try
         {
@@ -956,7 +1205,7 @@ public sealed partial class YtViewModel : ObservableObject
             if (cts.IsCancellationRequested) return;
             ReplaceItems(items);
             Info = info;
-            Message = "Keine Playlists gefunden.";
+            Message = Loc.T("yt.playlists.none");
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -971,7 +1220,7 @@ public sealed partial class YtViewModel : ObservableObject
         try
         {
             await action();
-            if (Info == "Lädt …") Info = "";
+            if (Info == Loc.T("yt.loading")) Info = "";
         }
         catch (Exception ex)
         {

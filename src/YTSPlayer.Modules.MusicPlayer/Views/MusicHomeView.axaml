@@ -1,0 +1,35 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.MusicPlayer.ViewModels"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             xmlns:icons="using:YTSPlayer.Ui"
+             xmlns:loc="using:YTSPlayer.Ui.Localization"
+             x:Class="YTSPlayer.Modules.MusicPlayer.Views.MusicHomeView"
+             x:DataType="vm:MusicHomeViewModel">
+
+    <!-- Kacheln für Home: Playlists und zuletzt gespielte lokale Titel. Der Kopf (Titel, Knöpfe) kommt von der Shell. -->
+    <StackPanel>
+        <TextBlock Text="{loc:T music.home.empty}" Classes="caption muted" IsVisible="{Binding IsEmpty}" />
+        <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="{DynamicResource Pad.TileRow}" IsVisible="{Binding !IsEmpty}">
+            <ItemsControl ItemsSource="{Binding Tiles}">
+                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.M}" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MusicTile">
+                        <Button Classes="bare" Command="{Binding PlayCommand}">
+                            <StackPanel Classes="tile" Width="{DynamicResource Size.HomeTile}" Spacing="{DynamicResource Space.XS}">
+                                <Border Classes="cover" Width="{DynamicResource Size.HomeTile}" Height="{DynamicResource Size.HomeTile}">
+                                    <Grid>
+                                        <mi:MaterialIcon Kind="{Binding Icon, Converter={x:Static icons:IconConverters.Kind}}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        <Border Classes="dim" />
+                                    </Grid>
+                                </Border>
+                                <TextBlock Text="{Binding Name}" Classes="row" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{Binding Subtitle}" Classes="small secondary" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </StackPanel>
+</UserControl>

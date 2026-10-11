@@ -1,59 +1,17 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="using:YTSPlayer.Ui">
     <!--
-        Die EINE Farbpalette der App. Alle Farben sind semantische Tokens (Rolle, nicht Farbname).
-        Aussehen ändern = nur diese Datei ändern. Views nutzen nie Hex-Werte, nur diese Brushes.
-        Platzhalter-Werte: neutrales Dunkel-Grau mit einer Akzentfarbe (Look wird später festgelegt).
+        Verteiler der Themes. Die eigentlichen Farben stehen je Theme in Theme/Themes/*.axaml.
+        Ein neues Theme: Datei anlegen, Variante in AppThemes ergänzen, hier einen Eintrag hinzufügen.
+        Umschalten zur Laufzeit: Application.RequestedThemeVariant = AppThemes.Get("name").
+        Views nutzen immer {DynamicResource …}, nie StaticResource für Farben.
     -->
-
-    <!-- Flächen -->
-    <Color x:Key="Color.Surface0">#15171C</Color>
-    <Color x:Key="Color.Surface1">#1D2026</Color>
-    <Color x:Key="Color.Surface2">#262A32</Color>
-    <Color x:Key="Color.SurfaceHover">#2F343E</Color>
-    <Color x:Key="Color.SurfacePressed">#383E4A</Color>
-    <Color x:Key="Color.Border">#363C48</Color>
-    <Color x:Key="Color.Scrim">#99000000</Color>
-
-    <!-- Text -->
-    <Color x:Key="Color.Text">#E8EAED</Color>
-    <Color x:Key="Color.TextMuted">#9AA0A6</Color>
-    <Color x:Key="Color.TextDisabled">#5F6570</Color>
-
-    <!-- Akzent, Gefahr, Status -->
-    <Color x:Key="Color.Accent">#4C8DFF</Color>
-    <Color x:Key="Color.AccentHover">#6AA0FF</Color>
-    <Color x:Key="Color.AccentPressed">#3A74DB</Color>
-    <Color x:Key="Color.OnAccent">#FFFFFF</Color>
-    <Color x:Key="Color.Danger">#E5484D</Color>
-    <Color x:Key="Color.DangerHover">#EC6B6F</Color>
-    <Color x:Key="Color.DangerPressed">#C93A3F</Color>
-    <Color x:Key="Color.Success">#3FB950</Color>
-    <Color x:Key="Color.Warning">#F0A33B</Color>
-
-    <SolidColorBrush x:Key="Brush.Surface0" Color="{StaticResource Color.Surface0}" />
-    <SolidColorBrush x:Key="Brush.Surface1" Color="{StaticResource Color.Surface1}" />
-    <SolidColorBrush x:Key="Brush.Surface2" Color="{StaticResource Color.Surface2}" />
-    <SolidColorBrush x:Key="Brush.SurfaceHover" Color="{StaticResource Color.SurfaceHover}" />
-    <SolidColorBrush x:Key="Brush.SurfacePressed" Color="{StaticResource Color.SurfacePressed}" />
-    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
-    <SolidColorBrush x:Key="Brush.Scrim" Color="{StaticResource Color.Scrim}" />
-    <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource Color.Text}" />
-    <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}" />
-    <SolidColorBrush x:Key="Brush.TextDisabled" Color="{StaticResource Color.TextDisabled}" />
-    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
-    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
-    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{StaticResource Color.AccentPressed}" />
-    <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.OnAccent}" />
-    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
-    <SolidColorBrush x:Key="Brush.DangerHover" Color="{StaticResource Color.DangerHover}" />
-    <SolidColorBrush x:Key="Brush.DangerPressed" Color="{StaticResource Color.DangerPressed}" />
-    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
-    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
-    <SolidColorBrush x:Key="Brush.Transparent" Color="Transparent" />
-
-    <!-- Bindet die eingebauten Fluent-Controls (Slider, Schalter, Fokus …) an unseren Akzent. -->
-    <Color x:Key="SystemAccentColor">#4C8DFF</Color>
-    <Color x:Key="SystemAccentColorDark1">#3A74DB</Color>
-    <Color x:Key="SystemAccentColorLight1">#6AA0FF</Color>
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="{x:Static ui:AppThemes.Graphit}">
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="avares://YTSPlayer.Ui/Theme/Themes/Graphit.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

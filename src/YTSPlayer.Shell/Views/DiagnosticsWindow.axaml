@@ -1,11 +1,11 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:YTSPlayer.Shell.ViewModels"
         xmlns:c="using:YTSPlayer.Ui.Controls"
         xmlns:d="using:YTSPlayer.Contracts.Diagnostics"
         x:Class="YTSPlayer.Shell.Views.DiagnosticsWindow"
         x:DataType="vm:DiagnosticsViewModel"
-        Width="720" Height="780" Title="Diagnose – Fledgr">
+        Width="720" Height="780" Title="Diagnostics – Fledgr">
 
     <ScrollViewer>
         <StackPanel Margin="{DynamicResource Pad.L}" Spacing="{DynamicResource Space.M}">
@@ -14,10 +14,10 @@
             <TextBlock Text="{Binding TargetText}" Classes="muted" />
             <c:HistoryChart Height="120" Values="{Binding History}" Target="{Binding TargetMb}" />
 
-            <TextBlock Text="Prozesse" Classes="heading" />
+            <TextBlock Text="Processes" Classes="heading" />
             <Grid ColumnDefinitions="90,*,70,90,70" Classes="muted">
-                <TextBlock Text="Gruppe" Classes="muted" />
-                <TextBlock Grid.Column="1" Text="Prozess" Classes="muted" />
+                <TextBlock Text="Group" Classes="muted" />
+                <TextBlock Grid.Column="1" Text="Process" Classes="muted" />
                 <TextBlock Grid.Column="2" Text="PID" Classes="muted" />
                 <TextBlock Grid.Column="3" Text="MB" Classes="muted" />
                 <TextBlock Grid.Column="4" Text="CPU %" Classes="muted" />
@@ -36,7 +36,7 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock Text="Zähler der Module" Classes="heading" />
+            <TextBlock Text="Module counters" Classes="heading" />
             <ItemsControl ItemsSource="{Binding Lines}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="d:DiagnosticLine">
@@ -48,15 +48,15 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
 
-            <TextBlock Text="Operationen (Dauer)" Classes="heading" />
+            <TextBlock Text="Operations (duration)" Classes="heading" />
             <Grid ColumnDefinitions="*,60,60,80,80,80,60">
                 <TextBlock Text="Name" Classes="muted" />
-                <TextBlock Grid.Column="1" Text="Anz." Classes="muted" />
-                <TextBlock Grid.Column="2" Text="Fehler" Classes="muted" />
-                <TextBlock Grid.Column="3" Text="Letzte" Classes="muted" />
+                <TextBlock Grid.Column="1" Text="Count" Classes="muted" />
+                <TextBlock Grid.Column="2" Text="Errors" Classes="muted" />
+                <TextBlock Grid.Column="3" Text="Last" Classes="muted" />
                 <TextBlock Grid.Column="4" Text="Ø" Classes="muted" />
                 <TextBlock Grid.Column="5" Text="Max" Classes="muted" />
-                <TextBlock Grid.Column="6" Text="Läuft" Classes="muted" />
+                <TextBlock Grid.Column="6" Text="Running" Classes="muted" />
             </Grid>
             <ItemsControl ItemsSource="{Binding Operations}">
                 <ItemsControl.ItemTemplate>
@@ -75,8 +75,8 @@
             </ItemsControl>
 
             <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
-                <Button Content="Arbeitssatz leeren" Command="{Binding TrimNowCommand}" />
-                <Button Content="CSV exportieren" Command="{Binding ExportCsvCommand}" />
+                <Button Content="Trim working set" Command="{Binding TrimNowCommand}" />
+                <Button Content="Export CSV" Command="{Binding ExportCsvCommand}" />
             </StackPanel>
             <TextBlock Text="{Binding Info}" Classes="muted" TextWrapping="Wrap" />
         </StackPanel>

@@ -6,6 +6,28 @@
         <Setter Property="Width" Value="{DynamicResource Size.Icon}" />
         <Setter Property="Height" Value="{DynamicResource Size.Icon}" />
     </Style>
+    <Style Selector="Button.icon.header mi|MaterialIcon, Button.icon.nav mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconM}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconM}" />
+    </Style>
+    <Style Selector="Button.segment mi|MaterialIcon, Button.chip mi|MaterialIcon, Button.hero mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconXS}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconXS}" />
+    </Style>
+    <Style Selector="Button.pill mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconM}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconM}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Highlight}" />
+    </Style>
+    <Style Selector="Button.play mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconPlay}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconPlay}" />
+    </Style>
+    <!-- Play im Widget: 10 % kleiner als der große Play-Knopf, Icon mit. -->
+    <Style Selector="Button.play.compact mi|MaterialIcon">
+        <Setter Property="Width" Value="{DynamicResource Size.IconPlayW}" />
+        <Setter Property="Height" Value="{DynamicResource Size.IconPlayW}" />
+    </Style>
     <Style Selector="Button.icon.large mi|MaterialIcon">
         <Setter Property="Width" Value="{DynamicResource Size.IconL}" />
         <Setter Property="Height" Value="{DynamicResource Size.IconL}" />

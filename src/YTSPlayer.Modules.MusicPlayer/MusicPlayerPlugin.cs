@@ -1,4 +1,4 @@
-using Avalonia.Controls.Templates;
+﻿using Avalonia.Controls.Templates;
 using YTSPlayer.Contracts;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Playback;
@@ -19,13 +19,15 @@ public sealed class MusicPlayerPlugin(Func<string?>? libVlcDirectory = null) : I
     LibraryService? _library;
 
     public string Id => "music";
-    public string DisplayName => "Musikplayer (lokal)";
+    public string DisplayName => "music.plugin.name";
     public bool IsCore => true;
     public bool EnabledByDefault => true;
 
     public IEnumerable<IDataTemplate> GetTemplates() =>
     [
         new FuncDataTemplate<LibraryViewModel>((_, _) => new LibraryView()),
+        new FuncDataTemplate<MusicHomeViewModel>((_, _) => new MusicHomeView()),
+        new FuncDataTemplate<MusicSearchHeader>((_, _) => new YTSPlayer.Ui.Controls.SearchBox { PlaceholderKey = "music.search.placeholder", [!YTSPlayer.Ui.Controls.SearchBox.TextProperty] = new Avalonia.Data.Binding("Vm.SearchText") { Mode = Avalonia.Data.BindingMode.TwoWay } }),
         new FuncDataTemplate<MusicSettingsViewModel>((_, _) => new MusicSettingsView()),
     ];
 
@@ -40,12 +42,14 @@ public sealed class MusicPlayerPlugin(Func<string?>? libVlcDirectory = null) : I
         var library = _library = new LibraryService(settings, store, perf);
         var provider = new LibraryProvider(library);
         _source = new LibVlcSource(perf, libVlcDirectory);
-        var vm = new LibraryViewModel(library, provider, player);
+        var vm = new LibraryViewModel(library, provider, player, store);
 
         context.AddSource(_source);
         context.AddProvider(provider);
-        context.AddPage(new NavPage("music", "Musik", Icons.Music, vm, 10));
-        context.AddSettingsPage(new SettingsPage("music-settings", "Musik", new MusicSettingsViewModel(library, vm)));
+        context.AddPage(new NavPage("music", "music.nav", Icons.Music, vm, 10, "music"));
+        var home = new MusicHomeViewModel(library, vm, player, sp.Get<IPlayHistory>());
+        context.AddHomeSection(new HomeSection("music-home", "music.nav", "music", 30, home, "music", [new HomeAction("music.home.shuffle", Icons.Shuffle, home.StartShuffle)]));
+        context.AddSettingsPage(new SettingsPage("music-settings", "music.settings.title", new MusicSettingsViewModel(library, vm, sp.Require<AppSettings>(), store)));
         await vm.InitializeAsync();
         library.StartWatching();
     }

@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns:loc="using:YTSPlayer.Ui.Localization" xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
              x:Class="YTSPlayer.Modules.YtConnect.Views.YtSettingsView"
@@ -7,36 +7,60 @@
     <StackPanel Spacing="{DynamicResource Space.L}">
 
         <StackPanel Spacing="{DynamicResource Space.S}">
-            <TextBlock Classes="heading" Text="Wiedergabe" />
-            <CheckBox Content="Song-Modus (kein Video, spart Daten und Speicher)" IsChecked="{Binding S.SongMode}" />
+            <TextBlock Classes="heading" Text="{loc:T yt.settings.account}" />
+            <StackPanel IsVisible="{Binding IsLoggedIn}">
+                <TextBlock Text="{Binding AccountName}" Classes="label" />
+                <TextBlock Text="{Binding AccountEmail}" Classes="caption muted" />
+            </StackPanel>
+            <Button Content="{loc:T shell.account.signout}" Classes="danger dots" Command="{Binding SignOutCommand}" HorizontalAlignment="Left" IsVisible="{Binding IsLoggedIn}" />
+            <Button Content="{loc:T shell.account.signin}" Classes="primary" Command="{Binding SignInCommand}" HorizontalAlignment="Left" IsVisible="{Binding CanSignIn}" />
         </StackPanel>
 
         <StackPanel Spacing="{DynamicResource Space.S}">
-            <TextBlock Classes="heading" Text="Speicher sparen" />
+            <TextBlock Classes="heading" Text="{loc:T yt.settings.display}" />
+            <CheckBox Content="{loc:T yt.settings.nowPlaying}" IsChecked="{Binding ShowNowPlaying}" />
+        </StackPanel>
+
+        <StackPanel Spacing="{DynamicResource Space.S}">
+            <TextBlock Classes="heading" Text="{loc:T yt.settings.playback}" />
+            <CheckBox Content="{loc:T yt.settings.songMode}" IsChecked="{Binding S.SongMode}" />
+        </StackPanel>
+
+        <StackPanel Spacing="{DynamicResource Space.S}">
+            <TextBlock Classes="heading" Text="{loc:T yt.settings.search}" />
+            <Button Content="{loc:T yt.search.clear}" Command="{Binding ClearSearchHistoryCommand}" HorizontalAlignment="Left" />
+        </StackPanel>
+
+        <Expander IsExpanded="False" HorizontalAlignment="Stretch">
+            <Expander.Header>
+                <TextBlock Classes="heading" Text="{loc:T yt.settings.memory}" />
+            </Expander.Header>
+        <StackPanel Spacing="{DynamicResource Space.S}">
             <TextBlock Classes="caption muted" TextWrapping="Wrap"
-                       Text="Hebel der Web-Ansicht, die YouTube Music im Hintergrund abspielt. Änderungen wirken nach „Anwenden“ (die Web-Ansicht startet dabei neu)." />
-            <WrapPanel>
-                <CheckBox Content="Bilder blockieren" IsChecked="{Binding S.BlockImages}" />
-                <CheckBox Content="CSS blockieren" IsChecked="{Binding S.BlockStyles}" />
-                <CheckBox Content="Fonts blockieren" IsChecked="{Binding S.BlockFonts}" />
-                <CheckBox Content="GPU aus" IsChecked="{Binding S.DisableGpu}" />
-                <CheckBox Content="GPU im Browser-Prozess" IsChecked="{Binding S.InProcessGpu}" />
-                <CheckBox Content="V8-Heap klein" IsChecked="{Binding S.LimitV8}" />
-                <CheckBox Content="Prozess pro Seite" IsChecked="{Binding S.ProcessPerSite}" />
-                <CheckBox Content="Site Isolation aus" IsChecked="{Binding S.SiteIsolationOff}" />
-                <CheckBox Content="Arbeitssatz im Leerlauf leeren" IsChecked="{Binding S.TrimWhenIdle}" />
-            </WrapPanel>
+                       Text="{loc:T yt.settings.memory.hint}" />
+            <StackPanel Spacing="{DynamicResource Space.XS}">
+                <CheckBox Content="{loc:T yt.settings.blockImages}" IsChecked="{Binding S.BlockImages}" />
+                <CheckBox Content="{loc:T yt.settings.blockCss}" IsChecked="{Binding S.BlockStyles}" />
+                <CheckBox Content="{loc:T yt.settings.blockFonts}" IsChecked="{Binding S.BlockFonts}" />
+                <CheckBox Content="{loc:T yt.settings.gpuOff}" IsChecked="{Binding S.DisableGpu}" />
+                <CheckBox Content="{loc:T yt.settings.gpuInProcess}" IsChecked="{Binding S.InProcessGpu}" />
+                <CheckBox Content="{loc:T yt.settings.v8Small}" IsChecked="{Binding S.LimitV8}" />
+                <CheckBox Content="{loc:T yt.settings.processPerSite}" IsChecked="{Binding S.ProcessPerSite}" />
+                <CheckBox Content="{loc:T yt.settings.siteIsolationOff}" IsChecked="{Binding S.SiteIsolationOff}" />
+                <CheckBox Content="{loc:T yt.settings.trimIdle}" IsChecked="{Binding S.TrimWhenIdle}" />
+            </StackPanel>
             <Grid ColumnDefinitions="Auto,80,Auto,80" ColumnSpacing="{DynamicResource Space.S}">
-                <TextBlock Text="Sparmodus nach (s)" VerticalAlignment="Center" />
+                <TextBlock Text="{loc:T yt.settings.lowAfter}" VerticalAlignment="Center" />
                 <TextBox Grid.Column="1" Text="{Binding S.IdleLowSeconds}" />
-                <TextBlock Grid.Column="2" Text="Web-Ansicht aus nach (min)" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{loc:T yt.settings.offAfter}" VerticalAlignment="Center" />
                 <TextBox Grid.Column="3" Text="{Binding S.IdleDisposeMinutes}" />
             </Grid>
             <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
-                <Button Content="Anwenden (Web-Ansicht neu starten)" Classes="primary" Command="{Binding ApplyCommand}" />
-                <Button Content="Arbeitssatz jetzt leeren" Command="{Binding TrimNowCommand}" />
+                <Button Content="{loc:T yt.settings.apply}" Classes="primary" Command="{Binding ApplyCommand}" />
+                <Button Content="{loc:T yt.settings.trimNow}" Command="{Binding TrimNowCommand}" />
             </StackPanel>
             <TextBlock Text="{Binding Info}" Classes="caption muted" TextWrapping="Wrap" />
         </StackPanel>
+        </Expander>
     </StackPanel>
 </UserControl>

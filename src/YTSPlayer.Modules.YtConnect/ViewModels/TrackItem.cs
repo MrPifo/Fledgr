@@ -9,9 +9,13 @@ namespace YTSPlayer.Modules.YtConnect.ViewModels;
 /// Eine Zeile in der Titelliste. Das Vorschaubild wird erst geladen, wenn die Zeile zum ersten Mal angezeigt wird
 /// (die Liste ist virtualisiert, so liegen nur sichtbare Bilder im Speicher).
 /// </summary>
-public sealed class TrackItem(TrackInfo info, IThumbnailCache thumbs) : ObservableObject
+public sealed class TrackItem(TrackInfo info, IThumbnailCache thumbs, int thumbWidth = TrackItem.ListWidth) : YTSPlayer.Ui.PlayingRow
 {
-    const int ThumbWidth = 96;
+    /// <summary>Breite des Vorschaubilds in Listenzeilen (klein, spart Speicher).</summary>
+    public const int ListWidth = 96;
+
+    /// <summary>Breite für Karten (120 px groß, auch bei höherer Bildschirmskalierung scharf; daher mehr Pixel, sonst wirkt das Bild unscharf).</summary>
+    public const int CardWidth = 192;
 
     Bitmap? _cover;
     bool _requested;
@@ -35,18 +39,24 @@ public sealed class TrackItem(TrackInfo info, IThumbnailCache thumbs) : Observab
         }
     }
 
+    /// <summary>Fragt bei Google-Bildern (Größe im Adress-Ende) die Kartengröße an. Andere Adressen bleiben.</summary>
+    static string Larger(string url) =>
+        url.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+            ? System.Text.RegularExpressions.Regex.Replace(url, @"=w\d+-h\d+[^?]*$", $"=w{CardWidth}-h{CardWidth}-l90-rj")
+            : url;
+
     async Task LoadAsync()
     {
         try
         {
-            var bytes = await thumbs.GetAsync(Info.Thumb);
+            var bytes = await thumbs.GetAsync(thumbWidth > ListWidth ? Larger(Info.Thumb) : Info.Thumb);
             if (bytes == null) return;
             var bmp = await Task.Run(() =>
             {
                 try
                 {
                     using var ms = new MemoryStream(bytes);
-                    return Bitmap.DecodeToWidth(ms, ThumbWidth);
+                    return Bitmap.DecodeToWidth(ms, thumbWidth);
                 }
                 catch (Exception)
                 {

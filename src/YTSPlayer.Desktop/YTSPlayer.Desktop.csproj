@@ -54,4 +54,7 @@
     <ProjectReference Include="..\YTSPlayer.Modules.RadioPlayer\YTSPlayer.Modules.RadioPlayer.csproj" />
     <ProjectReference Include="..\YTSPlayer.Platform.Windows\YTSPlayer.Platform.Windows.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings\*.xml" />
+  </ItemGroup>
 </Project>

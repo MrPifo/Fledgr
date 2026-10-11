@@ -1,7 +1,6 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="YTSPlayer.Desktop.App"
-             RequestedThemeVariant="Dark">
+             x:Class="YTSPlayer.Desktop.App">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -12,7 +11,12 @@
     </Application.Resources>
 
     <Application.Styles>
-        <FluentTheme />
+        <!-- Ohne eigene Akzentfarbe nimmt Fluent die Windows-Akzentfarbe. Hier kommt sie aus dem aktiven Theme. Eigene Theme-Varianten erben von „Dark“. -->
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <ColorPaletteResources x:Key="Dark" Accent="{DynamicResource Color.Accent}" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
         <StyleInclude Source="avares://YTSPlayer.Ui/UiTheme.axaml" />
     </Application.Styles>
 </Application>

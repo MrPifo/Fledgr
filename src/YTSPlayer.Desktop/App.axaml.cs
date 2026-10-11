@@ -5,7 +5,9 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Platform;
 using YTSPlayer.Contracts;
 using YTSPlayer.Contracts.Diagnostics;
+using YTSPlayer.Contracts.Localization;
 using YTSPlayer.Contracts.Media;
+using YTSPlayer.Contracts.Playback;
 using YTSPlayer.Contracts.Plugins;
 using YTSPlayer.Contracts.Settings;
 using YTSPlayer.Desktop.SelfTests;
@@ -23,7 +25,11 @@ public partial class App : Application
     public const string AppName = "Fledgr";
     const string OldAppName = "YT-SPlayer";
 
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        RequestedThemeVariant = YTSPlayer.Ui.AppThemes.Graphit;
+    }
 
     /// <summary>App-Ordner unter <paramref name="root"/>. Gibt es nur den alten Ordner (YT-SPlayer), wird er einmalig umbenannt.</summary>
     static string AppFolder(Environment.SpecialFolder root)
@@ -41,6 +47,8 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        YTSPlayer.Ui.Behaviors.GlobalDefocus.Install();
+        YTSPlayer.Ui.Behaviors.TextBoxClear.Install();
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var args = desktop.Args ?? [];
@@ -66,6 +74,17 @@ public partial class App : Application
                 Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) => AppLog.Error("Oberfläche", "Unbehandelter Fehler im UI-Thread", e.Exception);
             }
 
+            var settings = store.Load<AppSettings>("app");
+
+            // Sprache und Theme aus den Einstellungen. Alle Projekte mit Strings\*.xml werden angemeldet.
+            var loc = Loc.Current;
+            foreach (var assembly in new[] { typeof(YTSPlayer.Ui.AppThemes), typeof(ShellApp), typeof(MusicPlayerPlugin), typeof(RadioPlayerPlugin), typeof(YtConnectPlugin), typeof(App) }.Select(t => t.Assembly))
+                loc.AddAssembly(assembly);
+            // Zum Testen: --lang=en-GB überschreibt die Sprache aus den Einstellungen (ohne sie zu speichern).
+            var langArg = args.FirstOrDefault(a => a.StartsWith("--lang="));
+            loc.SetLanguage(langArg != null ? langArg[7..] : settings.Language);
+            RequestedThemeVariant = YTSPlayer.Ui.AppThemes.Get(settings.Theme);
+
             if (selfTest && !uiTest)
             {
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -74,21 +93,23 @@ public partial class App : Application
                 return;
             }
 
-            var settings = store.Load<AppSettings>("app");
             var services = new ServiceRegistry()
                 .Add<IAppPaths>(paths)
                 .Add<ISettingsStore>(store)
                 .Add(settings)
+                .Add<ILocalizer>(loc)
                 .Add<IPerfTracker>(new PerfTracker())
                 .Add<IProcessStats>(new WindowsProcessStats())
                 .Add<IWindowEffects>(new WindowsWindowEffects())
-                .Add<IMediaTransport>(new WindowsMediaTransport());
+                .Add<IMediaTransport>(new WindowsMediaTransport())
+                .Add<ISystemAudio>(new WindowsSystemAudio())
+                .Add<IChildAudioVolume>(new WindowsChildAudio());
 
             var plugins = new List<IPlugin>
             {
                 new MusicPlayerPlugin(LibVlcLocator.Find),
                 new YtConnectPlugin(s => new WebView2YtHost(s, paths)),
-                new RadioPlayerPlugin(),
+                new RadioPlayerPlugin(LibVlcLocator.Find),
             };
             if (args.Contains("--selftest-ui-fake")) plugins.Add(new FakeAccountPlugin());
 

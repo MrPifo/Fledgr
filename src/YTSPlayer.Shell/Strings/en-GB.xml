@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<translations language="en" country="GB">
+  <!-- Navigation and header -->
+  <t key="shell.nav.settings">Settings</t>
+  <t key="shell.nav.diagnostics">Diagnostics</t>
+  <t key="shell.nav.quit">Quit</t>
+  <t key="shell.header.widget">Turn the app into a small widget</t>
+
+  <!-- Account -->
+  <t key="shell.account.settings">Settings</t>
+  <t key="shell.account.signout">Sign out</t>
+  <t key="shell.account.signin">Sign in</t>
+  <t key="shell.account.busy.login">Signing in …</t>
+  <t key="shell.account.busy.verify">Reading profile …</t>
+  <t key="shell.account.busy.logout">Signing out …</t>
+
+  <!-- Lyrics -->
+  <t key="shell.lyrics.title">Lyrics</t>
+  <t key="shell.lyrics.hide">Hide lyrics</t>
+  <t key="shell.lyrics.unsupported">The current source does not provide lyrics.</t>
+  <t key="shell.lyrics.loading">Loading lyrics …</t>
+  <t key="shell.lyrics.none">There are no lyrics for this track.</t>
+  <t key="shell.lyrics.failed">The lyrics could not be loaded.</t>
+
+  <!-- Player -->
+  <t key="shell.player.idle">Nothing playing</t>
+  <t key="shell.player.artistpage">Open artist page</t>
+  <t key="shell.player.more">More</t>
+  <t key="shell.player.addToPlaylist">Add to playlist</t>
+  <t key="shell.player.mute">Mute</t>
+  <t key="shell.player.shuffle.on">Shuffle: on (click to turn off)</t>
+  <t key="shell.player.shuffle.off">Shuffle: off (click to turn on)</t>
+  <t key="shell.player.mix.on">Radio mix is playing (click to restart it from this track)</t>
+  <t key="shell.player.mix.off">Start a radio mix from this track</t>
+  <t key="shell.player.like.on">Liked (click to remove)</t>
+  <t key="shell.player.like.off">Like</t>
+  <t key="shell.player.dislike.on">Disliked (click to remove)</t>
+  <t key="shell.player.dislike.off">Dislike</t>
+  <t key="shell.status.playing">Playing</t>
+  <t key="shell.status.paused">Paused</t>
+  <t key="shell.error">Error: %1</t>
+  <t key="shell.menu.lyrics">Lyrics</t>
+  <t key="shell.menu.radiomix">Start radio mix</t>
+
+  <!-- Sleep timer -->
+  <t key="shell.sleep.on">Sleep timer on: pauses after %1 minutes without activity (click to turn off)</t>
+  <t key="shell.sleep.off">Sleep timer off (click to turn on)</t>
+
+  <!-- Settings -->
+  <t key="shell.settings.general">General</t>
+  <t key="shell.settings.modules">Modules</t>
+  <t key="shell.settings.cubicvolume">Fine control at low volume</t>
+  <t key="shell.settings.playerdocked">Dock player bar at the bottom, full width</t>
+  <t key="shell.settings.minimize">Minimise on close</t>
+  <t key="shell.settings.ram">RAM target (MB)</t>
+  <t key="shell.settings.sleep">Sleep timer</t>
+  <t key="shell.settings.sleep.enable">Pause when idle</t>
+  <t key="shell.settings.sleep.after">Pause after (min)</t>
+  <t key="shell.settings.sleep.hint">Counts mouse, keyboard and media keys. A notice appears one minute before.</t>
+  <t key="shell.settings.cache">Cache</t>
+  <t key="shell.settings.cache.size">Used</t>
+  <t key="shell.settings.cache.clear">Clear</t>
+  <t key="shell.settings.cache.hint">Images and saved lists. Login, settings and playlists stay.</t>
+  <t key="shell.settings.log">Log</t>
+  <t key="shell.settings.log.open">Open folder</t>
+  <t key="shell.settings.modules.hint">Modules that are switched off free their memory.</t>
+  <t key="shell.tray.signedOut">Not signed in</t>
+  <t key="shell.tray.pause">Pause</t>
+  <t key="shell.tray.play">Play</t>
+  <t key="shell.tray.next">Next</t>
+  <t key="shell.tray.previous">Previous</t>
+  <t key="shell.tray.show">Show window</t>
+  <t key="shell.tray.widget">Widget</t>
+  <t key="shell.sleep.paused">Sleep timer: playback paused (no activity for %1 minutes).</t>
+  <t key="shell.sleep.warn">Sleep timer: pausing in one minute. Move the mouse or press a key to cancel.</t>
+  <t key="shell.error.module">Error while starting a module: %1</t>
+  <t key="shell.error.session">The last session could not be restored: %1</t>
+  <t key="shell.error.sourceInactive">The source “%1” is not active. Switch the module on.</t>
+  <t key="shell.error.browser">The browser could not be opened.</t>
+  <t key="shell.widget.back">Back to the full app</t>
+  <t key="shell.widget.favorites">Favourites</t>
+  <t key="shell.widget.source.radio">Radio</t>
+  <t key="shell.widget.source.yt">Music</t>
+  <t key="shell.widget.source.local">Local</t>
+  <t key="shell.player.volume">Volume</t>
+  <t key="shell.player.volume.percent">%1%%</t>
+  <!-- Home -->
+  <t key="home.nav">Home</t>
+  <t key="home.time">%1</t>
+  <t key="home.greeting.morning">Good morning</t>
+  <t key="home.greeting.day">Good afternoon</t>
+  <t key="home.greeting.evening">Good evening</t>
+  <t key="home.greeting.night">Good night</t>
+  <t key="home.resume">Continue</t>
+  <t key="home.continue">Currently playing:</t>
+  <t key="home.showAll">Show all</t>
+  <t key="home.noModules">All modules are switched off. Switch one on under “Modules” in the settings.</t>
+  <t key="home.history">History</t>
+  <t key="home.history.clear">Clear history</t>
+  <t key="home.source.yt">YouTube</t>
+  <t key="home.source.radio">Radio</t>
+  <t key="home.source.local">Local</t>
+  <t key="home.ago.now">just now</t>
+  <t key="home.ago.min.one">%1 min ago</t>
+  <t key="home.ago.min.other">%1 min ago</t>
+  <t key="home.ago.hour.one">%1 hr ago</t>
+  <t key="home.ago.hour.other">%1 hr ago</t>
+  <t key="home.ago.day.one">%1 day ago</t>
+  <t key="home.ago.day.other">%1 days ago</t>
+  <t key="shell.settings.version">Version</t>
+</translations>

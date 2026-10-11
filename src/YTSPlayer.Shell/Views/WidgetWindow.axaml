@@ -1,4 +1,4 @@
-<Window xmlns="https://github.com/avaloniaui"
+﻿<Window xmlns:loc="using:YTSPlayer.Ui.Localization" xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:YTSPlayer.Shell.ViewModels"
         xmlns:views="using:YTSPlayer.Shell.Views"
@@ -7,77 +7,116 @@
         xmlns:mi="using:Material.Icons.Avalonia"
         x:Class="YTSPlayer.Shell.Views.WidgetWindow"
         x:DataType="vm:ShellViewModel"
-        Width="300" SizeToContent="Height" CanResize="False" Topmost="True" ShowInTaskbar="False"
-        WindowStartupLocation="CenterScreen"
+        Width="{DynamicResource Size.WidgetWindow}" SizeToContent="Height" CanResize="False" Topmost="True" ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen" TransparencyLevelHint="Transparent" Background="Transparent"
         WindowDecorations="None" Title="Fledgr Widget">
 
-    <!-- Mini-Version des Players: Cover, Titel, Steuerung, Lautstärke, Fortschritt. Oben rechts zurück zur großen App. -->
-    <Border Classes="raised flush flat" PointerPressed="OnDrag" PointerMoved="OnDragMove" PointerReleased="OnDragEnd">
-        <Grid Margin="{DynamicResource Pad.S}" RowDefinitions="Auto,Auto,Auto">
+    <Window.Styles>
+        <!-- Ohne Cover ist die obere Zeile flach: die Steuerung rückt etwas nach unten. -->
+        <Style Selector="StackPanel.transport.fav">
+            <Setter Property="Margin" Value="{DynamicResource Pad.WidgetFav}" />
+        </Style>
+        <Style Selector="Grid.controls.nocover">
+            <Setter Property="Margin" Value="{DynamicResource Pad.WidgetNoCover}" />
+        </Style>
+    </Window.Styles>
 
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}">
-                <Border Classes="cover flat" Width="48" Height="48" IsVisible="{Binding HasCover}">
-                    <Grid>
-                        <Image Source="{Binding Cover}" Stretch="UniformToFill" />
-                        <Border Classes="scrim" IsVisible="{Binding CanOpenExternal}" PointerPressed="OnCoverPressed"
-                                ToolTip.Tip="{Binding ExternalLabel}">
-                            <mi:MaterialIcon Kind="OpenInNew" HorizontalAlignment="Center" VerticalAlignment="Center" />
+    <!-- Mini-Version der Player-Karte (Vorlage widgets-v13): runde Ecken, Korn, Cover, Titel, dann Menü | Transport | Lautstärke, unten der Fortschritt. -->
+    <!-- Das ganze Widget ist 5 % größer als die Vorlage (300 px Breite). -->
+    <LayoutTransformControl LayoutTransform="scale(1.05)">
+    <Border Classes="player widget" Margin="{DynamicResource Pad.WidgetShadow}" PointerPressed="OnDrag" PointerMoved="OnDragMove" PointerReleased="OnDragEnd">
+        <Grid>
+            <Border Classes="grain g-player" CornerRadius="{DynamicResource Radius.L}" />
+            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="{DynamicResource Space.XS}">
+
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.M}">
+                    <!-- Links: Cover, darunter die Quelle (Symbol und Kurzname). -->
+                    <StackPanel Spacing="{DynamicResource Space.XS}" Width="{DynamicResource Size.CoverWidget}" IsVisible="{Binding ShowCoverColumn}">
+                        <Border Classes="cover" Classes.zoom="{Binding CanOpenExternal}" BoxShadow="{DynamicResource Shadow.Cover}" Width="{DynamicResource Size.CoverWidget}" Height="{DynamicResource Size.CoverWidget}"
+                                CornerRadius="{DynamicResource Radius.Cover}" IsVisible="{Binding HasCover}">
+                            <Grid>
+                                <Image Source="{Binding Cover}" Stretch="UniformToFill" />
+                                <Border Classes="scrim" IsVisible="{Binding CanOpenExternal}" PointerPressed="OnCoverPressed"
+                                        ToolTip.Tip="{Binding ExternalLabel}">
+                                    <mi:MaterialIcon Kind="OpenInNew" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Grid>
                         </Border>
-                    </Grid>
-                </Border>
-                <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <DockPanel>
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" IsVisible="{Binding HasYear}" VerticalAlignment="Center">
-                            <mi:MaterialIcon Kind="CircleSmall" />
-                            <TextBlock Text="{Binding Year}" Classes="muted" />
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{DynamicResource Space.XS}" IsVisible="{Binding ShowSourceLine}">
+                            <ContentControl Classes="tone" Tag="{Binding SourceTone}" VerticalAlignment="Center">
+                                <mi:MaterialIcon Kind="{Binding SourceIcon, Converter={x:Static icons:IconConverters.Kind}}"
+                                                 Width="{DynamicResource Size.IconSource}" Height="{DynamicResource Size.IconSource}" Classes="shadow-icon" />
+                            </ContentControl>
+                            <TextBlock Text="{Binding SourceShort}" Classes="micro muted shadow" VerticalAlignment="Center" />
                         </StackPanel>
-                        <ui:MarqueeText Text="{Binding Title}" TextElement.FontWeight="SemiBold" />
-                    </DockPanel>
-                    <Border Background="Transparent" Cursor="Hand" IsHitTestVisible="{Binding CanOpenArtist}" PointerPressed="OnArtistPressed"
-                            ToolTip.Tip="Künstler-Seite öffnen">
-                        <ui:MarqueeText Text="{Binding Artist}" Classes="caption muted" />
-                    </Border>
-                </StackPanel>
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
-                    <Button Classes="icon ghost" Command="{Binding ReturnToMainCommand}" ToolTip.Tip="Zurück zur großen App"><mi:MaterialIcon Kind="ArrowExpand" /></Button>
-                    <Button Classes="icon ghost" Command="{Binding QuitCommand}" ToolTip.Tip="Beenden"><mi:MaterialIcon Kind="Close" /></Button>
-                </StackPanel>
-            </Grid>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Top">
+                        <ui:MarqueeText Text="{Binding Title}" Classes="label shadow" />
+                        <Border Background="Transparent" Cursor="Hand" IsHitTestVisible="{Binding CanOpenArtist}" PointerPressed="OnArtistPressed"
+                                ToolTip.Tip="{loc:T shell.player.artistpage}">
+                            <ui:MarqueeText Text="{Binding ArtistLine}" Classes="small secondary shadow" />
+                        </Border>
+                    </StackPanel>
+                    <Grid Grid.Column="2">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                            <Button Classes="icon header compact" Command="{Binding ReturnToMainCommand}" ToolTip.Tip="{loc:T shell.widget.back}"><mi:MaterialIcon Kind="ArrowExpand" Classes="shadow-icon" /></Button>
+                            <Button Classes="icon header compact" Command="{Binding QuitCommand}" ToolTip.Tip="{loc:T shell.nav.quit}"><mi:MaterialIcon Kind="Close" Classes="shadow-icon" /></Button>
+                        </StackPanel>
+                        <!-- Signal-Balken (nur Radio): bewegen sich, solange der Stream wirklich läuft. -->
+                        <StackPanel Classes="bars" Classes.on="{Binding BarsOn}" HorizontalAlignment="Right" IsVisible="{Binding IsLive}"
+                                    Margin="{DynamicResource Pad.Bars}">
+                            <Border Classes="bar b1" />
+                            <Border Classes="bar b2" />
+                            <Border Classes="bar b3" />
+                            <Border Classes="bar b4" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
 
-            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="{DynamicResource Space.XS}">
-                <Button Classes="icon ghost" Classes.active="{Binding IsLiked}" Command="{Binding ToggleLikeCommand}"
-                        IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding LikeTip}">
-                    <mi:MaterialIcon Kind="{Binding LikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                </Button>
-                <Button Classes="icon ghost" Classes.active="{Binding IsDisliked}" Command="{Binding ToggleDislikeCommand}"
-                        IsVisible="{Binding CanLike}" ToolTip.Tip="{Binding DislikeTip}">
-                    <mi:MaterialIcon Kind="{Binding DislikeIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                </Button>
-                <Button Classes="icon ghost" Click="OnTrackMenu" IsVisible="{Binding CanTrackMenu}" ToolTip.Tip="Mehr: Playlist, Mix, Teilen …">
-                    <mi:MaterialIcon Kind="DotsVertical" />
-                </Button>
-                <Button Classes="icon ghost" Classes.active="{Binding IsShuffle}" Command="{Binding ToggleShuffleCommand}"
-                        IsVisible="{Binding CanShuffle}" ToolTip.Tip="{Binding ShuffleTip}">
-                    <mi:MaterialIcon Kind="{Binding ShuffleIcon, Converter={x:Static icons:IconConverters.Kind}}" />
-                </Button>
-                <Button Classes="icon ghost" Command="{Binding PreviousCommand}" IsVisible="{Binding CanPrevious}"><mi:MaterialIcon Kind="SkipPrevious" /></Button>
-                <Button Classes="icon" Command="{Binding TogglePlayCommand}"><mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" /></Button>
-                <Button Classes="icon ghost" Command="{Binding NextCommand}" IsVisible="{Binding CanNext}"><mi:MaterialIcon Kind="SkipNext" /></Button>
-                <Button Classes="icon ghost" IsVisible="{Binding CanVolume}" ToolTip.Tip="Lautstärke">
-                    <mi:MaterialIcon Kind="VolumeHigh" />
-                    <Button.Flyout>
-                        <Flyout Placement="Top">
-                            <Slider Minimum="0" Maximum="1" Value="{Binding Volume}" Width="140" />
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
-            </StackPanel>
+                <!-- Links Favoriten (Radio), rechts Drei-Punkte-Menü und Lautstärke. Alle drei liegen in einer Zelle, damit Play genau mittig im Widget steht. -->
+                <Grid Grid.Row="1" Classes="controls" Classes.nocover="{Binding !HasCover}">
+                    <Button Classes="bare" HorizontalAlignment="Left" VerticalAlignment="Center" Click="OnFavorites" IsVisible="{Binding CanFavorites}">
+                        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
+                            <mi:MaterialIcon Kind="Star" Classes="shadow-icon" Foreground="{DynamicResource Brush.Highlight}" />
+                            <TextBlock Text="{loc:T shell.widget.favorites}" Classes="small secondary" VerticalAlignment="Center" />
+                            <mi:MaterialIcon Kind="ChevronDown" Classes="shadow-icon" Width="{DynamicResource Size.IconS}" Height="{DynamicResource Size.IconS}" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel Classes="transport" Classes.fav="{Binding CanFavorites}" Orientation="Horizontal" Spacing="{DynamicResource Space.XS}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransform="translateY(-5px)">
+                        <Button Classes="icon step" Command="{Binding PreviousCommand}" IsVisible="{Binding CanPrevious}"><mi:MaterialIcon Kind="SkipPrevious" Classes="shadow-icon" /></Button>
+                        <Button Classes="play compact" Command="{Binding TogglePlayCommand}"><mi:MaterialIcon Kind="{Binding PlayIcon, Converter={x:Static icons:IconConverters.Kind}}" Classes="shadow-icon" /></Button>
+                        <Button Classes="icon step" Command="{Binding NextCommand}" IsVisible="{Binding CanNext}"><mi:MaterialIcon Kind="SkipNext" Classes="shadow-icon" /></Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Classes="icon compact" Click="OnTrackMenu" IsVisible="{Binding CanWidgetMore}" ToolTip.Tip="{loc:T shell.player.more}">
+                        <mi:MaterialIcon Kind="DotsVertical" Classes="shadow-icon" />
+                    </Button>
+                    <Button x:Name="VolumeButton" Classes="icon compact" Click="OnVolumeClick" PointerPressed="OnVolumePressed" IsVisible="{Binding CanVolume}" ToolTip.Tip="{loc:T shell.player.volume}">
+                        <mi:MaterialIcon Kind="{Binding VolumeIcon, Converter={x:Static icons:IconConverters.Kind}}" Classes="shadow-icon" />
+                        <FlyoutBase.AttachedFlyout>
+                            <Flyout Placement="Top" ShowMode="Transient" VerticalOffset="0" FlyoutPresenterClasses="pop volume">
+                                <Border Classes="pop-card" Width="{DynamicResource Size.VolumePop}" Height="{DynamicResource Size.VolumePopH}">
+                                    <Grid>
+                                        <Border Classes="grain g-menu" CornerRadius="{DynamicResource Radius.Card}" />
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource Space.S}" Margin="{DynamicResource Pad.Pop}" VerticalAlignment="Center">
+                                            <Slider Classes="volume compact" Minimum="0" Maximum="1" Value="{Binding Volume}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding VolumeText}" Classes="tiny secondary" Width="{DynamicResource Size.VolumeText}" TextAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                            </Flyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </Button>
+                    </StackPanel>
+                </Grid>
 
-            <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}" IsVisible="{Binding CanSeek}">
-                <TextBlock Text="{Binding PositionText}" Classes="caption muted" VerticalAlignment="Center" />
-                <views:PlayerSeekBar Grid.Column="1" Minimum="0" Maximum="{Binding SliderMax}" />
-                <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="caption muted" VerticalAlignment="Center" />
+                <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.S}" IsVisible="{Binding CanSeek}" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PositionText}" Classes="tiny secondary" VerticalAlignment="Center" />
+                    <views:PlayerSeekBar Grid.Column="1" Classes="progress compact" Minimum="0" Maximum="{Binding SliderMax}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="2" Text="{Binding DurationText}" Classes="tiny secondary" VerticalAlignment="Center" />
+                </Grid>
             </Grid>
         </Grid>
     </Border>
+    </LayoutTransformControl>
 </Window>

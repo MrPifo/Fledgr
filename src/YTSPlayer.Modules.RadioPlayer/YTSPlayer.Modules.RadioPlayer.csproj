@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Live-Radio. Aktuell nur Platzhalter: Verträge und leere Plugin-Hülle. -->
+  <!-- Internet-Radio: Sender-Suche (radio-browser.info), Favoriten, Verlauf, Stream-Adressen. Läuft über den gemeinsamen Audio-Motor. -->
   <PropertyGroup>
     <RootNamespace>YTSPlayer.Modules.RadioPlayer</RootNamespace>
   </PropertyGroup>
@@ -10,5 +10,9 @@
   <ItemGroup>
     <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
     <ProjectReference Include="..\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
+    <ProjectReference Include="..\Fledgr.Audio\Fledgr.Audio.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings\*.xml" />
   </ItemGroup>
 </Project>

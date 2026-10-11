@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using Avalonia.Controls;
 using Microsoft.Web.WebView2.Core;
 using YTSPlayer.Contracts.Diagnostics;
@@ -48,7 +48,20 @@ public sealed class WebView2YtHost(YtSettings settings, IAppPaths paths) : IYtWe
         return s;
     }
 
+    readonly SemaphoreSlim _startGate = new(1, 1);
+
+    /// <summary>
+    /// Startet die Web-Ansicht oder navigiert, wenn sie läuft. Der Aufbau ist gesperrt: Starten zwei Aufgaben gleichzeitig
+    /// (z. B. Wiedergabe und Lesen der Startseite), baut die zweite sonst eine zweite Umgebung auf und alles hängt.
+    /// </summary>
     public async Task StartAsync(string url, CancellationToken ct = default)
+    {
+        await _startGate.WaitAsync(ct);
+        try { await StartCoreAsync(url); }
+        finally { _startGate.Release(); }
+    }
+
+    async Task StartCoreAsync(string url)
     {
         if (_web != null) { _web.Navigate(url); return; }
         BlockActive = !_login;
@@ -85,7 +98,7 @@ public sealed class WebView2YtHost(YtSettings settings, IAppPaths paths) : IYtWe
             _navTcs?.TrySetResult();
             Navigated?.Invoke(Uri.TryCreate(_web?.Source, UriKind.Absolute, out var u) ? u : null);
         };
-        await _web.AddScriptToExecuteOnDocumentCreatedAsync(BridgeScript.Build(settings.SongMode, settings.Gain));
+        await _web.AddScriptToExecuteOnDocumentCreatedAsync(BridgeScript.Build(settings.SongMode, 1.0));
         ConfigureBlocking();
         _ctl.IsVisible = true;
         UpdateBounds();

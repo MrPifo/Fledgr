@@ -1,0 +1,72 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Player-Regler. Slider mit Classes:
+          progress = Fortschritt (8 px, Verlauf Rot nach Bernstein, Creme-Griff)
+          volume   = Lautstärke (3 px, Bernstein, kleiner Griff)
+        Maße kommen als Fluent-Ressourcen, die hier pro Slider überschrieben werden. Die Füllung ist der Verlauf Brush.Progress aus dem Theme.
+    -->
+    <Style Selector="Slider.progress">
+        <Style.Resources>
+            <x:Double x:Key="SliderTrackThemeHeight">8</x:Double>
+            <x:Double x:Key="SliderHorizontalThumbWidth">14</x:Double>
+            <x:Double x:Key="SliderHorizontalThumbHeight">14</x:Double>
+        </Style.Resources>
+    </Style>
+    <Style Selector="Slider.progress /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="Background" Value="{DynamicResource Brush.Progress}" />
+    </Style>
+    <Style Selector="Slider.progress:pointerover /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="Background" Value="{DynamicResource Brush.Progress}" />
+    </Style>
+    <Style Selector="Slider.progress:pressed /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="Background" Value="{DynamicResource Brush.Progress}" />
+    </Style>
+    <Style Selector="Slider.progress /template/ Thumb">
+        <Setter Property="Background" Value="{DynamicResource Brush.Primary}" />
+    </Style>
+    <!-- slim: flacher Fortschritt der Player-Karte. Die Fluent-Vorlage reserviert 32 px (SliderHorizontalHeight); sie wird hier verkleinert statt abgeschnitten. -->
+    <Style Selector="Slider.progress.slim">
+        <Style.Resources>
+            <x:Double x:Key="SliderHorizontalHeight">20</x:Double>
+        </Style.Resources>
+    </Style>
+    <!-- compact: niedriger Fortschritt (Widget), ohne den hohen Fluent-Mindestplatz. -->
+    <Style Selector="Slider.progress.compact">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="{DynamicResource Height.SeekCompact}" />
+    </Style>
+    <!-- Kompakte Schieber (Widget und Lautstärke-Popup): Verschiebung auf die Mitte der Zeiten, Höhe siehe Metrics. -->
+    <Style Selector="Slider.compact">
+        <Setter Property="Margin" Value="{DynamicResource Pad.SeekCompact}" />
+        <Setter Property="RenderTransform">
+            <Setter.Value>
+                <TranslateTransform Y="{DynamicResource Offset.SeekCompact}" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style Selector="Slider.volume">
+        <Style.Resources>
+            <x:Double x:Key="SliderTrackThemeHeight">4</x:Double>
+            <x:Double x:Key="SliderHorizontalThumbWidth">14</x:Double>
+            <x:Double x:Key="SliderHorizontalThumbHeight">14</x:Double>
+        </Style.Resources>
+    </Style>
+    <!-- compact (Lautstärke-Popup im Widget): so niedrig wie der Fortschritt im Widget. -->
+    <Style Selector="Slider.volume.compact">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Height" Value="{DynamicResource Height.SeekCompact}" />
+    </Style>
+    <Style Selector="Slider.volume /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Slider.volume:pointerover /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Slider.volume:pressed /template/ RepeatButton#PART_DecreaseButton">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="Slider.volume /template/ Thumb">
+        <Setter Property="Background" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+</Styles>

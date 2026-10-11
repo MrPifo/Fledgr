@@ -1,6 +1,7 @@
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Settings;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Shell.Services;
 
@@ -103,12 +104,12 @@ public sealed class SleepTimer : IDisposable
             _warned = false;
             _ = PauseAsync();
             _last = now;
-            Say($"Sleep-Timer: Wiedergabe pausiert (keine Bedienung seit {Minutes} Minuten).");
+            Say(Loc.F("shell.sleep.paused", Minutes));
         }
         else if (!_warned && limit - idle <= TimeSpan.FromSeconds(WarnSeconds))
         {
             _warned = true;
-            Say("Sleep-Timer: Pause in einer Minute. Maus bewegen oder Taste drücken bricht ab.");
+            Say(Loc.T("shell.sleep.warn"));
         }
     }
 

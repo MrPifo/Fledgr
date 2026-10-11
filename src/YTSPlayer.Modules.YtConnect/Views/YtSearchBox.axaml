@@ -1,0 +1,21 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             xmlns:loc="using:YTSPlayer.Ui.Localization"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="YTSPlayer.Modules.YtConnect.Views.YtSearchBox"
+             x:DataType="vm:YtSearchHeader">
+
+    <!-- Suche in der Kopfzeile. Mit Vorschlägen (frühere Suchen und YouTube-Vorschläge). Enter oder Klick auf einen Vorschlag sucht. -->
+    <Grid>
+        <Grid>
+            <AutoCompleteBox x:Name="SearchBox" Classes="search" Text="{Binding Vm.SearchText}" ItemsSource="{Binding Vm.Suggestions}"
+                             PlaceholderText="{loc:T yt.search.placeholder}"
+                             MinimumPrefixLength="0" FilterMode="None" IsTextCompletionEnabled="False"
+                             KeyUp="OnSearchKeyUp" GotFocus="OnSearchGotFocus" DropDownOpening="OnSearchDropDownOpening" SelectionChanged="OnSearchSelectionChanged" />
+            <mi:MaterialIcon Kind="Magnify" IsHitTestVisible="False" HorizontalAlignment="Left" VerticalAlignment="Center"
+                             Margin="{DynamicResource Pad.SearchIcon}" Width="{DynamicResource Size.IconS}" Height="{DynamicResource Size.IconS}"
+                             Foreground="{DynamicResource Brush.TextMuted}" />
+        </Grid>
+    </Grid>
+</UserControl>

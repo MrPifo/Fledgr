@@ -1,0 +1,322 @@
+﻿<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Theme "Graphit" (Design v13): warmes Graphit, Bernstein als Hauptakzent.
+        Jedes Theme ist eine Datei mit EXAKT denselben Schlüsseln (prüft der Test ThemeKeysTests).
+        Neues Theme = diese Datei kopieren, Werte ändern, in Palette.axaml und AppThemes registrieren.
+        Namen beschreiben die ROLLE, nie die Farbe. Hex-Werte stehen nur in Dateien unter Theme/Themes.
+    -->
+
+    <!-- Flächen -->
+    <Color x:Key="Color.Surface0">#2A2829</Color>
+    <Color x:Key="Color.Surface1">#363435</Color>
+    <Color x:Key="Color.Surface2">#434142</Color>
+    <Color x:Key="Color.SurfaceHover">#444243</Color>
+    <Color x:Key="Color.SurfacePressed">#4B4849</Color>
+    <Color x:Key="Color.Side">#201F20</Color>
+    <Color x:Key="Color.Border">#57545A</Color>
+    <Color x:Key="Color.BorderSoft">#24FFFFFF</Color>
+    <Color x:Key="Color.Scrim">#99000000</Color>
+
+    <!-- Text -->
+    <Color x:Key="Color.Text">#FBF3EE</Color>
+    <Color x:Key="Color.TextSecondary">#DCC9C4</Color>
+    <Color x:Key="Color.TextMuted">#A8939A</Color>
+    <Color x:Key="Color.TextDisabled">#6E6A6C</Color>
+    <Color x:Key="Color.TextShadow">#CC000000</Color>
+
+    <!-- Akzent -->
+    <Color x:Key="Color.Accent">#F39C12</Color>
+    <Color x:Key="Color.AccentHover">#F8C46B</Color>
+    <Color x:Key="Color.AccentPressed">#D98508</Color>
+    <Color x:Key="Color.AccentRing">#59F39C12</Color>
+    <Color x:Key="Color.AccentSoftFill">#1FF39C12</Color>
+    <Color x:Key="Color.OnAccent">#2A2829</Color>
+    <Color x:Key="Color.Highlight">#F8C46B</Color>
+    <Color x:Key="Color.Focus">#F39C12</Color>
+
+    <!-- Hauptaktion (Play, "Mix starten") -->
+    <Color x:Key="Color.Primary">#F5E6D3</Color>
+    <Color x:Key="Color.PrimaryHover">#FAEFE2</Color>
+    <Color x:Key="Color.PrimaryPressed">#E6D4BD</Color>
+    <Color x:Key="Color.OnPrimary">#2A2829</Color>
+
+    <!-- Gefahr, Status, Gefühle -->
+    <Color x:Key="Color.Danger">#E74C3C</Color>
+    <Color x:Key="Color.DangerHover">#EF6A5E</Color>
+    <Color x:Key="Color.DangerPressed">#C93A2C</Color>
+    <Color x:Key="Color.OnDanger">#FFFFFF</Color>
+    <Color x:Key="Color.Success">#3FB950</Color>
+    <Color x:Key="Color.Warning">#D9C94A</Color>
+    <Color x:Key="Color.Dislike">#E8837A</Color>
+    <Color x:Key="Color.Heart">#EE8FC4</Color>
+
+    <!-- Modulfarben (Sidebar aktiv, Quellen-Icon) -->
+    <Color x:Key="Color.ModuleMusic">#F39C12</Color>
+    <Color x:Key="Color.ModuleYt">#E74C3C</Color>
+    <Color x:Key="Color.ModuleRadio">#8FB8E8</Color>
+
+    <!-- Menüs -->
+    <Color x:Key="Color.MenuTop">#403E3F</Color>
+    <Color x:Key="Color.MenuBottom">#353334</Color>
+    <Color x:Key="Color.MenuHover">#534F52</Color>
+    <Color x:Key="Color.MenuText">#FFFAF6</Color>
+
+    <!-- Verlauf-Stützfarben (Hero, Player) -->
+    <Color x:Key="Color.HeroA">#5E5B5C</Color>
+    <Color x:Key="Color.Header">#363435</Color>
+    <Color x:Key="Color.HeroB">#3A3536</Color>
+    <Color x:Key="Color.HeroC">#5A4A44</Color>
+    <Color x:Key="Color.HeroD">#6E5B52</Color>
+    <Color x:Key="Color.PlayerTop">#4A4749</Color>
+    <Color x:Key="Color.PlayerBottom">#2A2829</Color>
+    <Color x:Key="Color.PlayerBorder">#67636A</Color>
+    <Color x:Key="Color.PlayLight">#F8EBDB</Color>
+    <Color x:Key="Color.PlayDark">#E3CFB6</Color>
+
+    <SolidColorBrush x:Key="Brush.Surface0" Color="{StaticResource Color.Surface0}" />
+    <SolidColorBrush x:Key="Brush.Surface1" Color="{StaticResource Color.Surface1}" />
+    <SolidColorBrush x:Key="Brush.Surface2" Color="{StaticResource Color.Surface2}" />
+    <SolidColorBrush x:Key="Brush.SurfaceHover" Color="{StaticResource Color.SurfaceHover}" />
+    <SolidColorBrush x:Key="Brush.SurfacePressed" Color="{StaticResource Color.SurfacePressed}" />
+    <SolidColorBrush x:Key="Brush.Side" Color="{StaticResource Color.Side}" />
+    <SolidColorBrush x:Key="Brush.Border" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.ScrollThumb" Color="{StaticResource Color.Border}" />
+    <SolidColorBrush x:Key="Brush.ScrollThumbHover" Color="{StaticResource Color.TextMuted}" />
+    <SolidColorBrush x:Key="Brush.Header" Color="{StaticResource Color.Header}" />
+    <SolidColorBrush x:Key="Brush.RowSoft" Color="#12FBF3EE" />
+    <SolidColorBrush x:Key="Brush.BorderSoft" Color="{StaticResource Color.BorderSoft}" />
+    <SolidColorBrush x:Key="Brush.Scrim" Color="{StaticResource Color.Scrim}" />
+    <SolidColorBrush x:Key="Brush.Text" Color="{StaticResource Color.Text}" />
+    <SolidColorBrush x:Key="Brush.TextSecondary" Color="{StaticResource Color.TextSecondary}" />
+    <SolidColorBrush x:Key="Brush.TextMuted" Color="{StaticResource Color.TextMuted}" />
+    <SolidColorBrush x:Key="Brush.TextDisabled" Color="{StaticResource Color.TextDisabled}" />
+    <SolidColorBrush x:Key="Brush.TextShadow" Color="{StaticResource Color.TextShadow}" />
+    <SolidColorBrush x:Key="Brush.Accent" Color="{StaticResource Color.Accent}" />
+    <SolidColorBrush x:Key="Brush.AccentHover" Color="{StaticResource Color.AccentHover}" />
+    <SolidColorBrush x:Key="Brush.AccentPressed" Color="{StaticResource Color.AccentPressed}" />
+    <SolidColorBrush x:Key="Brush.AccentRing" Color="{StaticResource Color.AccentRing}" />
+    <SolidColorBrush x:Key="Brush.AccentSoftFill" Color="{StaticResource Color.AccentSoftFill}" />
+    <SolidColorBrush x:Key="Brush.OnAccent" Color="{StaticResource Color.OnAccent}" />
+    <SolidColorBrush x:Key="Brush.Highlight" Color="{StaticResource Color.Highlight}" />
+    <SolidColorBrush x:Key="Brush.Focus" Color="{StaticResource Color.Focus}" />
+    <SolidColorBrush x:Key="Brush.Primary" Color="{StaticResource Color.Primary}" />
+    <SolidColorBrush x:Key="Brush.PrimaryHover" Color="{StaticResource Color.PrimaryHover}" />
+    <SolidColorBrush x:Key="Brush.PrimaryPressed" Color="{StaticResource Color.PrimaryPressed}" />
+    <SolidColorBrush x:Key="Brush.OnPrimary" Color="{StaticResource Color.OnPrimary}" />
+    <SolidColorBrush x:Key="Brush.Danger" Color="{StaticResource Color.Danger}" />
+    <SolidColorBrush x:Key="Brush.DangerHover" Color="{StaticResource Color.DangerHover}" />
+    <SolidColorBrush x:Key="Brush.DangerPressed" Color="{StaticResource Color.DangerPressed}" />
+    <SolidColorBrush x:Key="Brush.OnDanger" Color="{StaticResource Color.OnDanger}" />
+    <SolidColorBrush x:Key="Brush.Success" Color="{StaticResource Color.Success}" />
+    <SolidColorBrush x:Key="Brush.Warning" Color="{StaticResource Color.Warning}" />
+    <SolidColorBrush x:Key="Brush.Dislike" Color="{StaticResource Color.Dislike}" />
+    <SolidColorBrush x:Key="Brush.Heart" Color="{StaticResource Color.Heart}" />
+    <SolidColorBrush x:Key="Brush.ModuleMusic" Color="{StaticResource Color.ModuleMusic}" />
+    <SolidColorBrush x:Key="Brush.ModuleYt" Color="{StaticResource Color.ModuleYt}" />
+    <SolidColorBrush x:Key="Brush.ModuleRadio" Color="{StaticResource Color.ModuleRadio}" />
+    <SolidColorBrush x:Key="Brush.MenuHover" Color="{StaticResource Color.MenuHover}" />
+    <SolidColorBrush x:Key="Brush.MenuText" Color="{StaticResource Color.MenuText}" />
+    <SolidColorBrush x:Key="Brush.PlayerBorder" Color="{StaticResource Color.PlayerBorder}" />
+    <SolidColorBrush x:Key="Brush.Transparent" Color="Transparent" />
+
+    <!-- Verläufe -->
+    <LinearGradientBrush x:Key="Brush.Hero" StartPoint="0%,100%" EndPoint="100%,0%">
+        <GradientStop Color="{StaticResource Color.HeroA}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.HeroB}" Offset="0.45" />
+        <GradientStop Color="{StaticResource Color.HeroC}" Offset="0.8" />
+        <GradientStop Color="{StaticResource Color.HeroD}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.PlayerCard" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Color="{StaticResource Color.PlayerTop}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.PlayerBottom}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Progress" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Color="{StaticResource Color.Danger}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.Accent}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Volume" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Color="{StaticResource Color.Accent}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.AccentHover}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Menu" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="{StaticResource Color.MenuTop}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.MenuBottom}" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="Brush.Play" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="{StaticResource Color.PlayLight}" Offset="0" />
+        <GradientStop Color="{StaticResource Color.PlayDark}" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Schatten -->
+    <BoxShadows x:Key="Shadow.Player">0 10 30 0 #80000000</BoxShadows>
+    <BoxShadows x:Key="Shadow.None">0 0 0 0 #00000000</BoxShadows>
+    <!-- Schatten muss in Pad.PopOuter passen (Versatz + Unschärfe), sonst schneidet das Popup-Fenster die Ecken ab. -->
+    <BoxShadows x:Key="Shadow.Pop">0 6 14 0 #A6000000</BoxShadows>
+    <BoxShadows x:Key="Shadow.Widget">0 6 14 0 #8C000000</BoxShadows>
+    <!-- Abdunkeln beim Überfahren (flache Knöpfe). -->
+    <SolidColorBrush x:Key="Brush.Shade" Color="#33000000" />
+    <BoxShadows x:Key="Shadow.Play">0 4 12 0 #99000000</BoxShadows>
+    <BoxShadows x:Key="Shadow.Cover">0 3 8 0 #8C000000</BoxShadows>
+    <BoxShadows x:Key="Shadow.Button">0 2 6 0 #59000000</BoxShadows>
+    <BoxShadows x:Key="Shadow.Like">0 2 5 0 #47000000</BoxShadows>
+    <BoxShadows x:Key="Shadow.Menu">0 14 30 0 #80000000</BoxShadows>
+
+    <!-- Textschatten (weich, dunkel) und Icon-Schatten. Nur über Verläufen und in der Player-Karte benutzen, nicht in Listen. -->
+    <DropShadowEffect x:Key="Effect.Text" OffsetX="0" OffsetY="1" BlurRadius="2" Color="#80000000" />
+    <DropShadowEffect x:Key="Effect.TextStrong" OffsetX="0" OffsetY="1" BlurRadius="5" Color="#D9000000" />
+    <DropShadowEffect x:Key="Effect.Play" OffsetX="0" OffsetY="3" BlurRadius="8" Color="#73000000" />
+    <DropShadowEffect x:Key="Effect.Icon" OffsetX="0" OffsetY="1" BlurRadius="3" Color="#66000000" />
+
+    <!-- Papier-Korn: eine Kachel, geteilt. Deckkraft je Fläche als Zahl. -->
+    <ImageBrush x:Key="Brush.Grain" Source="avares://YTSPlayer.Ui/Assets/Textures/noise-grain-512.png"
+                TileMode="Tile" Stretch="Fill" DestinationRect="0,0,256,256" />
+    <x:Double x:Key="Grain.Window">0.22</x:Double>
+    <x:Double x:Key="Grain.Header">0.05</x:Double>
+    <x:Double x:Key="Grain.Main">0.17</x:Double>
+    <x:Double x:Key="Grain.Player">0.18</x:Double>
+    <x:Double x:Key="Grain.Menu">0.18</x:Double>
+    <x:Double x:Key="Grain.Hero">0.55</x:Double>
+    <!-- Halftone der Kopfzeile: feines, versetztes Punktraster (Kachel 5 x 5, zwei Punkte diagonal). -->
+    <DrawingBrush x:Key="Brush.Halftone" TileMode="Tile" Stretch="None" SourceRect="0,0,5,5" DestinationRect="0,0,5,5">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#FBF3EE"><GeometryDrawing.Geometry>
+                    <GeometryGroup>
+                        <EllipseGeometry Center="1.25,1.25" RadiusX="0.7" RadiusY="0.7" />
+                        <EllipseGeometry Center="3.75,3.75" RadiusX="0.7" RadiusY="0.7" />
+                    </GeometryGroup>
+                </GeometryDrawing.Geometry></GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <!-- Hover-Fläche von Zeilen: Hover-Farbe mit demselben Punktraster (nur beim Überfahren). -->
+    <DrawingBrush x:Key="Brush.SurfaceHoverDots" TileMode="Tile" Stretch="None" SourceRect="0,0,5,5" DestinationRect="0,0,5,5">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Color.SurfaceHover}" Geometry="M0,0 L5,0 L5,5 L0,5 Z" />
+                <GeometryDrawing Brush="#1FFBF3EE">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="1.25,1.25" RadiusX="0.7" RadiusY="0.7" />
+                            <EllipseGeometry Center="3.75,3.75" RadiusX="0.7" RadiusY="0.7" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <!-- Abdunkeln beim Hover über Karten-Covern: Scrim mit dem Punktraster. -->
+    <DrawingBrush x:Key="Brush.DimDots" TileMode="Tile" Stretch="None" SourceRect="0,0,5,5" DestinationRect="0,0,5,5">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Color.Scrim}" Geometry="M0,0 L5,0 L5,5 L0,5 Z" />
+                <GeometryDrawing Brush="#2EFBF3EE">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="1.25,1.25" RadiusX="0.7" RadiusY="0.7" />
+                            <EllipseGeometry Center="3.75,3.75" RadiusX="0.7" RadiusY="0.7" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <!-- Roter Knopf (danger) mit Punktraster: normal und beim Überfahren. -->
+    <DrawingBrush x:Key="Brush.DangerDots" TileMode="Tile" Stretch="None" SourceRect="0,0,5,5" DestinationRect="0,0,5,5">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Color.Danger}" Geometry="M0,0 L5,0 L5,5 L0,5 Z" />
+                <GeometryDrawing Brush="#2E000000">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="1.25,1.25" RadiusX="0.7" RadiusY="0.7" />
+                            <EllipseGeometry Center="3.75,3.75" RadiusX="0.7" RadiusY="0.7" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <DrawingBrush x:Key="Brush.DangerHoverDots" TileMode="Tile" Stretch="None" SourceRect="0,0,5,5" DestinationRect="0,0,5,5">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Color.DangerHover}" Geometry="M0,0 L5,0 L5,5 L0,5 Z" />
+                <GeometryDrawing Brush="#2E000000">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="1.25,1.25" RadiusX="0.7" RadiusY="0.7" />
+                            <EllipseGeometry Center="3.75,3.75" RadiusX="0.7" RadiusY="0.7" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <!-- Fläche der Einstellungen (Surface1) mit sehr feinem Punktraster, ein Ticken dunkler als die Fläche. -->
+    <DrawingBrush x:Key="Brush.PanelDots" TileMode="Tile" Stretch="None" SourceRect="0,0,5,5" DestinationRect="0,0,5,5">
+        <DrawingBrush.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="{StaticResource Color.Surface1}" Geometry="M0,0 L5,0 L5,5 L0,5 Z" />
+                <GeometryDrawing Brush="#2F2D2E">
+                    <GeometryDrawing.Geometry>
+                        <GeometryGroup>
+                            <EllipseGeometry Center="1.25,1.25" RadiusX="0.7" RadiusY="0.7" />
+                            <EllipseGeometry Center="3.75,3.75" RadiusX="0.7" RadiusY="0.7" />
+                        </GeometryGroup>
+                    </GeometryDrawing.Geometry>
+                </GeometryDrawing>
+            </DrawingGroup>
+        </DrawingBrush.Drawing>
+    </DrawingBrush>
+    <!-- Überblendung: Schienenfarbe oben deckend, unten durchsichtig (lässt das Halftone der Schiene nach oben ausblenden). -->
+    <LinearGradientBrush x:Key="Brush.RailFade" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="{StaticResource Color.Side}" Offset="0" />
+        <GradientStop Color="#00201F20" Offset="1" />
+    </LinearGradientBrush>
+    <x:Double x:Key="Halftone.Rail">0.09</x:Double>
+    <x:Double x:Key="Halftone.Header">0.05</x:Double>
+    <x:Double x:Key="Grain.Scroll">0.45</x:Double>
+
+
+    <!-- Eingebaute Fluent-Controls auf die Farben dieses Themes umbiegen. Schlüssel gehören zu Avalonia.Themes.Fluent. -->
+    <StaticResource x:Key="TextControlBackground" ResourceKey="Brush.Surface1" />
+    <StaticResource x:Key="TextControlBackgroundPointerOver" ResourceKey="Brush.Surface1" />
+    <StaticResource x:Key="TextControlBackgroundFocused" ResourceKey="Brush.Surface1" />
+    <StaticResource x:Key="TextControlBackgroundDisabled" ResourceKey="Brush.Surface1" />
+    <StaticResource x:Key="TextControlBorderBrush" ResourceKey="Brush.BorderSoft" />
+    <StaticResource x:Key="TextControlBorderBrushPointerOver" ResourceKey="Brush.Border" />
+    <StaticResource x:Key="TextControlBorderBrushFocused" ResourceKey="Brush.Accent" />
+    <StaticResource x:Key="ComboBoxBackground" ResourceKey="Brush.Surface1" />
+    <StaticResource x:Key="ComboBoxBackgroundPointerOver" ResourceKey="Brush.SurfaceHover" />
+    <StaticResource x:Key="ComboBoxBackgroundPressed" ResourceKey="Brush.Surface2" />
+    <StaticResource x:Key="ComboBoxBackgroundFocused" ResourceKey="Brush.Surface1" />
+    <StaticResource x:Key="ComboBoxBorderBrush" ResourceKey="Brush.BorderSoft" />
+    <StaticResource x:Key="ComboBoxBorderBrushPointerOver" ResourceKey="Brush.Border" />
+    <StaticResource x:Key="ComboBoxBorderBrushPressed" ResourceKey="Brush.Border" />
+    <StaticResource x:Key="ComboBoxBorderBrushFocused" ResourceKey="Brush.Accent" />
+    <StaticResource x:Key="ComboBoxDropDownBackground" ResourceKey="Brush.Menu" />
+    <StaticResource x:Key="ComboBoxDropDownBorderBrush" ResourceKey="Brush.BorderSoft" />
+    <StaticResource x:Key="MenuFlyoutPresenterBackground" ResourceKey="Brush.Menu" />
+    <StaticResource x:Key="MenuFlyoutPresenterBorderBrush" ResourceKey="Brush.BorderSoft" />
+    <StaticResource x:Key="ContextMenuBackground" ResourceKey="Brush.Menu" />
+    <StaticResource x:Key="ContextMenuBorderBrush" ResourceKey="Brush.BorderSoft" />
+    <StaticResource x:Key="MenuFlyoutItemBackgroundPointerOver" ResourceKey="Brush.MenuHover" />
+    <StaticResource x:Key="MenuFlyoutItemBackgroundPressed" ResourceKey="Brush.MenuHover" />
+    <StaticResource x:Key="MenuFlyoutItemForegroundPointerOver" ResourceKey="Brush.MenuText" />
+    <StaticResource x:Key="MenuFlyoutItemForegroundPressed" ResourceKey="Brush.MenuText" />
+    <StaticResource x:Key="FlyoutPresenterBackground" ResourceKey="Brush.Menu" />
+    <StaticResource x:Key="FlyoutBorderThemeBrush" ResourceKey="Brush.BorderSoft" />
+    <StaticResource x:Key="ToolTipBackground" ResourceKey="Brush.Surface2" />
+    <StaticResource x:Key="ToolTipBorderBrush" ResourceKey="Brush.Border" />
+    <StaticResource x:Key="ToolTipForeground" ResourceKey="Brush.Text" />
+
+    <!-- Bindet die eingebauten Fluent-Controls (Slider, Schalter, Fokus …) an den Akzent. -->
+    <Color x:Key="SystemAccentColor">#F39C12</Color>
+    <Color x:Key="SystemAccentColorLight1">#F8C46B</Color>
+    <Color x:Key="SystemAccentColorLight2">#FAD58F</Color>
+    <Color x:Key="SystemAccentColorLight3">#FCE4B5</Color>
+    <Color x:Key="SystemAccentColorDark1">#D98508</Color>
+    <Color x:Key="SystemAccentColorDark2">#B87007</Color>
+    <Color x:Key="SystemAccentColorDark3">#965B05</Color>
+</ResourceDictionary>

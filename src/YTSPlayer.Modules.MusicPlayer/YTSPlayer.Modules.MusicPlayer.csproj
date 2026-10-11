@@ -6,11 +6,14 @@
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="LibVLCSharp" Version="3.10.1" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
     <ProjectReference Include="..\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
+    <ProjectReference Include="..\Fledgr.Audio\Fledgr.Audio.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings\*.xml" />
   </ItemGroup>
 </Project>

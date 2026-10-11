@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace YTSPlayer.Contracts.Settings;
 
@@ -60,8 +60,30 @@ public sealed class AppSettings
 
     /// <summary>Zufallswiedergabe je Quelle (Quelle-Id → an/aus).</summary>
     public Dictionary<string, bool> SourceShuffle { get; set; } = [];
+
+    /// <summary>Titel-Anzeige beim Songwechsel je Quelle (Quelle-Id → an/aus). Fehlt ein Eintrag, ist sie an.</summary>
+    public Dictionary<string, bool> SourceNowPlaying { get; set; } = [];
+
+    public bool NowPlayingShown(string sourceId) => SourceNowPlaying.GetValueOrDefault(sourceId, true);
+
+    public void SetNowPlayingShown(string sourceId, bool shown) => SourceNowPlaying[sourceId] = shown;
+    /// <summary>Wahr, wenn die App zuletzt im Miniplayer (Widget) beendet wurde: dann startet sie wieder dort.</summary>
+    public bool StartInWidget { get; set; }
+
+    /// <summary>Name des Themes (siehe AppThemes). Der Schalter in den Einstellungen kommt später.</summary>
+    public string Theme { get; set; } = "Graphit";
+
+    /// <summary>Sprache als Kennung <c>sprache-LAND</c> (z. B. de-DE, en-GB). Der Schalter in den Einstellungen kommt später.</summary>
+    public string Language { get; set; } = "de-DE";
+
     public int TargetMb { get; set; } = 300;
     public bool MinimizeOnClose { get; set; }
+
+    /// <summary>Lautstärke-Regler mit Kubik-Kurve (Regler³): feinere Einstellung bei leisen Werten. Aus = linear.</summary>
+    public bool CubicVolume { get; set; } = true;
+
+    /// <summary>Player-Leiste fest unten über die volle Breite (statt als schwebende Karte).</summary>
+    public bool PlayerDocked { get; set; }
 
     /// <summary>Quelle, die zuletzt gespielt hat. Der Play-Knopf nimmt sie nach einem Neustart wieder auf.</summary>
     public string? LastSourceId { get; set; }

@@ -11,4 +11,7 @@
     <ProjectReference Include="..\YTSPlayer.Contracts\YTSPlayer.Contracts.csproj" />
     <ProjectReference Include="..\YTSPlayer.Ui\YTSPlayer.Ui.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Strings\*.xml" />
+  </ItemGroup>
 </Project>

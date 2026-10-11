@@ -1,9 +1,42 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Grundwerte für alle Fenster. -->
     <Style Selector="Window">
         <Setter Property="Background" Value="{DynamicResource Brush.Surface0}" />
         <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Text}" />
         <Setter Property="FontSize" Value="{DynamicResource Font.Body}" />
     </Style>
+
+    <!-- Scrollbalken blenden nie aus. Sie liegen dann neben dem Inhalt (decken nichts zu) und haben etwas Abstand. -->
+    <Style Selector="ScrollViewer">
+        <Setter Property="AllowAutoHide" Value="False" />
+    </Style>
+    <Style Selector="ScrollBar:vertical">
+        <Setter Property="Margin" Value="{DynamicResource Pad.ScrollBar}" />
+    </Style>
+
+    <!--
+        Farbe nach Modul-Ton (NavPage.Tone): ContentControl mit Classes="tone" und Tag="music|yt|radio|accent".
+        Classes="module" ist der Eintrag in der Sidebar: gedämpft, bei Hover hell, aktiv in der Modulfarbe.
+    -->
+    <Style Selector="ContentControl.tone">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="ContentControl.tone[Tag=music]"><Setter Property="Foreground" Value="{DynamicResource Brush.ModuleMusic}" /></Style>
+    <Style Selector="ContentControl.tone[Tag=yt]"><Setter Property="Foreground" Value="{DynamicResource Brush.ModuleYt}" /></Style>
+    <Style Selector="ContentControl.tone[Tag=radio]"><Setter Property="Foreground" Value="{DynamicResource Brush.ModuleRadio}" /></Style>
+
+    <Style Selector="ContentControl.module">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.TextMuted}" />
+    </Style>
+    <Style Selector="ListBoxItem:pointerover ContentControl.module">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected ContentControl.module">
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Accent}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected ContentControl.module[Tag=music]"><Setter Property="Foreground" Value="{DynamicResource Brush.ModuleMusic}" /></Style>
+    <Style Selector="ListBoxItem:selected ContentControl.module[Tag=yt]"><Setter Property="Foreground" Value="{DynamicResource Brush.ModuleYt}" /></Style>
+    <Style Selector="ListBoxItem:selected ContentControl.module[Tag=radio]"><Setter Property="Foreground" Value="{DynamicResource Brush.ModuleRadio}" /></Style>
 </Styles>

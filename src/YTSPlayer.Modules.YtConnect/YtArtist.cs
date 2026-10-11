@@ -1,9 +1,12 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace YTSPlayer.Modules.YtConnect;
 
-/// <summary>Ein Bereich der Künstler-Seite (z. B. „Alben“, „Singles &amp; EPs“, „Fans mögen auch“) mit seinen Karten.</summary>
-public sealed record ArtistSectionData(string Title, List<TrackInfo> Items);
+/// <summary>Wie ein Bereich gezeigt wird: als Karten (Cover mit Titel darunter) oder als Zeilen (kleines Cover links, Titel daneben).</summary>
+public enum SectionLayout { Cards, Rows }
+
+/// <summary>Ein Bereich der Künstler-Seite (z. B. „Alben“, „Singles &amp; EPs“, „Fans mögen auch“) mit seinen Karten oder Zeilen.</summary>
+public sealed record ArtistSectionData(string Title, List<TrackInfo> Items, SectionLayout Layout = SectionLayout.Cards);
 
 /// <summary>
 /// Die Künstler-Seite: Kopf (Name, Zuhörer, Beschreibung, Bild, Knöpfe), die Top-Songs und die Bereiche darunter.

@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui"
+﻿<ResourceDictionary xmlns:loc="using:YTSPlayer.Ui.Localization" xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:c="using:YTSPlayer.Ui.Controls">
     <!-- Control-Themes der eigenen Controls (LoadingState, Avatar). -->
@@ -23,7 +23,7 @@
                     <StackPanel x:Name="PART_Error" IsVisible="False" Spacing="{DynamicResource Space.S}"
                                 HorizontalAlignment="Center" VerticalAlignment="Center">
                         <TextBlock Text="{TemplateBinding ErrorText}" Classes="danger" HorizontalAlignment="Center" TextWrapping="Wrap" />
-                        <Button Content="Erneut versuchen" Command="{TemplateBinding RetryCommand}" HorizontalAlignment="Center" />
+                        <Button Content="{loc:T ui.retry}" Command="{TemplateBinding RetryCommand}" HorizontalAlignment="Center" />
                     </StackPanel>
                 </Panel>
             </ControlTemplate>

@@ -1,4 +1,5 @@
-using YTSPlayer.Contracts.Media;
+﻿using YTSPlayer.Contracts.Media;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Modules.MusicPlayer.Library;
 
@@ -6,25 +7,25 @@ namespace YTSPlayer.Modules.MusicPlayer.Library;
 public sealed class LibraryProvider(LibraryService library) : IMediaProvider
 {
     /// <summary>Knoten, der alle Playlists enthält.</summary>
-    public static readonly MediaNode PlaylistsNode = new("@playlists", "Playlists", MediaNodeKind.Folder);
+    public static MediaNode PlaylistsNode => new("@playlists", Loc.T("music.mode.playlists"), MediaNodeKind.Folder);
 
     /// <summary>Knoten, der alle Favoriten enthält.</summary>
-    public static readonly MediaNode FavoritesNode = new("@favorites", "Favoriten", MediaNodeKind.Folder);
+    public static MediaNode FavoritesNode => new("@favorites", Loc.T("music.mode.favorites"), MediaNodeKind.Folder);
 
     /// <summary>Knoten, der alle Interpreten enthält (aus den Tags).</summary>
-    public static readonly MediaNode ArtistsNode = new("@artists", "Interpreten", MediaNodeKind.Folder);
+    public static MediaNode ArtistsNode => new("@artists", Loc.T("music.mode.artists"), MediaNodeKind.Folder);
 
     /// <summary>Knoten, der alle Alben enthält (aus den Tags).</summary>
-    public static readonly MediaNode AlbumsNode = new("@albums", "Alben", MediaNodeKind.Folder);
+    public static MediaNode AlbumsNode => new("@albums", Loc.T("music.mode.albums"), MediaNodeKind.Folder);
 
-    const string NoArtist = "Unbekannter Interpret";
-    const string NoAlbum = "Unbekanntes Album";
+    static string NoArtist => Loc.T("music.unknownArtist");
+    static string NoAlbum => Loc.T("music.unknownAlbum");
     const string ArtistPrefix = "@artist:";
     const string AlbumPrefix = "@album:";
     const char Sep = '\u001f';
 
     public string Id => "local";
-    public string Title => "Lokale Musik";
+    public string Title => Loc.T("music.source");
 
     static string ArtistOf(LibraryEntry e) => e.Artist.Length > 0 ? e.Artist : NoArtist;
     static string AlbumOf(LibraryEntry e) => e.Album.Length > 0 ? e.Album : NoAlbum;
@@ -49,7 +50,7 @@ public sealed class LibraryProvider(LibraryService library) : IMediaProvider
         var entries = library.Entries;
         if (parent.Id == ArtistsNode.Id)
             return [.. entries.GroupBy(ArtistOf).OrderBy(g => g.Key, StringComparer.CurrentCultureIgnoreCase)
-                .Select(g => new MediaNode(ArtistPrefix + g.Key, g.Key, MediaNodeKind.Folder, $"{g.Select(AlbumOf).Distinct().Count()} Alben, {g.Count()} Titel"))];
+                .Select(g => new MediaNode(ArtistPrefix + g.Key, g.Key, MediaNodeKind.Folder, Loc.F("music.artist.sub", g.Select(AlbumOf).Distinct().Count(), g.Count())))];
         if (parent.Id.StartsWith(ArtistPrefix, StringComparison.Ordinal))
         {
             var artist = parent.Id[ArtistPrefix.Length..];
@@ -74,7 +75,7 @@ public sealed class LibraryProvider(LibraryService library) : IMediaProvider
         var list = tracks as IReadOnlyCollection<LibraryEntry> ?? [.. tracks];
         var first = InAlbumOrder(list).First();
         return new MediaNode(AlbumPrefix + artist + Sep + album, album, MediaNodeKind.Folder,
-            (withArtist ? artist + " · " : "") + $"{list.Count} Titel", LibraryService.ToItem(first.Path));
+            (withArtist ? artist + " · " : "") + Loc.P("music.tracks", list.Count), LibraryService.ToItem(first.Path));
     }
 
     public async Task<IReadOnlyList<MediaNode>> GetChildrenAsync(MediaNode? parent, CancellationToken ct = default)
@@ -93,7 +94,7 @@ public sealed class LibraryProvider(LibraryService library) : IMediaProvider
         if (await Task.Run(() => VirtualChildren(parent), ct) is { } virtualNodes) return virtualNodes;
         if (parent.Id == PlaylistsNode.Id)
             return library.Settings.Playlists
-                .Select(p => new MediaNode("pl:" + p.Id, p.Name, MediaNodeKind.Playlist, $"{p.Paths.Count} Titel"))
+                .Select(p => new MediaNode("pl:" + p.Id, p.Name, MediaNodeKind.Playlist, Loc.P("music.tracks", p.Paths.Count)))
                 .ToList();
         if (parent.Id == FavoritesNode.Id)
             return library.Settings.Favorites.Where(File.Exists).Select(TrackNode).ToList();

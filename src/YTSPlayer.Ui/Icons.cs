@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia.Data.Converters;
 using Material.Icons;
 
@@ -29,6 +29,7 @@ public static class Icons
     public const string Next = "SkipNext";
     public const string Previous = "SkipPrevious";
     public const string Volume = "VolumeHigh";
+    public const string VolumeOff = "VolumeOff";
     public const string OpenExternal = "OpenInNew";
     public const string Close = "Close";
     public const string Expand = "ArrowExpand";
@@ -41,12 +42,30 @@ public static class Icons
     public const string Playlist = "PlaylistMusic";
     public const string Track = "Music";
     public const string Station = "RadioTower";
+    public const string Plus = "Plus";
+    public const string Alert = "Alert";
+    public const string Youtube = "Youtube";
+    public const string Library = "Library";
+    public const string Heart = "Heart";
+    public const string HeartOutline = "HeartOutline";
+    public const string Search = "Magnify";
+    public const string Diagnostics = "Pulse";
+    public const string Power = "Power";
+    public const string More = "DotsVertical";
+    public const string Lyrics = "TextLong";
+    public const string Logout = "Logout";
+    public const string Tune = "Tune";
+    public const string Home = "Home";
+    public const string PlayOutline = "PlayOutline";
+    public const string History = "History";
+    public const string Delete = "DeleteOutline";
 
     /// <summary>Alle Namen (für den Test, dass die Bibliothek sie kennt).</summary>
     public static readonly string[] All =
     [
-        Music, Cloud, Settings, Radio, RadioMix, Shuffle, ShuffleOff, Like, LikeOff, Dislike, DislikeOff, Sleep, SleepOff, Play, Pause, Next, Previous, Volume, OpenExternal,
-        Close, Expand, Widget, Up, Back, Star, StarOutline, Folder, Playlist, Track, Station,
+        Music, Cloud, Settings, Radio, RadioMix, Shuffle, ShuffleOff, Like, LikeOff, Dislike, DislikeOff, Sleep, SleepOff, Play, Pause, Next, Previous, Volume, VolumeOff, OpenExternal,
+        Close, Expand, Widget, Up, Back, Star, StarOutline, Folder, Playlist, Track, Station, Plus, Alert,
+        Youtube, Library, Heart, HeartOutline, Search, Diagnostics, Power, More, Lyrics, Logout, Tune, Home, PlayOutline, History, Delete,
     ];
 }
 

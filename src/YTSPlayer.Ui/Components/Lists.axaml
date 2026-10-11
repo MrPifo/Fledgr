@@ -1,6 +1,10 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Listen: ListBox mit einheitlichen Zeilen. Zeileninhalt kommt aus den DataTemplates (Ui/Templates). -->
+    <!--
+        Listen: ListBox mit einheitlichen Zeilen. Zeileninhalt kommt aus den DataTemplates.
+        Zeilen-Zustände wie in der Vorlage: Hover = Hover-Fläche, gedrückt und gewählt = aktive Fläche, gewählt zusätzlich feiner Ring in Bernstein.
+        ListBox.rail = Modul-Schiene (Sidebar): kein Hintergrund, Zustände zeichnet das Item-Template.
+    -->
     <Style Selector="ListBox">
         <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -10,7 +14,62 @@
     </Style>
     <Style Selector="ListBoxItem">
         <Setter Property="Padding" Value="{DynamicResource Pad.S}" />
-        <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
+        <Setter Property="CornerRadius" Value="{DynamicResource Radius.Row}" />
         <Setter Property="MinHeight" Value="{DynamicResource Height.Control}" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <!-- roomy: größere Zeilen (Playlist-Liste). -->
+    <Style Selector="ListBox.roomy ListBoxItem">
+        <Setter Property="Padding" Value="{DynamicResource Pad.Roomy}" />
+        <Setter Property="MinHeight" Value="{DynamicResource Height.Roomy}" />
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.SurfaceHoverDots}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+    </Style>
+    <Style Selector="ListBoxItem:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentRing}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentRing}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Surface2}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.AccentRing}" />
+    </Style>
+
+    <!-- Modul-Schiene: Items ohne eigene Fläche. -->
+    <Style Selector="ListBox.rail ListBoxItem">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Width" Value="{DynamicResource Size.Rail}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="ListBox.rail ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="ListBox.rail ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="ListBox.rail ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="ListBox.rail ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
+    </Style>
+    <Style Selector="ListBox.rail ListBoxItem:selected:focus /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Brush.Transparent}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.Transparent}" />
     </Style>
 </Styles>

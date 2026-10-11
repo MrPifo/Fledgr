@@ -1,8 +1,9 @@
-using Avalonia.Threading;
+﻿using Avalonia.Threading;
 using YTSPlayer.Contracts.Diagnostics;
 using YTSPlayer.Contracts.Media;
 using YTSPlayer.Contracts.Playback;
 using YTSPlayer.Contracts.Settings;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Shell.Services;
 
@@ -27,6 +28,22 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
     public event Action<PlaybackState>? StateChanged;
     public event Action? SourceChanged;
 
+    /// <summary>Speichert die App-Einstellungen. Die Shell setzt es; so gehen Zufall und Lautstärke auch bei hartem Beenden nicht verloren.</summary>
+    public Action? Persist { get; set; }
+
+    CancellationTokenSource? _persistCts;
+
+    /// <summary>Speichert kurz nach der letzten Änderung (Regler-Ziehen löst sonst viele Schreibvorgänge aus).</summary>
+    void PersistSoon()
+    {
+        _persistCts?.Cancel();
+        var cts = _persistCts = new CancellationTokenSource();
+        _ = Task.Delay(1000, cts.Token).ContinueWith(t =>
+        {
+            if (!t.IsCanceled) Dispatcher.UIThread.Post(() => { try { Persist?.Invoke(); } catch (Exception) { } });
+        });
+    }
+
     /// <summary>Der Nutzer hat etwas am Player bedient (Abspielen, Pause, Weiter, Spulen, Lautstärke …). Der Sleep-Timer setzt dann seine Zeit zurück.</summary>
     public event Action? UserAction;
 
@@ -50,7 +67,12 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
     /// </summary>
     public async Task RestoreAsync(MediaItem item, TimeSpan position, TimeSpan duration, bool play, IReadOnlyList<MediaItem>? queue = null)
     {
-        if (!_sources.TryGetValue(item.SourceId, out var source)) return;
+        if (!_sources.TryGetValue(item.SourceId, out var source))
+        {
+            AppLog.Warn("Sitzung", $"Quelle {item.SourceId} fehlt, Titel nicht wiederhergestellt");
+            return;
+        }
+        AppLog.Info("Sitzung", $"Wiederherstellen: Quelle {item.SourceId}, Position {position.TotalSeconds:F0} s, abspielen {play}");
         if (play)
         {
             await ActivateAsync(source);
@@ -70,7 +92,7 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
         UserAction?.Invoke();
         _pending = null;
         if (!_sources.TryGetValue(item.SourceId, out var source))
-            throw new InvalidOperationException($"Quelle „{item.SourceId}“ ist nicht aktiv. Plugin einschalten.");
+            throw new InvalidOperationException(Loc.F("shell.error.sourceInactive", item.SourceId));
         using var scope = perf.Begin("Player.Start");
         try
         {
@@ -116,6 +138,7 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
         var on = !s.Shuffle;
         await s.SetShuffleAsync(on);
         settings.SourceShuffle[_active.Id] = on;
+        PersistSoon();
     }
 
     /// <summary>Schaltet „Gefällt mir“ des laufenden Titels um, wenn die aktive Quelle das kann.</summary>
@@ -152,11 +175,24 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
         // Jede Quelle merkt sich ihre eigene Lautstärke (auch eine nur angezeigte, noch nicht geladene).
         var id = _active?.Id ?? _pending?.Item.SourceId ?? settings.LastSourceId;
         if (id != null) settings.SourceVolumes[id] = Volume;
+        PersistSoon();
         if (_active != null) await _active.SetVolumeAsync(ToGain(Volume));
     }
 
-    /// <summary>Reglerstellung (0–1) zu Lautstärke. Linear: LibVLC wendet unter Windows selbst schon eine Kubik-Kurve an.</summary>
-    static double ToGain(double slider) => slider;
+    /// <summary>
+    /// Reglerstellung (0–1) zu Lautstärke der Quelle. Mit Kubik-Kurve (Regler³) sind leise Werte feiner einstellbar.
+    /// Die Quellen setzen den Wert ohne weitere Kurve (LibVLC-Motor und YT-Mixer gleichen ihre Eigenheiten selbst aus).
+    /// </summary>
+    double ToGain(double slider) => settings.CubicVolume ? slider * slider * slider : slider;
+
+    /// <summary>Setzt die Lautstärke der laufenden Quelle neu (z. B. nach dem Umschalten der Kurve).</summary>
+    public void ReapplyVolume()
+    {
+        if (_active != null) _ = _active.SetVolumeAsync(ToGain(Volume));
+    }
+
+    /// <summary>Umkehrung von <see cref="ToGain"/>: Lautstärke der Quelle zurück zur Reglerstellung.</summary>
+    double FromGain(double gain) => settings.CubicVolume ? Math.Cbrt(gain) : gain;
 
     public async Task StopAsync()
     {
@@ -173,6 +209,7 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
         // Die Lautstärke dieser Quelle laden (sonst die zuletzt benutzte). Die Oberfläche übernimmt sie über SourceChanged.
         Volume = settings.SourceVolumes.TryGetValue(source.Id, out var own) ? own : Volume;
         source.StateChanged += OnSourceState;
+        if (source is IExternalVolumeSource ev) ev.VolumeChangedExternally += OnExternalVolume;
         await source.SetVolumeAsync(ToGain(Volume));
         // Quellen, die den Zufall nicht selbst behalten (lokale Musik), bekommen die gemerkte Wahl zurück.
         if (source is IShuffleSource { AppliesSavedShuffle: true } sh && settings.SourceShuffle.TryGetValue(source.Id, out var shuffle))
@@ -186,10 +223,21 @@ public sealed class PlayerService(AppSettings settings, IPerfTracker perf) : IPl
         if (old == null) return;
         _active = null;
         old.StateChanged -= OnSourceState;
+        if (old is IExternalVolumeSource oldEv) oldEv.VolumeChangedExternally -= OnExternalVolume;
         try { await old.StopAsync(); }
         catch { }
         Publish(PlaybackState.Empty);
     }
+
+    /// <summary>Die Lautstärke wurde außerhalb der App geändert (Windows-Mixer): Regler, Einstellung und Quelle übernehmen den Wert.</summary>
+    void OnExternalVolume(double volume) => Dispatcher.UIThread.Post(() =>
+    {
+        if (_active == null) return;
+        Volume = Math.Clamp(FromGain(volume), 0, 1);
+        settings.Volume = Volume;
+        settings.SourceVolumes[_active.Id] = Volume;
+        SourceChanged?.Invoke();
+    });
 
     void OnSourceState(PlaybackState st)
     {

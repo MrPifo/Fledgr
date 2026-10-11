@@ -1,0 +1,38 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
+             xmlns:loc="using:YTSPlayer.Ui.Localization"
+             xmlns:mi="using:Material.Icons.Avalonia"
+             x:Class="YTSPlayer.Modules.YtConnect.Views.HomeHeader"
+             x:DataType="vm:YtViewModel">
+
+    <!-- Kopf der Startseite: Schnellzugriff und Stimmungen (Hero mit Datum und Uhrzeit liegt auf Home) -->
+    <StackPanel Spacing="{DynamicResource Space.M}">
+        <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="{DynamicResource Space.S}">
+            <Button Classes="pill" Command="{Binding ShowPlaylistsTabCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                    <mi:MaterialIcon Kind="PlaylistMusic" />
+                    <TextBlock Text="{loc:T yt.home.playlists}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="1" Classes="pill" Command="{Binding OpenLikedCommand}">
+                <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.S}">
+                    <mi:MaterialIcon Kind="Heart" Foreground="{DynamicResource Brush.Heart}" />
+                    <TextBlock Text="{loc:T yt.home.likes}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <TextBlock Grid.Column="2" Classes="caption muted" Text="{loc:T yt.checking}" VerticalAlignment="Center" IsVisible="{Binding BackgroundBusy}" />
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding HomeChips}" IsVisible="{Binding HasHomeChips}">
+            <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:HomeChipVm">
+                    <Button Classes="chip" Classes.active="{Binding Selected}" Margin="{DynamicResource Pad.Gap}"
+                            Content="{Binding Title}"
+                            Command="{ReflectionBinding $parent[UserControl].DataContext.SelectChipCommand}" CommandParameter="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns:loc="using:YTSPlayer.Ui.Localization" xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:YTSPlayer.Modules.YtConnect.ViewModels"
              xmlns:ui="using:YTSPlayer.Ui.Controls"
@@ -13,16 +13,16 @@
             <Button Command="{Binding BackFromArtistCommand}">
                 <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
                     <mi:MaterialIcon Kind="ChevronLeft" />
-                    <TextBlock Text="Zurück" VerticalAlignment="Center" />
+                    <TextBlock Text="{loc:T yt.back}" VerticalAlignment="Center" />
                 </StackPanel>
             </Button>
             <TextBlock Grid.Column="1" Classes="heading" Text="{Binding Artist.Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-            <Button Grid.Column="2" Content="Aktualisieren" Command="{Binding ReloadArtistCommand}" />
+            <Button Grid.Column="2" Content="{loc:T yt.refresh}" Command="{Binding ReloadArtistCommand}" />
         </Grid>
 
-        <ui:LoadingState Grid.Row="1" State="{Binding ArtistState}" Message="Künstler-Seite wird geladen …"
+        <ui:LoadingState Grid.Row="1" State="{Binding ArtistState}" Message="{loc:T yt.artist.loading}"
                          ErrorText="{Binding ArtistError}" RetryCommand="{Binding ReloadArtistCommand}">
-            <ScrollViewer>
+            <ScrollViewer Classes="page">
                 <StackPanel Spacing="{DynamicResource Space.L}">
 
                     <!-- Kopf -->
@@ -39,17 +39,17 @@
                                 <Button Classes="primary" Command="{Binding ArtistShuffleCommand}">
                                     <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
                                         <mi:MaterialIcon Kind="Shuffle" />
-                                        <TextBlock Text="Zufallsmix" VerticalAlignment="Center" />
+                                        <TextBlock Text="{loc:T yt.artist.shuffleMix}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                                 <Button Command="{Binding ArtistMixCommand}">
                                     <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.XS}">
                                         <mi:MaterialIcon Kind="RadioTower" />
-                                        <TextBlock Text="Mix" VerticalAlignment="Center" />
+                                        <TextBlock Text="{loc:T yt.artist.mix}" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                                 <Button Command="{Binding ToggleSubscribeCommand}" Classes.active="{Binding Subscribed}" Content="{Binding SubscribeText}" />
-                                <Button Classes="icon ghost" Click="OnArtistMore" ToolTip.Tip="Mehr">
+                                <Button Classes="icon ghost" Click="OnArtistMore" ToolTip.Tip="{loc:T yt.more}">
                                     <mi:MaterialIcon Kind="DotsVertical" />
                                 </Button>
                             </StackPanel>
@@ -60,13 +60,13 @@
                     <StackPanel Spacing="{DynamicResource Space.S}" IsVisible="{Binding HasArtistSongs}">
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Classes="heading" Text="{Binding Artist.TopSongsTitle}" VerticalAlignment="Center" />
-                            <Button Grid.Column="1" Content="Alle anzeigen" Command="{Binding ArtistAllSongsCommand}" />
+                            <Button Grid.Column="1" Content="{loc:T yt.showAll}" Command="{Binding ArtistAllSongsCommand}" />
                         </Grid>
                         <ListBox x:Name="ArtistSongList" ItemsSource="{Binding ArtistSongs}" DoubleTapped="OnArtistSongDoubleTapped"
                                  ScrollViewer.VerticalScrollBarVisibility="Disabled">
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="vm:TrackItem">
-                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}" ContextRequested="OnTrackContext" Background="Transparent">
+                                    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="{DynamicResource Space.M}" ContextRequested="OnTrackContext" Background="Transparent">
                                         <Border Classes="thumb">
                                             <Image Source="{Binding Cover}" Stretch="UniformToFill" />
                                         </Border>
@@ -74,8 +74,9 @@
                                             <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                             <TextBlock Text="{Binding Artist}" Classes="caption muted" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
-                                        <TextBlock Grid.Column="2" Text="{Binding Duration}" Classes="caption muted" VerticalAlignment="Center" />
-                                        <Button Grid.Column="3" Classes="icon ghost" Click="OnTrackMenu" DoubleTapped="OnMenuButtonDoubleTapped" ToolTip.Tip="Mehr">
+                                        <ui:PlayingBars Grid.Column="2" Playing="{Binding IsPlayingNow}" IsVisible="{Binding IsCurrent}" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Duration}" Classes="caption muted" VerticalAlignment="Center" />
+                                        <Button Grid.Column="4" Classes="icon ghost" Click="OnTrackMenu" DoubleTapped="OnMenuButtonDoubleTapped" ToolTip.Tip="{loc:T yt.more}">
                                             <mi:MaterialIcon Kind="DotsVertical" />
                                         </Button>
                                     </Grid>

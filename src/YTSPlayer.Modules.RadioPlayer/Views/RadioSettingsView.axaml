@@ -1,0 +1,11 @@
+﻿<UserControl xmlns:loc="using:YTSPlayer.Ui.Localization" xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:YTSPlayer.Modules.RadioPlayer.ViewModels"
+             x:Class="YTSPlayer.Modules.RadioPlayer.Views.RadioSettingsView"
+             x:DataType="vm:RadioSettingsViewModel">
+
+    <StackPanel Spacing="{DynamicResource Space.S}">
+        <TextBlock Classes="heading" Text="{loc:T radio.settings.display}" />
+        <CheckBox Content="{loc:T radio.settings.nowPlaying}" IsChecked="{Binding ShowNowPlaying}" />
+    </StackPanel>
+</UserControl>

@@ -1,8 +1,9 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using YTSPlayer.Shell.ViewModels;
+using YTSPlayer.Contracts.Localization;
 
 namespace YTSPlayer.Shell.Services;
 
@@ -24,7 +25,7 @@ public sealed class TrayService : IDisposable
         _vm = vm;
         _host = host;
         _defaultIcon = new WindowIcon(defaultIcon);
-        _icon = new TrayIcon { Icon = _defaultIcon, ToolTipText = "Fledgr" };
+        _icon = new TrayIcon { Icon = _defaultIcon, ToolTipText = "Fledgr", IsVisible = true };
         _icon.Clicked += (_, _) => vm.ShowMain?.Invoke();
         host.AccountChanged += Rebuild;
         host.Changed += Rebuild;
@@ -35,6 +36,7 @@ public sealed class TrayService : IDisposable
         };
         TrayIcon.SetIcons(app, [_icon]);
         Rebuild();
+        YTSPlayer.Contracts.Diagnostics.AppLog.Info("Tray", "Tray-Symbol angelegt");
     }
 
     public void Dispose() => _icon.Dispose();
@@ -48,31 +50,31 @@ public sealed class TrayService : IDisposable
             if (_vm.IsLoggedIn)
             {
                 menu.Add(new NativeMenuItem($"{_vm.AccountName}  ({_vm.AccountEmail})") { IsEnabled = false });
-                menu.Add(Item("Abmelden", () => _vm.SignOutCommand.Execute(null)));
+                menu.Add(Item(Loc.T("shell.account.signout"), () => _vm.SignOutCommand.Execute(null)));
             }
             else if (_vm.CanSignIn)
             {
-                menu.Add(new NativeMenuItem("Nicht angemeldet") { IsEnabled = false });
-                menu.Add(Item("Anmelden", () => _vm.SignInCommand.Execute(null)));
+                menu.Add(new NativeMenuItem(Loc.T("shell.tray.signedOut")) { IsEnabled = false });
+                menu.Add(Item(Loc.T("shell.account.signin"), () => _vm.SignInCommand.Execute(null)));
             }
             menu.Add(new NativeMenuItemSeparator());
         }
         // Kopf: was gerade läuft. Darunter die Steuerung und der Sleep-Timer.
         var playing = _vm.PlayIcon == Ui.Icons.Pause;
-        if (_vm.Title is { Length: > 0 } title && title != "Nichts spielt")
+        if (!_vm.IsIdle && _vm.Title is { Length: > 0 } title)
             menu.Add(new NativeMenuItem(_vm.Artist.Length > 0 ? $"{title} – {_vm.Artist}" : title) { IsEnabled = false });
-        menu.Add(Item(playing ? "Pause" : "Wiedergabe", () => _vm.TogglePlayCommand.Execute(null)));
-        if (_vm.CanNext) menu.Add(Item("Weiter", () => _vm.NextCommand.Execute(null)));
-        if (_vm.CanPrevious) menu.Add(Item("Zurück", () => _vm.PreviousCommand.Execute(null)));
-        menu.Add(new NativeMenuItem("Sleep-Timer") { ToggleType = MenuItemToggleType.CheckBox, IsChecked = _vm.SleepOn, Command = _vm.ToggleSleepCommand });
+        menu.Add(Item(Loc.T(playing ? "shell.tray.pause" : "shell.tray.play"), () => _vm.TogglePlayCommand.Execute(null)));
+        if (_vm.CanNext) menu.Add(Item(Loc.T("shell.tray.next"), () => _vm.NextCommand.Execute(null)));
+        if (_vm.CanPrevious) menu.Add(Item(Loc.T("shell.tray.previous"), () => _vm.PreviousCommand.Execute(null)));
+        menu.Add(new NativeMenuItem(Loc.T("shell.settings.sleep")) { ToggleType = MenuItemToggleType.CheckBox, IsChecked = _vm.SleepOn, Command = _vm.ToggleSleepCommand });
         menu.Add(new NativeMenuItemSeparator());
         foreach (var e in _host.TrayEntries) menu.Add(Item(e.Text, e.Invoke));
         if (_host.TrayEntries.Count > 0) menu.Add(new NativeMenuItemSeparator());
-        menu.Add(Item("Fenster zeigen", () => _vm.ShowMain?.Invoke()));
-        menu.Add(Item("Widget", () => _vm.OpenWidget?.Invoke()));
-        menu.Add(Item("Diagnose", () => _vm.OpenDiagnostics?.Invoke()));
+        menu.Add(Item(Loc.T("shell.tray.show"), () => _vm.ShowMain?.Invoke()));
+        menu.Add(Item(Loc.T("shell.tray.widget"), () => _vm.OpenWidget?.Invoke()));
+        menu.Add(Item(Loc.T("shell.nav.diagnostics"), () => _vm.OpenDiagnostics?.Invoke()));
         menu.Add(new NativeMenuItemSeparator());
-        menu.Add(Item("Beenden", () => _vm.QuitApp?.Invoke()));
+        menu.Add(Item(Loc.T("shell.nav.quit"), () => _vm.QuitApp?.Invoke()));
         _icon.Menu = menu;
 
         if (account != null && _vm.IsLoggedIn)
@@ -82,11 +84,11 @@ public sealed class TrayService : IDisposable
         }
         else
         {
-            _icon.ToolTipText = account != null ? "Fledgr – nicht angemeldet" : "Fledgr";
+            _icon.ToolTipText = account != null ? "Fledgr – " + Loc.T("shell.tray.signedOut") : "Fledgr";
             _icon.Icon = _defaultIcon;
         }
         // Läuft etwas, steht es im Tooltip (kurz gehalten, Windows schneidet lange Texte ab).
-        if (_vm.Title is { Length: > 0 } t && t != "Nichts spielt" && playing)
+        if (!_vm.IsIdle && _vm.Title is { Length: > 0 } t && playing)
         {
             var line = _vm.Artist.Length > 0 ? $"{t} – {_vm.Artist}" : t;
             _icon.ToolTipText = line.Length > 100 ? line[..99] + "…" : line;

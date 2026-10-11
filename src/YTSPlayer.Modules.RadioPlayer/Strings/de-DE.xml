@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<translations language="de" country="DE">
+  <t key="radio.nav">Radio</t>
+  <t key="radio.plugin.name">Radio</t>
+  <t key="radio.settings.title">Radio</t>
+  <t key="radio.search.placeholder">Sender suchen, z. B. WDR</t>
+  <t key="radio.status.playFailed">Wiedergabe nicht möglich.</t>
+  <t key="radio.status.checking">Stream antwortet nicht. Der Sender wird geprüft …</t>
+  <t key="radio.status.noDb">Keine Verbindung zur Sender-Datenbank. Erneut versuchen.</t>
+  <t key="radio.status.gone">Sender weg: nicht mehr in der Datenbank.</t>
+  <t key="radio.status.dead">Sender tot: Stream antwortet nicht.</t>
+  <t key="radio.status.noResponse">Stream antwortet nicht.</t>
+  <t key="radio.countries.all">Alle Länder</t>
+  <t key="radio.search.none">Keine Sender gefunden.</t>
+  <t key="radio.add.noStream">In der Playlist steht keine Stream-Adresse.</t>
+  <t key="radio.add.failed">Die Adresse konnte nicht geladen werden.</t>
+  <t key="radio.error.noDb">Keine Verbindung zur Sender-Datenbank.</t>
+  <t key="radio.error.inactive">Radio ist nicht aktiv. Plugin einschalten.</t>
+  <t key="radio.add.title">Adresse hinzufügen</t>
+  <t key="radio.add.prompt">Adresse des Streams oder einer Playlist (.m3u oder .pls), beginnend mit http:// oder https://</t>
+  <t key="radio.add.ok">Hinzufügen</t>
+  <t key="radio.view.country.search">Land suchen</t>
+  <t key="radio.view.country">Land</t>
+  <t key="radio.view.genre">Genre, z. B. jazz</t>
+  <t key="radio.view.addUrl.tip">Einen Stream oder eine Playlist (.m3u, .pls) per Adresse hinzufügen</t>
+  <t key="radio.view.back.tip">Zurück zu den Favoriten</t>
+  <t key="radio.view.results">Treffer</t>
+  <t key="radio.view.noFavorites">Noch keine Favoriten. Den Stern an einem Sender drücken, dann bleibt er hier.</t>
+  <t key="radio.view.recent">Zuletzt gespielt</t>
+  <t key="radio.view.favorite">Favorit</t>
+  <t key="radio.view.play">Abspielen</t>
+  <t key="radio.view.favorites">Favoriten</t>
+  <t key="radio.settings.display">Anzeige</t>
+  <t key="radio.settings.nowPlaying">Neuen Titel oben einblenden</t>
+</translations>
