@@ -112,6 +112,12 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
             if (_points.Count < MaxCsv) _points.Add(new Point(DateTime.Now, sample.HostMb, new Dictionary<string, double>(sample.GroupMb)));
 
             Lines.Clear();
+            // Host aufgeteilt: .NET-Speicher (verwaltet) gegen den Rest (Skia, LibVLC, native DLLs).
+            var gc = GC.GetGCMemoryInfo();
+            Lines.Add(new DiagnosticLine("Host: .NET heap", $"{gc.HeapSizeBytes / 1048576.0:F0} MB (GC committed {gc.TotalCommittedBytes / 1048576.0:F0} MB)"));
+            Lines.Add(new DiagnosticLine("Host: native + rest", $"{sample.HostMb - gc.TotalCommittedBytes / 1048576.0:F0} MB"));
+            using (var self = System.Diagnostics.Process.GetCurrentProcess())
+                Lines.Add(new DiagnosticLine("Host: threads", self.Threads.Count.ToString()));
             foreach (var c in _host.Diagnostics.ToList())
                 foreach (var l in c.GetLines()) Lines.Add(new DiagnosticLine($"{c.Group}: {l.Label}", l.Value));
 

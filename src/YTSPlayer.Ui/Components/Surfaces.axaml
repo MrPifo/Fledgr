@@ -1,4 +1,4 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
         Flächen. Border mit Classes:
@@ -173,7 +173,7 @@
     <!--
         Signal-Balken (StackPanel.bars mit vier Border.bar b1 bis b4, blau): stehen ruhig und flach.
         Mit der zusätzlichen Klasse "on" (spielt, Stream steht) zucken sie unregelmäßig wie Rauschen.
-        Die Höhen-Transition lässt sie beim Stoppen weich in den Ruhezustand zurückgehen.
+        Die Transition lässt sie beim Stoppen weich in den Ruhezustand zurückgehen.
     -->
     <Style Selector="StackPanel.bars">
         <Setter Property="Orientation" Value="Horizontal" />
@@ -181,67 +181,72 @@
         <Setter Property="Height" Value="{DynamicResource Size.BarsH}" />
         <Setter Property="VerticalAlignment" Value="Bottom" />
     </Style>
+    <!-- Beim Spielen sind die Balken voll hoch und zucken nur per ScaleY. Nie Height animieren: das gab 60-mal pro Sekunde ein neues Layout und ließ nativen Speicher endlos wachsen (ca. 12 MB/s). -->
     <Style Selector="StackPanel.bars > Border.bar">
         <Setter Property="Width" Value="{DynamicResource Size.BarW}" />
         <Setter Property="Background" Value="{DynamicResource Brush.ModuleRadio}" />
         <Setter Property="CornerRadius" Value="{DynamicResource Radius.S}" />
         <Setter Property="VerticalAlignment" Value="Bottom" />
         <Setter Property="Height" Value="3" />
+        <Setter Property="RenderTransformOrigin" Value="50%,100%" />
         <Setter Property="Transitions">
             <Transitions>
                 <DoubleTransition Property="Height" Duration="0:0:0.45" Easing="CubicEaseOut" />
             </Transitions>
         </Setter>
     </Style>
+    <Style Selector="StackPanel.bars.on > Border.bar">
+        <Setter Property="Height" Value="{DynamicResource Size.BarsH}" />
+    </Style>
     <Style Selector="StackPanel.bars.on > Border.bar.b1">
         <Style.Animations>
             <Animation Duration="0:0:0.43" IterationCount="INFINITE" Easing="SineEaseInOut">
-                <KeyFrame Cue="0%"><Setter Property="Height" Value="3" /></KeyFrame>
-                <KeyFrame Cue="17%"><Setter Property="Height" Value="9" /></KeyFrame>
-                <KeyFrame Cue="33%"><Setter Property="Height" Value="4" /></KeyFrame>
-                <KeyFrame Cue="50%"><Setter Property="Height" Value="10" /></KeyFrame>
-                <KeyFrame Cue="67%"><Setter Property="Height" Value="2" /></KeyFrame>
-                <KeyFrame Cue="83%"><Setter Property="Height" Value="7" /></KeyFrame>
-                <KeyFrame Cue="100%"><Setter Property="Height" Value="3" /></KeyFrame>
+                <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleY" Value="0.3" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="ScaleTransform.ScaleY" Value="0.9" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="ScaleTransform.ScaleY" Value="0.4" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="ScaleTransform.ScaleY" Value="1.0" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="ScaleTransform.ScaleY" Value="0.2" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="ScaleTransform.ScaleY" Value="0.7" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="ScaleTransform.ScaleY" Value="0.3" /></KeyFrame>
             </Animation>
         </Style.Animations>
     </Style>
     <Style Selector="StackPanel.bars.on > Border.bar.b2">
         <Style.Animations>
             <Animation Duration="0:0:0.59" IterationCount="INFINITE" Easing="SineEaseInOut">
-                <KeyFrame Cue="0%"><Setter Property="Height" Value="8" /></KeyFrame>
-                <KeyFrame Cue="17%"><Setter Property="Height" Value="3" /></KeyFrame>
-                <KeyFrame Cue="33%"><Setter Property="Height" Value="10" /></KeyFrame>
-                <KeyFrame Cue="50%"><Setter Property="Height" Value="5" /></KeyFrame>
-                <KeyFrame Cue="67%"><Setter Property="Height" Value="2" /></KeyFrame>
-                <KeyFrame Cue="83%"><Setter Property="Height" Value="9" /></KeyFrame>
-                <KeyFrame Cue="100%"><Setter Property="Height" Value="8" /></KeyFrame>
+                <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleY" Value="0.8" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="ScaleTransform.ScaleY" Value="0.3" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="ScaleTransform.ScaleY" Value="1.0" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="ScaleTransform.ScaleY" Value="0.5" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="ScaleTransform.ScaleY" Value="0.2" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="ScaleTransform.ScaleY" Value="0.9" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="ScaleTransform.ScaleY" Value="0.8" /></KeyFrame>
             </Animation>
         </Style.Animations>
     </Style>
     <Style Selector="StackPanel.bars.on > Border.bar.b3">
         <Style.Animations>
             <Animation Duration="0:0:0.37" IterationCount="INFINITE" Easing="SineEaseInOut">
-                <KeyFrame Cue="0%"><Setter Property="Height" Value="4" /></KeyFrame>
-                <KeyFrame Cue="17%"><Setter Property="Height" Value="10" /></KeyFrame>
-                <KeyFrame Cue="33%"><Setter Property="Height" Value="3" /></KeyFrame>
-                <KeyFrame Cue="50%"><Setter Property="Height" Value="7" /></KeyFrame>
-                <KeyFrame Cue="67%"><Setter Property="Height" Value="9" /></KeyFrame>
-                <KeyFrame Cue="83%"><Setter Property="Height" Value="2" /></KeyFrame>
-                <KeyFrame Cue="100%"><Setter Property="Height" Value="4" /></KeyFrame>
+                <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleY" Value="0.4" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="ScaleTransform.ScaleY" Value="1.0" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="ScaleTransform.ScaleY" Value="0.3" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="ScaleTransform.ScaleY" Value="0.7" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="ScaleTransform.ScaleY" Value="0.9" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="ScaleTransform.ScaleY" Value="0.2" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="ScaleTransform.ScaleY" Value="0.4" /></KeyFrame>
             </Animation>
         </Style.Animations>
     </Style>
     <Style Selector="StackPanel.bars.on > Border.bar.b4">
         <Style.Animations>
             <Animation Duration="0:0:0.51" IterationCount="INFINITE" Easing="SineEaseInOut">
-                <KeyFrame Cue="0%"><Setter Property="Height" Value="6" /></KeyFrame>
-                <KeyFrame Cue="17%"><Setter Property="Height" Value="2" /></KeyFrame>
-                <KeyFrame Cue="33%"><Setter Property="Height" Value="8" /></KeyFrame>
-                <KeyFrame Cue="50%"><Setter Property="Height" Value="10" /></KeyFrame>
-                <KeyFrame Cue="67%"><Setter Property="Height" Value="4" /></KeyFrame>
-                <KeyFrame Cue="83%"><Setter Property="Height" Value="9" /></KeyFrame>
-                <KeyFrame Cue="100%"><Setter Property="Height" Value="6" /></KeyFrame>
+                <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleY" Value="0.6" /></KeyFrame>
+                <KeyFrame Cue="17%"><Setter Property="ScaleTransform.ScaleY" Value="0.2" /></KeyFrame>
+                <KeyFrame Cue="33%"><Setter Property="ScaleTransform.ScaleY" Value="0.8" /></KeyFrame>
+                <KeyFrame Cue="50%"><Setter Property="ScaleTransform.ScaleY" Value="1.0" /></KeyFrame>
+                <KeyFrame Cue="67%"><Setter Property="ScaleTransform.ScaleY" Value="0.4" /></KeyFrame>
+                <KeyFrame Cue="83%"><Setter Property="ScaleTransform.ScaleY" Value="0.9" /></KeyFrame>
+                <KeyFrame Cue="100%"><Setter Property="ScaleTransform.ScaleY" Value="0.6" /></KeyFrame>
             </Animation>
         </Style.Animations>
     </Style>

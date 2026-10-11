@@ -156,6 +156,12 @@ public sealed partial class SettingsViewModel : ObservableObject
         set { _settings.CubicVolume = value; _store.Save("app", _settings); OnPropertyChanged(); VolumeCurveChanged?.Invoke(); }
     }
 
+    /// <summary>Öffnet das Diagnose-Fenster (die Shell setzt hier die Aktion ein).</summary>
+    public Action? DiagnosticsRequested { get; set; }
+
+    [RelayCommand]
+    void OpenDiagnostics() => DiagnosticsRequested?.Invoke();
+
     /// <summary>Wird nach dem Umschalten der Lautstärke-Kurve aufgerufen: Die laufende Quelle bekommt sofort den neuen Wert.</summary>
     public Action? VolumeCurveChanged { get; set; }
 

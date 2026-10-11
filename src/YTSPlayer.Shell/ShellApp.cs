@@ -115,6 +115,7 @@ public sealed class ShellApp
             diag = new DiagnosticsWindow { DataContext = new DiagnosticsViewModel(_settings, monitor, _host, perf, paths) };
             diag.Show();
         };
+        settingsVm.DiagnosticsRequested = () => _vm.OpenDiagnostics?.Invoke();
     }
 
     /// <summary>Merkt, ob die App im Miniplayer läuft, damit der nächste Start dort beginnt.</summary>

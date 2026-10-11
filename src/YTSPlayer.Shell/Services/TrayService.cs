@@ -72,7 +72,6 @@ public sealed class TrayService : IDisposable
         if (_host.TrayEntries.Count > 0) menu.Add(new NativeMenuItemSeparator());
         menu.Add(Item(Loc.T("shell.tray.show"), () => _vm.ShowMain?.Invoke()));
         menu.Add(Item(Loc.T("shell.tray.widget"), () => _vm.OpenWidget?.Invoke()));
-        menu.Add(Item(Loc.T("shell.nav.diagnostics"), () => _vm.OpenDiagnostics?.Invoke()));
         menu.Add(new NativeMenuItemSeparator());
         menu.Add(Item(Loc.T("shell.nav.quit"), () => _vm.QuitApp?.Invoke()));
         _icon.Menu = menu;

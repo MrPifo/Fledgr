@@ -18,6 +18,9 @@ sealed class Program
 #if DEBUG
             .WithDeveloperTools()
 #endif
+            // Software statt GPU (ANGLE/D3D): GPU kostete ca. 100 MB und 100 Threads mehr und ließ den Speicher
+            // bei jeder Animation endlos wachsen (ca. 12 MB/s). Software: ca. 120 MB flach, unter 1 % CPU.
+            .With(new Win32PlatformOptions { RenderingMode = [Win32RenderingMode.Software] })
             .WithInterFont()
             .LogToTrace();
 }

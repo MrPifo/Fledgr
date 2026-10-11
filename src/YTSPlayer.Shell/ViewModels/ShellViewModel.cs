@@ -524,7 +524,6 @@ public sealed partial class ShellViewModel : ObservableObject, INavigator
 
     /// <summary>Vom Widget zurück zur großen App (das Widget verschwindet).</summary>
     [RelayCommand] void ReturnToMain() => ShowMain?.Invoke();
-    [RelayCommand] void Diagnostics() => OpenDiagnostics?.Invoke();
     [RelayCommand] void Quit() => QuitApp?.Invoke();
 
     [RelayCommand]

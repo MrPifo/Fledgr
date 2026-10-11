@@ -52,6 +52,9 @@
                             <TextBlock Classes="heading" Text="{loc:T shell.settings.log}" />
                             <TextBlock Classes="caption muted" Text="{Binding LogDirectory}" TextWrapping="Wrap" />
                             <Button Content="{loc:T shell.settings.log.open}" HorizontalAlignment="Left" Click="OnOpenLogFolder" />
+                            <TextBlock Classes="heading" Text="{loc:T shell.settings.dev}" />
+                            <TextBlock Classes="caption muted" TextWrapping="Wrap" Text="{loc:T shell.settings.dev.hint}" />
+                            <Button Content="{loc:T shell.settings.dev.open}" HorizontalAlignment="Left" Command="{Binding OpenDiagnosticsCommand}" />
                         </StackPanel>
                     </Border>
 

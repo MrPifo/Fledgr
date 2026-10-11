@@ -87,6 +87,9 @@
   <t key="shell.settings.cache.hint">Bilder und gespeicherte Listen. Login, Einstellungen und Playlists bleiben.</t>
   <t key="shell.settings.log">Protokoll</t>
   <t key="shell.settings.log.open">Ordner öffnen</t>
+  <t key="shell.settings.dev">Entwicklung</t>
+  <t key="shell.settings.dev.hint">Die Diagnose zeigt RAM, Prozesse und Messwerte. Sie ist für die Entwicklung gedacht.</t>
+  <t key="shell.settings.dev.open">Diagnose öffnen</t>
   <t key="shell.settings.modules.hint">Ausgeschaltete Module geben ihren Speicher frei.</t>
   <t key="shell.tray.signedOut">Nicht angemeldet</t>
   <t key="shell.tray.pause">Pause</t>

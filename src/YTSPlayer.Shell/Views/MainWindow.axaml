@@ -87,9 +87,6 @@
                         <Button Classes="icon nav" Classes.active="{Binding IsSettingsOpen}" Command="{Binding OpenSettingsCommand}" ToolTip.Tip="{loc:T shell.nav.settings}">
                             <mi:MaterialIcon Kind="Cog" />
                         </Button>
-                        <Button Classes="icon nav" Command="{Binding DiagnosticsCommand}" ToolTip.Tip="{loc:T shell.nav.diagnostics}">
-                            <mi:MaterialIcon Kind="Pulse" />
-                        </Button>
                         <Button Classes="icon nav" Command="{Binding QuitCommand}" ToolTip.Tip="{loc:T shell.nav.quit}">
                             <mi:MaterialIcon Kind="Power" />
                         </Button>

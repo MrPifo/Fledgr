@@ -63,6 +63,9 @@
   <t key="shell.settings.cache.hint">Images and saved lists. Login, settings and playlists stay.</t>
   <t key="shell.settings.log">Log</t>
   <t key="shell.settings.log.open">Open folder</t>
+  <t key="shell.settings.dev">Development</t>
+  <t key="shell.settings.dev.hint">Diagnostics shows memory, processes and measurements. It is meant for development.</t>
+  <t key="shell.settings.dev.open">Open diagnostics</t>
   <t key="shell.settings.modules.hint">Modules that are switched off free their memory.</t>
   <t key="shell.tray.signedOut">Not signed in</t>
   <t key="shell.tray.pause">Pause</t>
