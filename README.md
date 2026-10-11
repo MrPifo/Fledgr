@@ -3,6 +3,8 @@
 A lightweight native music player for Windows (C#, .NET 10, Avalonia).
 One player for your local music, YouTube Music and internet radio, built for low memory use.
 
+<img width="1128" height="826" alt="image" src="https://github.com/user-attachments/assets/4ee381f3-071a-4ea4-80fc-a9e1763667f1" />
+
 ## Features
 
 ### Local music
