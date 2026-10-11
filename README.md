@@ -3,7 +3,7 @@
 A lightweight native music player for Windows (C#, .NET 10, Avalonia).
 One player for your local music, YouTube Music and internet radio, built for low memory use.
 
-<img width="1128" height="826" alt="image" src="https://github.com/user-attachments/assets/4ee381f3-071a-4ea4-80fc-a9e1763667f1" />
+<img width="650" height="500" alt="image" src="https://github.com/user-attachments/assets/4ee381f3-071a-4ea4-80fc-a9e1763667f1" />
 
 ## Features
 
@@ -14,6 +14,9 @@ One player for your local music, YouTube Music and internet radio, built for low
 - Playlists, favourites, multi-select, drag & drop of files and folders
 - Weighted shuffle, queue saved between sessions
 - Playback via LibVLC
+  
+<img width="650" height="250" alt="image" src="https://github.com/user-attachments/assets/86e40f0a-e2f1-408b-82c9-67e481975c26" />
+
 
 ### YouTube Music (YtConnect)
 - Uses your own YouTube Music account in a hidden WebView2 (sign-in stays on Google's page)
@@ -25,6 +28,8 @@ One player for your local music, YouTube Music and internet radio, built for low
 - Favourites, history, custom stream URLs (M3U/PLS)
 - Live song titles (ICY metadata), automatic detection of dead or moved stations
 
+<img width="650" height="400" alt="image" src="https://github.com/user-attachments/assets/47d62c06-c92e-4924-853b-c16edb91ec93" />
+
 ### App
 - Home page with "continue listening", recently played and module sections
 - Floating player bar, mini player widget, tray menu
@@ -33,6 +38,8 @@ One player for your local music, YouTube Music and internet radio, built for low
 - Modules can be switched on and off at runtime in the settings
 - English and German UI
 - Built-in diagnostics (RAM per process, operation timings, CSV export)
+
+<img width="310" height="148" alt="image" src="https://github.com/user-attachments/assets/a7f18c92-e25f-475a-99c9-d756c2df9007" />
 
 ## Download
 
