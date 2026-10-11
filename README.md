@@ -1,48 +1,78 @@
 # Fledgr
 
-Musikplayer für Windows (C#, .NET 10, Avalonia). Spielt lokale Dateien und YouTube Music.
+A lightweight native music player for Windows (C#, .NET 10, Avalonia).
+One player for your local music, YouTube Music and internet radio, built for low memory use.
 
-## Funktionen
+## Features
 
-- Lokale Bibliothek: Ordner, Interpreten, Alben, Playlists, Favoriten. Suche über Pfad und Tags, Cover, Ordnerüberwachung. Wiedergabe mit LibVLC.
-- YouTube Music (Premium-Konto): Wiedergabe über eine versteckte WebView2. Playlists, Suche mit Filter und Vorschlägen, Startseite, Künstlerseiten, Songtexte, Playlists bearbeiten.
-- Zufallswiedergabe mit Gewichtung, Sleep-Timer, Medientasten und Medienanzeige (SMTC), Widget, Tray.
-- Module (lokal, YouTube Music, Radio) lassen sich in den Einstellungen ein- und ausschalten.
+### Local music
+- Library from your own folders, with live folder watching
+- Fast search across file names and tags (title, artist, album)
+- Views for artists, albums and folders, with embedded or folder cover art
+- Playlists, favourites, multi-select, drag & drop of files and folders
+- Weighted shuffle, queue saved between sessions
+- Playback via LibVLC
 
-## Aufbau
+### YouTube Music (YtConnect)
+- Uses your own YouTube Music account in a hidden WebView2 (sign-in stays on Google's page)
+- Home feed, search with filters and suggestions, artist pages, playlists and "Liked music"
+- Like/dislike, create and edit playlists, radio mixes, lyrics
+
+### Internet radio
+- Station search via [radio-browser.info](https://www.radio-browser.info) (name, country, genre)
+- Favourites, history, custom stream URLs (M3U/PLS)
+- Live song titles (ICY metadata), automatic detection of dead or moved stations
+
+### App
+- Home page with "continue listening", recently played and module sections
+- Floating player bar, mini player widget, tray menu
+- Media keys and Windows media overlay (SMTC)
+- Sleep timer, per-source volume, session restore (track and position)
+- Modules can be switched on and off at runtime in the settings
+- English and German UI
+- Built-in diagnostics (RAM per process, operation timings, CSV export)
+
+## Download
+
+Get `Fledgr.exe` from the [Releases](../../releases) page. It is a single self-contained file: no .NET install needed, just run it.
+
+**Requirements:** Windows 10/11 x64. YouTube Music needs the Microsoft Edge WebView2 Runtime (preinstalled on most systems).
+
+## Project structure
 
 ```
 src/
-  YTSPlayer.Contracts            Schnittstellen und Modelle, kein UI
-  YTSPlayer.Ui                   Design-System (Farben, Maße, Komponenten)
-  YTSPlayer.Shell                Hauptfenster, Player-Dienst, Plugin-Host
-  YTSPlayer.Modules.MusicPlayer  lokale Bibliothek
-  YTSPlayer.Modules.YtConnect    YouTube Music (+ .Windows: WebView2)
-  YTSPlayer.Modules.RadioPlayer  Platzhalter
+  YTSPlayer.Contracts            interfaces and models, no UI
+  YTSPlayer.Ui                   design system (themes, metrics, components)
+  YTSPlayer.Shell                main window, player service, plugin host, home page
+  Fledgr.Audio                   shared LibVLC audio engine (local music and radio)
+  YTSPlayer.Modules.MusicPlayer  local library
+  YTSPlayer.Modules.YtConnect    YouTube Music (+ .Windows: WebView2 host)
+  YTSPlayer.Modules.RadioPlayer  internet radio
   YTSPlayer.Platform.Windows     P/Invoke, SMTC
-  YTSPlayer.Desktop              EXE, Verdrahtung
+  YTSPlayer.Desktop              executable, composition root
 tests/YTSPlayer.Tests            xunit
-tools/                           Architektur-Check, Icon-Skript
+tools/                           architecture check, icon script
 ```
 
-Abhängigkeiten zeigen nur nach unten. Plattformcode steht nur in `*.Windows` und `Desktop`. `tools/check-architecture.ps1` prüft das.
+Dependencies only point downwards. Platform code lives only in `*.Windows` and `Desktop`. `tools/check-architecture.ps1` enforces this.
 
-## Bauen
+## Building
 
-Voraussetzungen: .NET 10 SDK, Windows 10 (1809) oder neuer, WebView2 Runtime.
+Requirements: .NET 10 SDK, Windows 10 (1809) or newer, WebView2 Runtime.
 
 ```powershell
 dotnet run --project src\YTSPlayer.Desktop
 dotnet test tests\YTSPlayer.Tests\YTSPlayer.Tests.csproj
-.\publish.ps1        # Single-File-EXE nach publish\Fledgr.exe
+.\publish.ps1        # single-file EXE to publish\Fledgr.exe
 ```
 
-Die EXE hat Selbsttests (`--selftest`, `--selftest-ytm`, `--selftest-login`, `--selftest-local`, `--selftest-ui`). Das Ergebnis liegt neben der EXE.
+The EXE has built-in self-tests (`--selftest`, `--selftest-ytm`, `--selftest-login`, `--selftest-local`, `--selftest-radio`, `--selftest-ui`). Results are written next to the EXE.
 
-## Hinweise
+## Notes
 
-- YouTube-Inhalte werden nicht heruntergeladen, gespeichert oder aus der Web-Ansicht herausgelöst. Werbung wird nicht blockiert.
-- Der Google-Login läuft auf der Seite von Google. Die App speichert keine Passwörter.
-- Inoffiziell: Die App nutzt Schnittstellen der YouTube-Music-Webseite. Sie können sich ohne Ankündigung ändern. Kein Produkt von Google.
-- Ziel ist wenig Arbeitsspeicher. Im Leerlauf sind es etwa 50 MB, die Web-Ansicht wird nach Ruhe beendet.
-- Neue YouTube-Funktionen zuerst mit einem Zweitkonto testen. Playlists löschen und bearbeiten wirkt direkt auf das Konto.
+- YouTube content is never downloaded, stored or extracted from the web view. Ads are not blocked.
+- Google sign-in happens on Google's own page. The app never stores passwords.
+- Unofficial: the app uses interfaces of the YouTube Music website, which may change without notice. Not affiliated with Google.
+- Low memory is a core goal. The web view is closed after a period of inactivity.
+- Test new YouTube features with a secondary account first. Deleting or editing playlists affects your account directly.
